@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package auth.v1;
+import "errors/errors.proto";
+
+option go_package = "auth/api/auth/v1;v1";
+option java_multiple_files = true;
+option java_package = "auth.v1";
+option objc_class_prefix = "APIAuthV1";
+
+enum ErrorReason {
+  // default reason
+  option (errors.default_code) = 500;
+
+  TOO_MANY_REQUESTS = 0 [(errors.code) = 429];
+
+  // custom reason
+  DUPLICATE_USERNAME = 1 [(errors.code) = 400];
+  USER_NOT_FOUND = 2 [(errors.code) = 404];
+  INCORRECT_PASSWORD = 3 [(errors.code) = 400];
+  SAME_PASSWORD = 4 [(errors.code) = 400];
+}

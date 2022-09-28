@@ -1,0 +1,104 @@
+syntax = "proto3";
+
+package auth.v1;
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+// the validate rules:
+// https://github.com/envoyproxy/protoc-gen-validate
+import "validate/validate.proto";
+
+option go_package = "auth/api/auth/v1;v1";
+option java_multiple_files = true;
+option java_package = "auth.v1";
+option java_outer_classname = "AuthProtoV1";
+
+// The auth service definition.
+service Auth {
+  rpc Register (RegisterRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/v1/register"
+      body: "*"
+    };
+  }
+  rpc Pwd (PwdRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/v1/pwd"
+      body: "*"
+    };
+  }
+  rpc Login (LoginRequest) returns (LoginReply) {
+    option (google.api.http) = {
+      post: "/v1/login"
+      body: "*"
+    };
+  }
+  rpc Status (StatusRequest) returns (StatusReply) {
+    option (google.api.http) = {
+      get: "/v1/status"
+    };
+  }
+  rpc Captcha (google.protobuf.Empty) returns (CaptchaReply) {
+    option (google.api.http) = {
+      get: "/v1/captcha"
+    };
+  }
+  rpc Refresh (RefreshRequest) returns (LoginReply) {
+    option (google.api.http) = {
+      post: "/v1/refresh"
+      body: "*"
+    };
+  }
+  rpc Logout (google.protobuf.Empty) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/v1/logout"
+      body: "*"
+    };
+  }
+}
+
+message Captcha {
+  string id = 1;
+  string img = 2;
+}
+
+message RegisterRequest {
+  string username = 1 [(validate.rules).string = {min_len: 5, max_len: 50}];
+  string password = 2 [(validate.rules).string = {min_len: 6, max_len: 50}];
+}
+
+message PwdRequest {
+  string username = 1 [(validate.rules).string = {min_len: 5, max_len: 50}];
+  string old_password = 2 [(validate.rules).string = {min_len: 6, max_len: 50}];
+  string new_password = 3 [(validate.rules).string = {min_len: 6, max_len: 50}];
+}
+
+message LoginRequest {
+  string username = 1 [(validate.rules).string = {min_len: 5, max_len: 50}];
+  string password = 2 [(validate.rules).string = {min_len: 6, max_len: 50}];
+  optional string captcha_id = 3;
+  optional string captcha_answer = 4;
+}
+
+message LoginReply {
+  string token = 1;
+  string expires = 2;
+}
+
+message StatusRequest {
+  string username = 1 [(validate.rules).string = {min_len: 5, max_len: 50}];
+}
+
+message StatusReply {
+  Captcha captcha = 1;
+  uint64 locked = 2;
+  int64 lock_expire = 3;
+}
+
+message CaptchaReply {
+  Captcha captcha = 1;
+}
+
+message RefreshRequest {
+  string token = 1;
+}

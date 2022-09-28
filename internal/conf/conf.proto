@@ -1,0 +1,63 @@
+syntax = "proto3";
+package kratos.api;
+
+option go_package = "auth/internal/conf;conf";
+
+import "google/protobuf/duration.proto";
+
+message Bootstrap {
+  string name = 1;
+  string version = 2;
+  Server server = 3;
+  Data data = 4;
+  Tracer tracer = 5;
+  repeated Task tasks = 6;
+}
+
+message Server {
+  message HTTP {
+    string network = 1;
+    string addr = 2;
+    google.protobuf.Duration timeout = 3;
+  }
+  message GRPC {
+    string network = 1;
+    string addr = 2;
+    google.protobuf.Duration timeout = 3;
+  }
+  HTTP http = 1;
+  GRPC grpc = 2;
+}
+
+message Data {
+  message Database {
+    string driver = 1;
+    string dsn = 2;
+  }
+  message Redis {
+    string dsn = 1;
+  }
+  Database database = 1;
+  Redis redis = 2;
+}
+
+message Tracer {
+  message Otlp {
+    string endpoint = 1;
+    bool insecure = 2;
+  }
+  message Stdout {
+    bool prettyPrint = 1;
+  }
+  bool enable = 1;
+  Otlp otlp = 2;
+  Stdout stdout = 3;
+}
+
+message Task {
+  string category = 1;
+  string uuid = 2;
+  string expr = 3;
+  int64 timeout = 4;
+  int64 retry = 5;
+}

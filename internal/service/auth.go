@@ -1,0 +1,56 @@
+package service
+
+import (
+	v1 "auth/api/auth/v1"
+	"auth/internal/biz"
+	"context"
+	"github.com/jinzhu/copier"
+	"go.opentelemetry.io/otel"
+	"google.golang.org/protobuf/types/known/emptypb"
+)
+
+func (s *AuthService) Register(ctx context.Context, req *v1.RegisterRequest) (rp *emptypb.Empty, err error) {
+	tr := otel.Tracer("api")
+	ctx, span := tr.Start(ctx, "Register")
+	defer span.End()
+	rp = &emptypb.Empty{}
+	r := &biz.User{}
+	copier.Copy(&r, req)
+	err = s.user.Create(ctx, r)
+	return
+}
+
+func (s *AuthService) Pwd(ctx context.Context, req *v1.PwdRequest) (rp *emptypb.Empty, err error) {
+	tr := otel.Tracer("api")
+	ctx, span := tr.Start(ctx, "Pwd")
+	defer span.End()
+	rp = &emptypb.Empty{}
+	r := &biz.User{}
+	copier.Copy(&r, req)
+	err = s.user.UpdatePassword(ctx, r)
+	return
+}
+
+func (s *AuthService) Status(ctx context.Context, req *v1.StatusRequest) (rp *v1.StatusReply, err error) {
+	tr := otel.Tracer("api")
+	ctx, span := tr.Start(ctx, "Status")
+	defer span.End()
+	rp = &v1.StatusReply{}
+	res, err := s.user.Status(ctx, req.Username)
+	if err != nil {
+		return
+	}
+	copier.Copy(&rp, res)
+	return
+}
+
+func (s *AuthService) Captcha(ctx context.Context, req *emptypb.Empty) (rp *v1.CaptchaReply, err error) {
+	tr := otel.Tracer("api")
+	ctx, span := tr.Start(ctx, "Captcha")
+	defer span.End()
+	rp = &v1.CaptchaReply{}
+	rp.Captcha = &v1.Captcha{}
+	res := s.user.Captcha(ctx)
+	copier.Copy(&rp.Captcha, res)
+	return
+}
