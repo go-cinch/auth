@@ -11,4 +11,7 @@ var (
 	UserNotFound      = v1.ErrorUserNotFound(v1.ErrorReason_USER_NOT_FOUND.String())
 	IncorrectPassword = v1.ErrorIncorrectPassword(v1.ErrorReason_INCORRECT_PASSWORD.String())
 	SamePassword      = v1.ErrorSamePassword(v1.ErrorReason_SAME_PASSWORD.String())
+	InvalidCaptcha    = v1.ErrorInvalidCaptcha(v1.ErrorReason_INVALID_CAPTCHA.String())
+	UserLocked        = v1.ErrorUserLocked(v1.ErrorReason_USER_LOCKED.String())
+	LoginFailed       = v1.ErrorLoginFailed(v1.ErrorReason_LOGIN_FAILED.String())
 )

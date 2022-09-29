@@ -5,6 +5,7 @@ import (
 	"auth/internal/conf"
 	"context"
 	"github.com/go-cinch/common/log"
+	"github.com/go-cinch/common/utils"
 	"github.com/go-cinch/common/worker"
 	"github.com/google/wire"
 	"github.com/pkg/errors"
@@ -54,19 +55,7 @@ func NewTask(c *conf.Bootstrap, user *biz.UserUseCase) (tk *Task, err error) {
 	}
 
 	if len(c.Tasks) > 0 {
-		for _, item := range c.Tasks {
-			err = tk.worker.Cron(
-				worker.WithRunCategory(item.Category),
-				worker.WithRunUuid(item.Uuid),
-				worker.WithRunExpr(item.Expr),
-				worker.WithRunTimeout(int(item.Timeout)),
-				worker.WithRunMaxRetry(int(item.Retry)),
-			)
-			if err != nil {
-				err = errors.WithMessage(err, "initialize worker failed")
-				return
-			}
-		}
+		// TODO register cron tasks
 	}
 
 	log.Info("initialize worker success")
@@ -81,6 +70,10 @@ type task struct {
 
 func process(t task) (err error) {
 	switch t.payload.Category {
+	case "login.failed":
+		var req biz.LoginTime
+		utils.Json2Struct(&req, t.payload.Payload)
+		err = t.user.WrongPwd(t.ctx, req)
 	}
 	return
 }

@@ -68,14 +68,14 @@ message RegisterRequest {
 }
 
 message PwdRequest {
-  string username = 1 [(validate.rules).string = {min_len: 5, max_len: 50}];
-  string old_password = 2 [(validate.rules).string = {min_len: 6, max_len: 50}];
+  string username = 1;
+  string old_password = 2;
   string new_password = 3 [(validate.rules).string = {min_len: 6, max_len: 50}];
 }
 
 message LoginRequest {
   string username = 1 [(validate.rules).string = {min_len: 5, max_len: 50}];
-  string password = 2 [(validate.rules).string = {min_len: 6, max_len: 50}];
+  string password = 2;
   optional string captcha_id = 3;
   optional string captcha_answer = 4;
 }

@@ -4,8 +4,10 @@ import (
 	"auth/internal/biz"
 	"context"
 	"github.com/go-cinch/common/constant"
+	"github.com/go-cinch/common/utils"
 	"github.com/golang-module/carbon/v2"
 	"github.com/jinzhu/copier"
+	"gorm.io/gorm/clause"
 )
 
 type userRepo struct {
@@ -40,10 +42,11 @@ func NewUserRepo(data *Data) biz.UserRepo {
 func (ro userRepo) GetByUsername(ctx context.Context, username string) (item *biz.User, err error) {
 	item = &biz.User{}
 	var m User
-	db := ro.data.DB(ctx)
-	db.
+	ro.data.DB(ctx).
+		Clauses(clause.Locking{Strength: "UPDATE"}).
 		Where("username = ?", username).
 		First(&m)
+	utils.Json2Struct(&m, "")
 	if m.Id == constant.UI0 {
 		err = biz.UserNotFound
 		return
@@ -67,6 +70,52 @@ func (ro userRepo) Create(ctx context.Context, item *biz.User) (err error) {
 	return
 }
 
+func (ro userRepo) LastLogin(ctx context.Context, id uint64) (err error) {
+	fields := make(map[string]interface{})
+	fields["wrong"] = constant.I0
+	fields["last_login"] = carbon.Now()
+	fields["locked"] = constant.UI0
+	fields["lock_expire"] = constant.I0
+	err = ro.data.DB(ctx).
+		Model(&User{}).
+		Where("id = ?", id).
+		Updates(&fields).Error
+	return
+}
+
+func (ro userRepo) WrongPwd(ctx context.Context, req biz.LoginTime) (err error) {
+	oldItem, err := ro.GetByUsername(ctx, req.Username)
+	if err != nil {
+		return
+	}
+	if oldItem.LastLogin.Gt(req.LastLogin.Carbon) {
+		// already login success, skip set wrong count
+		return
+	}
+	m := make(map[string]interface{})
+	newWrong := oldItem.Wrong + 1
+	if newWrong >= 5 {
+		m["locked"] = constant.UI1
+		if newWrong == 5 {
+			m["lock_expire"] = carbon.Now().AddDuration("5m").Carbon2Time().Unix()
+		} else if newWrong == 10 {
+			m["lock_expire"] = carbon.Now().AddDuration("30m").Carbon2Time().Unix()
+		} else if newWrong == 20 {
+			m["lock_expire"] = carbon.Now().AddDuration("24h").Carbon2Time().Unix()
+		} else if newWrong >= 30 {
+			// forever lock
+			m["lock_expire"] = 0
+		}
+	}
+	m["wrong"] = newWrong
+	err = ro.data.DB(ctx).
+		Model(&User{}).
+		Where("id = ?", oldItem.Id).
+		Where("wrong = ?", oldItem.Wrong).
+		Updates(&m).Error
+	return
+}
+
 func (ro userRepo) UpdatePassword(ctx context.Context, item *biz.User) (err error) {
 	var m User
 	db := ro.data.DB(ctx)
@@ -77,9 +126,14 @@ func (ro userRepo) UpdatePassword(ctx context.Context, item *biz.User) (err erro
 		err = biz.UserNotFound
 		return
 	}
+	fields := make(map[string]interface{})
+	fields["password"] = item.Password
+	fields["wrong"] = constant.I0
+	fields["locked"] = constant.UI0
+	fields["lock_expire"] = constant.I0
 	err = db.
 		Model(&User{}).
 		Where("id = ?", m.Id).
-		Update("password", item.Password).Error
+		Updates(&fields).Error
 	return
 }

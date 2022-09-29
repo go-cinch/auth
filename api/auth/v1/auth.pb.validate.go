@@ -281,27 +281,9 @@ func (m *PwdRequest) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetUsername()); l < 5 || l > 50 {
-		err := PwdRequestValidationError{
-			field:  "Username",
-			reason: "value length must be between 5 and 50 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for Username
 
-	if l := utf8.RuneCountInString(m.GetOldPassword()); l < 6 || l > 50 {
-		err := PwdRequestValidationError{
-			field:  "OldPassword",
-			reason: "value length must be between 6 and 50 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for OldPassword
 
 	if l := utf8.RuneCountInString(m.GetNewPassword()); l < 6 || l > 50 {
 		err := PwdRequestValidationError{
@@ -424,16 +406,7 @@ func (m *LoginRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetPassword()); l < 6 || l > 50 {
-		err := LoginRequestValidationError{
-			field:  "Password",
-			reason: "value length must be between 6 and 50 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for Password
 
 	if m.CaptchaId != nil {
 		// no validation rules for CaptchaId

@@ -72,3 +72,39 @@ func IsSamePassword(err error) bool {
 func ErrorSamePassword(format string, args ...interface{}) *errors.Error {
 	return errors.New(400, ErrorReason_SAME_PASSWORD.String(), fmt.Sprintf(format, args...))
 }
+
+func IsInvalidCaptcha(err error) bool {
+	if err == nil {
+		return false
+	}
+	e := errors.FromError(err)
+	return e.Reason == ErrorReason_INVALID_CAPTCHA.String() && e.Code == 400
+}
+
+func ErrorInvalidCaptcha(format string, args ...interface{}) *errors.Error {
+	return errors.New(400, ErrorReason_INVALID_CAPTCHA.String(), fmt.Sprintf(format, args...))
+}
+
+func IsUserLocked(err error) bool {
+	if err == nil {
+		return false
+	}
+	e := errors.FromError(err)
+	return e.Reason == ErrorReason_USER_LOCKED.String() && e.Code == 403
+}
+
+func ErrorUserLocked(format string, args ...interface{}) *errors.Error {
+	return errors.New(403, ErrorReason_USER_LOCKED.String(), fmt.Sprintf(format, args...))
+}
+
+func IsLoginFailed(err error) bool {
+	if err == nil {
+		return false
+	}
+	e := errors.FromError(err)
+	return e.Reason == ErrorReason_LOGIN_FAILED.String() && e.Code == 400
+}
+
+func ErrorLoginFailed(format string, args ...interface{}) *errors.Error {
+	return errors.New(400, ErrorReason_LOGIN_FAILED.String(), fmt.Sprintf(format, args...))
+}

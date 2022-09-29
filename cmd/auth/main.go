@@ -2,10 +2,10 @@ package main
 
 import (
 	"auth/internal/conf"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"github.com/go-cinch/common/log"
+	"github.com/go-cinch/common/utils"
 	k8sConfig "github.com/go-kratos/kratos/contrib/config/kubernetes/v2"
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/config"
@@ -119,14 +119,14 @@ func main() {
 
 	app, cleanup, err := wireApp(&bc)
 	if err != nil {
-		str, _ := json.Marshal(bc)
+		str := utils.Struct2Json(bc)
 		log.
 			WithError(err).
 			WithFields(log.Fields{
 				"flag.c": flagConf,
 				"flag.n": flagK8sNamespace,
 				"flag.l": flagK8sLabel,
-				"json":   string(str),
+				"json":   str,
 			}).
 			Fatal("wire app failed")
 	}

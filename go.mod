@@ -6,17 +6,18 @@ require (
 	github.com/envoyproxy/protoc-gen-validate v0.1.0
 	github.com/go-cinch/common/captcha v0.0.0-20220928085003-afd18d35661d
 	github.com/go-cinch/common/constant v0.0.0-20220928094747-1b24c1dd963f
-	github.com/go-cinch/common/log v0.0.1
+	github.com/go-cinch/common/log v0.0.0-20220927061933-ccf4ca4bccbe
 	github.com/go-cinch/common/middleware v0.0.0-20220921090518-54e9eef45fde
 	github.com/go-cinch/common/migrate v0.0.0-20220915041442-c48afde5a28c
 	github.com/go-cinch/common/plugins/gorm/log v0.0.0-20220927074458-492682a7fa35
-	github.com/go-cinch/common/utils v0.0.0-20220916073718-f317849b1c58
-	github.com/go-cinch/common/worker v0.0.0-20220923043326-8aaacac4188d
+	github.com/go-cinch/common/utils v0.0.0-20220929033119-a700c311d11f
+	github.com/go-cinch/common/worker v0.0.0-20220929075000-0dd3fa2ef2a5
 	github.com/go-kratos/kratos/contrib/config/kubernetes/v2 v2.0.0-20220817101725-ba7223047727
 	github.com/go-kratos/kratos/v2 v2.5.0
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/golang-module/carbon/v2 v2.1.9
+	github.com/google/uuid v1.3.0
 	github.com/google/wire v0.5.0
 	github.com/jinzhu/copier v0.3.5
 	github.com/pkg/errors v0.9.1
@@ -41,7 +42,7 @@ require (
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/emicklei/go-restful/v3 v3.9.0 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
-	github.com/go-cinch/common/lock v0.0.0-20220923034812-0e33807d4680 // indirect
+	github.com/go-cinch/common/lock v0.0.0-20220929075000-0dd3fa2ef2a5 // indirect
 	github.com/go-gorp/gorp/v3 v3.0.2 // indirect
 	github.com/go-kratos/aegis v0.1.2 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
@@ -56,7 +57,6 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/gnostic v0.6.9 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
-	github.com/google/uuid v1.3.0 // indirect
 	github.com/gorhill/cronexpr v0.0.0-20180427100037-88b0669f7d75 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.7.0 // indirect
@@ -85,7 +85,7 @@ require (
 	golang.org/x/net v0.0.0-20220909164309-bea034e7d591 // indirect
 	golang.org/x/oauth2 v0.0.0-20220909003341-f21342109be1 // indirect
 	golang.org/x/sync v0.0.0-20220513210516-0976fa681c29 // indirect
-	golang.org/x/sys v0.0.0-20220919091848-fb04ddd9f9c8 // indirect
+	golang.org/x/sys v0.0.0-20220928140112-f11e5e49a4ec // indirect
 	golang.org/x/term v0.0.0-20220722155259-a9ba230a4035 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20220922220347-f3bd1da661af // indirect

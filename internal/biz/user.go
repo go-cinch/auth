@@ -2,10 +2,10 @@ package biz
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/go-cinch/common/captcha"
 	"github.com/go-cinch/common/constant"
+	"github.com/go-cinch/common/utils"
 	"github.com/golang-module/carbon/v2"
 	"github.com/jinzhu/copier"
 	"golang.org/x/crypto/bcrypt"
@@ -31,11 +31,26 @@ type User struct {
 	Captcha      Captcha         `json:"-"`
 }
 
+type Login struct {
+	Username      string `json:"username"`
+	Password      string `json:"password"`
+	CaptchaId     string `json:"captchaId"`
+	CaptchaAnswer string `json:"captchaAnswer"`
+}
+
+type LoginTime struct {
+	Username  string          `json:"username"`
+	LastLogin carbon.DateTime `json:"lastLogin"`
+}
+
 type UserStatus struct {
-	Wrong      int64   `json:"wrong"`
-	Locked     uint64  `json:"locked"`
-	LockExpire int64   `json:"lockExpire"`
-	Captcha    Captcha `json:"captcha"`
+	Id          uint64  `json:"id"`
+	Password    string  `json:"password"`
+	Wrong       int64   `json:"wrong"`
+	Locked      uint64  `json:"locked"`
+	LockExpire  int64   `json:"lockExpire"`
+	NeedCaptcha bool    `json:"needCaptcha"`
+	Captcha     Captcha `json:"captcha"`
 }
 
 type Captcha struct {
@@ -46,6 +61,8 @@ type Captcha struct {
 type UserRepo interface {
 	GetByUsername(ctx context.Context, username string) (*User, error)
 	Create(ctx context.Context, item *User) error
+	LastLogin(ctx context.Context, id uint64) error
+	WrongPwd(ctx context.Context, req LoginTime) error
 	UpdatePassword(ctx context.Context, item *User) error
 }
 
@@ -62,44 +79,92 @@ func NewUserUseCase(repo UserRepo, tx Transaction, cache Cache) *UserUseCase {
 
 func (uc *UserUseCase) Create(ctx context.Context, item *User) error {
 	return uc.tx.Tx(ctx, func(ctx context.Context) error {
-		item.Password = genPwd(item.Password)
-		return uc.repo.Create(ctx, item)
+		return uc.cache.Flush(ctx, func(ctx context.Context) error {
+			item.Password = genPwd(item.Password)
+			return uc.repo.Create(ctx, item)
+		})
 	})
 }
 
-func (uc *UserUseCase) UpdatePassword(ctx context.Context, item *User) error {
-	return uc.tx.Tx(ctx, func(ctx context.Context) (err error) {
-		oldItem := &User{}
-		oldItem, err = uc.repo.GetByUsername(ctx, item.Username)
-		if err != nil {
+func (uc *UserUseCase) Login(ctx context.Context, item *Login) error {
+	return uc.tx.Tx(ctx, func(ctx context.Context) error {
+		return uc.cache.Flush(ctx, func(ctx context.Context) (err error) {
+			status, err := uc.Status(ctx, item.Username, false)
+			if err != nil {
+				return
+			}
+			if status.Id == constant.UI0 {
+				err = UserNotFound
+				return
+			}
+			// verify captcha
+			if status.NeedCaptcha && !uc.VerifyCaptcha(ctx, item.CaptchaId, item.CaptchaAnswer) {
+				err = InvalidCaptcha
+				return
+			}
+			// user is locked
+			if status.Locked == constant.UI1 {
+				err = UserLocked
+				return
+			}
+			// check password
+			if ok := comparePwd(item.Password, status.Password); !ok {
+				err = LoginFailed
+				return
+			}
+			err = uc.repo.LastLogin(ctx, status.Id)
 			return
-		}
-		ok := comparePwd(item.OldPassword, oldItem.Password)
-		if !ok {
-			err = IncorrectPassword
-			return
-		}
-		ok = comparePwd(item.NewPassword, oldItem.Password)
-		if ok {
-			err = SamePassword
-			return
-		}
-		return uc.repo.UpdatePassword(ctx, item)
+		})
 	})
 }
 
-func (uc *UserUseCase) Status(ctx context.Context, username string) (rp *UserStatus, err error) {
+func (uc *UserUseCase) WrongPwd(ctx context.Context, req LoginTime) (err error) {
+	return uc.tx.Tx(ctx, func(ctx context.Context) error {
+		return uc.cache.Flush(ctx, func(ctx context.Context) error {
+			return uc.repo.WrongPwd(ctx, req)
+		})
+	})
+}
+
+func (uc *UserUseCase) Pwd(ctx context.Context, item *User) error {
+	return uc.tx.Tx(ctx, func(ctx context.Context) error {
+		return uc.cache.Flush(ctx, func(ctx context.Context) (err error) {
+			oldItem := &User{}
+			oldItem, err = uc.repo.GetByUsername(ctx, item.Username)
+			if err != nil {
+				return
+			}
+			ok := comparePwd(item.OldPassword, oldItem.Password)
+			if !ok {
+				err = IncorrectPassword
+				return
+			}
+			ok = comparePwd(item.NewPassword, oldItem.Password)
+			if ok {
+				err = SamePassword
+				return
+			}
+			item.Password = genPwd(item.NewPassword)
+			return uc.repo.UpdatePassword(ctx, item)
+		})
+	})
+}
+
+func (uc *UserUseCase) Status(ctx context.Context, username string, captcha bool) (rp *UserStatus, err error) {
 	rp = &UserStatus{}
 	action := fmt.Sprintf("status_%s", username)
 	str, ok, lock, _ := uc.cache.Get(ctx, action, func(ctx context.Context) (string, bool) {
 		return uc.status(ctx, action, username)
 	})
 	if ok {
-		json.Unmarshal([]byte(str), rp)
+		utils.Json2Struct(rp, str)
 		// TODO u can get max wrong count from env or dict
 		if rp.Wrong >= constant.I3 {
 			// need captcha
-			rp.Captcha = uc.Captcha(ctx)
+			rp.NeedCaptcha = true
+			if captcha {
+				rp.Captcha = uc.Captcha(ctx)
+			}
 		}
 		timestamp := carbon.Now().Timestamp()
 		if rp.Locked == constant.UI1 && rp.LockExpire > constant.I0 && timestamp >= rp.LockExpire {
@@ -121,6 +186,13 @@ func (uc *UserUseCase) Captcha(ctx context.Context) (rp Captcha) {
 	return
 }
 
+func (uc *UserUseCase) VerifyCaptcha(ctx context.Context, id, answer string) bool {
+	return captcha.New(
+		captcha.WithRedis(uc.cache.Cache()),
+		captcha.WithCtx(ctx),
+	).Verify(id, answer)
+}
+
 func (uc *UserUseCase) status(ctx context.Context, action string, username string) (res string, ok bool) {
 	// read data from db and write to cache
 	rp := &UserStatus{}
@@ -129,8 +201,7 @@ func (uc *UserUseCase) status(ctx context.Context, action string, username strin
 		return
 	}
 	copier.Copy(rp, user)
-	bs, _ := json.Marshal(rp)
-	res = string(bs)
+	res = utils.Struct2Json(rp)
 	uc.cache.Set(ctx, action, res, err == UserNotFound)
 	ok = true
 	return
