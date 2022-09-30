@@ -6,6 +6,7 @@ CREATE TABLE user
     created_at   DATETIME(3)          NULL COMMENT 'create time',
     updated_at   DATETIME(3)          NULL COMMENT 'update time',
     username     VARCHAR(191)         NULL COMMENT 'user login name',
+    user_code    CHAR(8)              NOT NULL COMMENT 'user code',
     password     LONGTEXT             NULL COMMENT 'password',
     mobile       LONGTEXT             NULL COMMENT 'mobile number',
     avatar       LONGTEXT             NULL COMMENT 'avatar url',
@@ -19,3 +20,4 @@ CREATE TABLE user
 );
 
 CREATE UNIQUE INDEX idx_username ON user (username);
+CREATE UNIQUE INDEX idx_user_code ON user (user_code);

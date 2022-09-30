@@ -16,6 +16,7 @@ type User struct {
 	CreatedAt    carbon.DateTime `json:"createdAt"`
 	UpdatedAt    carbon.DateTime `json:"updatedAt"`
 	Username     string          `json:"username"`
+	UserCode     string          `json:"userCode"`
 	Password     string          `json:"password"`
 	OldPassword  string          `json:"-"`
 	NewPassword  string          `json:"-"`

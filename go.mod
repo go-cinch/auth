@@ -6,6 +6,7 @@ require (
 	github.com/envoyproxy/protoc-gen-validate v0.1.0
 	github.com/go-cinch/common/captcha v0.0.0-20220928085003-afd18d35661d
 	github.com/go-cinch/common/constant v0.0.0-20220928094747-1b24c1dd963f
+	github.com/go-cinch/common/id v0.0.0-20220930093601-e55178e4c87f
 	github.com/go-cinch/common/log v0.0.0-20220927061933-ccf4ca4bccbe
 	github.com/go-cinch/common/middleware v0.0.0-20220921090518-54e9eef45fde
 	github.com/go-cinch/common/migrate v0.0.0-20220915041442-c48afde5a28c

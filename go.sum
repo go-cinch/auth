@@ -127,6 +127,8 @@ github.com/go-cinch/common/captcha v0.0.0-20220928085003-afd18d35661d h1:JN9J5Wj
 github.com/go-cinch/common/captcha v0.0.0-20220928085003-afd18d35661d/go.mod h1:sqNuRDL7Uh85RECdJqsf6TngO8st7oZVuweGRTmlRsg=
 github.com/go-cinch/common/constant v0.0.0-20220928094747-1b24c1dd963f h1:zGEkFs7lDK7Obrlfq6fctUJww+SgiXOrnWFvzgSR5bg=
 github.com/go-cinch/common/constant v0.0.0-20220928094747-1b24c1dd963f/go.mod h1:8cZ+7BJAkhvlqnXDTvETi3f4lryn+WGOQcpdR3PE5iE=
+github.com/go-cinch/common/id v0.0.0-20220930093601-e55178e4c87f h1:H1hIBvIBXpSdcnusgPqDElUoiEp/uJdjSLVyQ6ERHqc=
+github.com/go-cinch/common/id v0.0.0-20220930093601-e55178e4c87f/go.mod h1:LqK7MTQl5plUC/KkwDc6F2mQZZ+rIB/4MuYEVGDj+3Q=
 github.com/go-cinch/common/lock v0.0.0-20220929075000-0dd3fa2ef2a5 h1:PRfcTC6aIuodOGMWCD7AVEiAf/5tM1gk/PQ0tV6BoUo=
 github.com/go-cinch/common/lock v0.0.0-20220929075000-0dd3fa2ef2a5/go.mod h1:FvTdnnUJB5d4M9HsNE8KxkKTJBOgZRIlsD1Hh5ZumnU=
 github.com/go-cinch/common/log v0.0.0-20220927061933-ccf4ca4bccbe h1:wEIQFIzOpIPvttYsZQ6NrjpwlHLS+CJR+LNVZE/ttgE=

@@ -4,7 +4,7 @@ import (
 	"auth/internal/biz"
 	"context"
 	"github.com/go-cinch/common/constant"
-	"github.com/go-cinch/common/utils"
+	"github.com/go-cinch/common/id"
 	"github.com/golang-module/carbon/v2"
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm/clause"
@@ -20,6 +20,7 @@ type User struct {
 	CreatedAt    carbon.DateTime `json:"createdAt"`    // create time
 	UpdatedAt    carbon.DateTime `json:"updatedAt"`    // update time
 	Username     string          `json:"username"`     // user login name
+	UserCode     string          `json:"userCode"`     // user code
 	Password     string          `json:"password"`     // password
 	Mobile       string          `json:"mobile"`       // mobile number
 	Avatar       string          `json:"avatar"`       // avatar url
@@ -46,7 +47,6 @@ func (ro userRepo) GetByUsername(ctx context.Context, username string) (item *bi
 		Clauses(clause.Locking{Strength: "UPDATE"}).
 		Where("username = ?", username).
 		First(&m)
-	utils.Json2Struct(&m, "")
 	if m.Id == constant.UI0 {
 		err = biz.UserNotFound
 		return
@@ -67,6 +67,13 @@ func (ro userRepo) Create(ctx context.Context, item *biz.User) (err error) {
 	}
 	copier.Copy(&m, item)
 	err = db.Create(&m).Error
+	if err != nil {
+		return
+	}
+	m.UserCode = id.New(m.Id)
+	err = db.
+		Model(&m).
+		Update("user_code", m.UserCode).Error
 	return
 }
 
