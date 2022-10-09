@@ -12,6 +12,7 @@ message Bootstrap {
   Data data = 4;
   Tracer tracer = 5;
   repeated Task tasks = 6;
+  Auth auth = 7;
 }
 
 message Server {
@@ -60,4 +61,12 @@ message Task {
   string expr = 3;
   int64 timeout = 4;
   int64 retry = 5;
+}
+
+message Auth {
+  message Jwt {
+    string key = 1;
+    string expires = 2;
+  }
+  Jwt jwt = 1;
 }

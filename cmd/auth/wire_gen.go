@@ -36,7 +36,7 @@ func wireApp(c *conf.Bootstrap) (*kratos.App, func(), error) {
 	userRepo := data.NewUserRepo(dataData)
 	transaction := data.NewTransaction(dataData)
 	cache := data.NewCache(universalClient)
-	userUseCase := biz.NewUserUseCase(userRepo, transaction, cache)
+	userUseCase := biz.NewUserUseCase(c, userRepo, transaction, cache)
 	taskTask, err := task.NewTask(c, userUseCase)
 	if err != nil {
 		cleanup()

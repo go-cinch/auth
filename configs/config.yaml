@@ -30,3 +30,7 @@ tasks:
   - category: task2
     uuid: id2
     expr: '0/5 * * * ?'
+auth:
+  jwt:
+    key: 'auth'
+    expires: '24h'

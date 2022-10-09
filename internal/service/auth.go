@@ -42,7 +42,7 @@ func (s *AuthService) Login(ctx context.Context, req *v1.LoginRequest) (rp *v1.L
 	rp = &v1.LoginReply{}
 	r := &biz.Login{}
 	copier.Copy(&r, req)
-	err = s.user.Login(ctx, r)
+	res, err := s.user.Login(ctx, r)
 	if err != nil {
 		if err == biz.LoginFailed {
 			s.task.Once(
@@ -63,6 +63,7 @@ func (s *AuthService) Login(ctx context.Context, req *v1.LoginRequest) (rp *v1.L
 		}
 		return
 	}
+	copier.Copy(&rp, res)
 	return
 }
 

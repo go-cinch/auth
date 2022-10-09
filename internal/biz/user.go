@@ -1,6 +1,8 @@
 package biz
 
 import (
+	"auth/internal/conf"
+	"auth/internal/pkg/jwt"
 	"context"
 	"fmt"
 	"github.com/go-cinch/common/captcha"
@@ -44,8 +46,14 @@ type LoginTime struct {
 	LastLogin carbon.DateTime `json:"lastLogin"`
 }
 
+type LoginToken struct {
+	Token   string `json:"token"`
+	Expires string `json:"expires"`
+}
+
 type UserStatus struct {
 	Id          uint64  `json:"id"`
+	UserCode    string  `json:"userCode"`
 	Password    string  `json:"password"`
 	Wrong       int64   `json:"wrong"`
 	Locked      uint64  `json:"locked"`
@@ -68,14 +76,15 @@ type UserRepo interface {
 }
 
 type UserUseCase struct {
+	c     *conf.Bootstrap
 	repo  UserRepo
 	tx    Transaction
 	cache Cache
 }
 
-func NewUserUseCase(repo UserRepo, tx Transaction, cache Cache) *UserUseCase {
+func NewUserUseCase(c *conf.Bootstrap, repo UserRepo, tx Transaction, cache Cache) *UserUseCase {
 	cache.Register("auth_user_cache")
-	return &UserUseCase{repo: repo, tx: tx, cache: cache}
+	return &UserUseCase{c: c, repo: repo, tx: tx, cache: cache}
 }
 
 func (uc *UserUseCase) Create(ctx context.Context, item *User) error {
@@ -87,8 +96,9 @@ func (uc *UserUseCase) Create(ctx context.Context, item *User) error {
 	})
 }
 
-func (uc *UserUseCase) Login(ctx context.Context, item *Login) error {
-	return uc.tx.Tx(ctx, func(ctx context.Context) error {
+func (uc *UserUseCase) Login(ctx context.Context, item *Login) (rp *LoginToken, err error) {
+	rp = &LoginToken{}
+	err = uc.tx.Tx(ctx, func(ctx context.Context) error {
 		return uc.cache.Flush(ctx, func(ctx context.Context) (err error) {
 			status, err := uc.Status(ctx, item.Username, false)
 			if err != nil {
@@ -114,9 +124,19 @@ func (uc *UserUseCase) Login(ctx context.Context, item *Login) error {
 				return
 			}
 			err = uc.repo.LastLogin(ctx, status.Id)
+			if err != nil {
+				return
+			}
+			authUser := jwt.User{
+				Code: status.UserCode,
+			}
+			token, expireTime := authUser.CreateToken(uc.c.Auth.Jwt.Key, uc.c.Auth.Jwt.Expires)
+			rp.Token = token
+			rp.Expires = expireTime.ToDateTimeString()
 			return
 		})
 	})
+	return
 }
 
 func (uc *UserUseCase) WrongPwd(ctx context.Context, req LoginTime) (err error) {
