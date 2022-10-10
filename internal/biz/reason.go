@@ -15,4 +15,5 @@ var (
 	UserLocked         = v1.ErrorForbidden("user is locked")
 	LoginFailed        = v1.ErrorIllegalParameter("incorrect username or password")
 	DuplicateActionKey = v1.ErrorIllegalParameter("duplicate key")
+	DuplicateRoleKey   = v1.ErrorIllegalParameter("duplicate key")
 )

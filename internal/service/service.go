@@ -17,9 +17,10 @@ type AuthService struct {
 	task   *task.Task
 	user   *biz.UserUseCase
 	action *biz.ActionUseCase
+	role   *biz.RoleUseCase
 }
 
 // NewAuthService new an auth service.
-func NewAuthService(task *task.Task, user *biz.UserUseCase, action *biz.ActionUseCase) *AuthService {
-	return &AuthService{task: task, user: user, action: action}
+func NewAuthService(task *task.Task, user *biz.UserUseCase, action *biz.ActionUseCase, role *biz.RoleUseCase) *AuthService {
+	return &AuthService{task: task, user: user, action: action, role: role}
 }
