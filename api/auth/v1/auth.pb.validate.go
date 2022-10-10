@@ -1068,3 +1068,129 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = RefreshRequestValidationError{}
+
+// Validate checks the field values on CreateActionRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *CreateActionRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CreateActionRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// CreateActionRequestMultiError, or nil if none found.
+func (m *CreateActionRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CreateActionRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if utf8.RuneCountInString(m.GetName()) > 50 {
+		err := CreateActionRequestValidationError{
+			field:  "Name",
+			reason: "value length must be at most 50 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetKey()) > 50 {
+		err := CreateActionRequestValidationError{
+			field:  "Key",
+			reason: "value length must be at most 50 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for Path
+
+	if len(errors) > 0 {
+		return CreateActionRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// CreateActionRequestMultiError is an error wrapping multiple validation
+// errors returned by CreateActionRequest.ValidateAll() if the designated
+// constraints aren't met.
+type CreateActionRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CreateActionRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CreateActionRequestMultiError) AllErrors() []error { return m }
+
+// CreateActionRequestValidationError is the validation error returned by
+// CreateActionRequest.Validate if the designated constraints aren't met.
+type CreateActionRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateActionRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateActionRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateActionRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateActionRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateActionRequestValidationError) ErrorName() string {
+	return "CreateActionRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateActionRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateActionRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateActionRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateActionRequestValidationError{}

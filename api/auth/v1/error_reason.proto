@@ -13,13 +13,7 @@ enum ErrorReason {
   option (errors.default_code) = 500;
 
   TOO_MANY_REQUESTS = 0 [(errors.code) = 429];
-
-  // custom reason
-  DUPLICATE_USERNAME = 1 [(errors.code) = 400];
-  USER_NOT_FOUND = 2 [(errors.code) = 404];
-  INCORRECT_PASSWORD = 3 [(errors.code) = 400];
-  SAME_PASSWORD = 4 [(errors.code) = 400];
-  INVALID_CAPTCHA = 5 [(errors.code) = 400];
-  USER_LOCKED = 6 [(errors.code) = 403];
-  LOGIN_FAILED = 7 [(errors.code) = 400];
+  ILLEGAL_PARAMETER = 1 [(errors.code) = 400];
+  FORBIDDEN = 2 [(errors.code) = 403];
+  NOT_FOUND = 3 [(errors.code) = 404];
 }

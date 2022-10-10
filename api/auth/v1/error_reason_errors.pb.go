@@ -23,88 +23,38 @@ func ErrorTooManyRequests(format string, args ...interface{}) *errors.Error {
 	return errors.New(429, ErrorReason_TOO_MANY_REQUESTS.String(), fmt.Sprintf(format, args...))
 }
 
-// custom reason
-func IsDuplicateUsername(err error) bool {
+func IsIllegalParameter(err error) bool {
 	if err == nil {
 		return false
 	}
 	e := errors.FromError(err)
-	return e.Reason == ErrorReason_DUPLICATE_USERNAME.String() && e.Code == 400
+	return e.Reason == ErrorReason_ILLEGAL_PARAMETER.String() && e.Code == 400
 }
 
-// custom reason
-func ErrorDuplicateUsername(format string, args ...interface{}) *errors.Error {
-	return errors.New(400, ErrorReason_DUPLICATE_USERNAME.String(), fmt.Sprintf(format, args...))
+func ErrorIllegalParameter(format string, args ...interface{}) *errors.Error {
+	return errors.New(400, ErrorReason_ILLEGAL_PARAMETER.String(), fmt.Sprintf(format, args...))
 }
 
-func IsUserNotFound(err error) bool {
+func IsForbidden(err error) bool {
 	if err == nil {
 		return false
 	}
 	e := errors.FromError(err)
-	return e.Reason == ErrorReason_USER_NOT_FOUND.String() && e.Code == 404
+	return e.Reason == ErrorReason_FORBIDDEN.String() && e.Code == 403
 }
 
-func ErrorUserNotFound(format string, args ...interface{}) *errors.Error {
-	return errors.New(404, ErrorReason_USER_NOT_FOUND.String(), fmt.Sprintf(format, args...))
+func ErrorForbidden(format string, args ...interface{}) *errors.Error {
+	return errors.New(403, ErrorReason_FORBIDDEN.String(), fmt.Sprintf(format, args...))
 }
 
-func IsIncorrectPassword(err error) bool {
+func IsNotFound(err error) bool {
 	if err == nil {
 		return false
 	}
 	e := errors.FromError(err)
-	return e.Reason == ErrorReason_INCORRECT_PASSWORD.String() && e.Code == 400
+	return e.Reason == ErrorReason_NOT_FOUND.String() && e.Code == 404
 }
 
-func ErrorIncorrectPassword(format string, args ...interface{}) *errors.Error {
-	return errors.New(400, ErrorReason_INCORRECT_PASSWORD.String(), fmt.Sprintf(format, args...))
-}
-
-func IsSamePassword(err error) bool {
-	if err == nil {
-		return false
-	}
-	e := errors.FromError(err)
-	return e.Reason == ErrorReason_SAME_PASSWORD.String() && e.Code == 400
-}
-
-func ErrorSamePassword(format string, args ...interface{}) *errors.Error {
-	return errors.New(400, ErrorReason_SAME_PASSWORD.String(), fmt.Sprintf(format, args...))
-}
-
-func IsInvalidCaptcha(err error) bool {
-	if err == nil {
-		return false
-	}
-	e := errors.FromError(err)
-	return e.Reason == ErrorReason_INVALID_CAPTCHA.String() && e.Code == 400
-}
-
-func ErrorInvalidCaptcha(format string, args ...interface{}) *errors.Error {
-	return errors.New(400, ErrorReason_INVALID_CAPTCHA.String(), fmt.Sprintf(format, args...))
-}
-
-func IsUserLocked(err error) bool {
-	if err == nil {
-		return false
-	}
-	e := errors.FromError(err)
-	return e.Reason == ErrorReason_USER_LOCKED.String() && e.Code == 403
-}
-
-func ErrorUserLocked(format string, args ...interface{}) *errors.Error {
-	return errors.New(403, ErrorReason_USER_LOCKED.String(), fmt.Sprintf(format, args...))
-}
-
-func IsLoginFailed(err error) bool {
-	if err == nil {
-		return false
-	}
-	e := errors.FromError(err)
-	return e.Reason == ErrorReason_LOGIN_FAILED.String() && e.Code == 400
-}
-
-func ErrorLoginFailed(format string, args ...interface{}) *errors.Error {
-	return errors.New(400, ErrorReason_LOGIN_FAILED.String(), fmt.Sprintf(format, args...))
+func ErrorNotFound(format string, args ...interface{}) *errors.Error {
+	return errors.New(404, ErrorReason_NOT_FOUND.String(), fmt.Sprintf(format, args...))
 }

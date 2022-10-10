@@ -46,7 +46,9 @@ func wireApp(c *conf.Bootstrap) (*kratos.App, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	authService := service.NewAuthService(taskTask, userUseCase)
+	actionRepo := data.NewActionRepo(dataData)
+	actionUseCase := biz.NewActionUseCase(c, actionRepo, transaction, cache)
+	authService := service.NewAuthService(taskTask, userUseCase, actionUseCase)
 	grpcServer := server.NewGRPCServer(c, authService)
 	httpServer := server.NewHTTPServer(c, authService)
 	app := newApp(grpcServer, httpServer)

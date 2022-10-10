@@ -55,6 +55,12 @@ service Auth {
       body: "*"
     };
   }
+  rpc CreateAction (CreateActionRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/v1/action"
+      body: "*"
+    };
+  }
 }
 
 message Captcha {
@@ -101,4 +107,10 @@ message CaptchaReply {
 
 message RefreshRequest {
   string token = 1;
+}
+
+message CreateActionRequest {
+  string name = 1 [(validate.rules).string = {max_len: 50}];
+  string key = 2 [(validate.rules).string = {max_len: 50}];
+  string path = 3;
 }
