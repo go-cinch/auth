@@ -16,7 +16,7 @@ type userRepo struct {
 
 // User is database fields map
 type User struct {
-	Id           uint64          `json:"id"`           // auto increment id
+	Id           uint64          `json:"id,string"`    // auto increment id
 	CreatedAt    carbon.DateTime `json:"createdAt"`    // create time
 	UpdatedAt    carbon.DateTime `json:"updatedAt"`    // update time
 	Username     string          `json:"username"`     // user login name
@@ -66,14 +66,9 @@ func (ro userRepo) Create(ctx context.Context, item *biz.User) (err error) {
 		return
 	}
 	copier.Copy(&m, item)
+	m.Id = ro.data.Id(ctx)
+	m.UserCode = id.NewCode(m.Id)
 	err = db.Create(&m).Error
-	if err != nil {
-		return
-	}
-	m.UserCode = id.New(m.Id)
-	err = db.
-		Model(&m).
-		Update("user_code", m.UserCode).Error
 	return
 }
 

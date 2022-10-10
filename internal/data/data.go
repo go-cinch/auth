@@ -4,6 +4,7 @@ import (
 	"auth/internal/biz"
 	"auth/internal/conf"
 	"context"
+	"github.com/go-cinch/common/id"
 	"github.com/go-cinch/common/log"
 	"github.com/go-cinch/common/migrate"
 	glog "github.com/go-cinch/common/plugins/gorm/log"
@@ -17,16 +18,18 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 	"net/url"
+	"strconv"
 	"time"
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewRedis, NewDB, NewTracer, NewData, NewTransaction, NewCache, NewUserRepo)
+var ProviderSet = wire.NewSet(NewRedis, NewDB, NewSonyflake, NewTracer, NewData, NewTransaction, NewCache, NewUserRepo)
 
 // Data .
 type Data struct {
-	db    *gorm.DB
-	redis redis.UniversalClient
+	db        *gorm.DB
+	redis     redis.UniversalClient
+	sonyflake *id.Sonyflake
 }
 
 type contextTxKey struct{}
@@ -53,16 +56,22 @@ func (d *Data) Cache() redis.UniversalClient {
 	return d.redis
 }
 
+// Id can get unique id
+func (d *Data) Id(ctx context.Context) uint64 {
+	return d.sonyflake.Id(ctx)
+}
+
 // NewTransaction .
 func NewTransaction(d *Data) biz.Transaction {
 	return d
 }
 
 // NewData .
-func NewData(redis redis.UniversalClient, db *gorm.DB, tp *trace.TracerProvider) (d *Data, cleanup func()) {
+func NewData(redis redis.UniversalClient, db *gorm.DB, sonyflake *id.Sonyflake, tp *trace.TracerProvider) (d *Data, cleanup func()) {
 	d = &Data{
-		redis: redis,
-		db:    db,
+		redis:     redis,
+		db:        db,
+		sonyflake: sonyflake,
 	}
 	cleanup = func() {
 		if tp != nil {
@@ -151,5 +160,25 @@ func NewDB(c *conf.Bootstrap) (db *gorm.DB, err error) {
 	log.
 		WithField("db.dsn", showDsn).
 		Info("initialize mysql success")
+	return
+}
+
+// NewSonyflake is initialize sonyflake id generator
+func NewSonyflake(c *conf.Bootstrap) (sf *id.Sonyflake, err error) {
+	defer func() {
+		e := recover()
+		if e != nil {
+			err = errors.Errorf("%v", e)
+		}
+	}()
+	machineId, _ := strconv.ParseUint(c.Server.MachineId, 10, 16)
+	sf = id.NewSonyflake(id.WithSonyflakeMachineId(uint16(machineId)))
+	if sf.Error != nil {
+		err = errors.WithMessage(sf.Error, "initialize sonyflake failed")
+		return
+	}
+	log.
+		WithField("sonyflake.id", machineId).
+		Info("initialize sonyflake success")
 	return
 }

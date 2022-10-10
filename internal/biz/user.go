@@ -14,7 +14,7 @@ import (
 )
 
 type User struct {
-	Id           uint64          `json:"id"`
+	Id           uint64          `json:"id,string"`
 	CreatedAt    carbon.DateTime `json:"createdAt"`
 	UpdatedAt    carbon.DateTime `json:"updatedAt"`
 	Username     string          `json:"username"`
@@ -52,7 +52,7 @@ type LoginToken struct {
 }
 
 type UserStatus struct {
-	Id          uint64  `json:"id"`
+	Id          uint64  `json:"id,string"`
 	UserCode    string  `json:"userCode"`
 	Password    string  `json:"password"`
 	Wrong       int64   `json:"wrong"`
