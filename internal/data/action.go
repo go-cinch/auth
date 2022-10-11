@@ -49,17 +49,17 @@ func (ro actionRepo) Create(ctx context.Context, item *biz.Action) (err error) {
 	return
 }
 
-func (ro actionRepo) CodeExists(ctx context.Context, action string) (err error) {
+func (ro actionRepo) CodeExists(ctx context.Context, code string) (err error) {
 	var m Action
 	db := ro.data.DB(ctx)
-	arr := strings.Split(action, ",")
-	for _, code := range arr {
+	arr := strings.Split(code, ",")
+	for _, item := range arr {
 		db.
-			Where("code = ?", code).
+			Where("code = ?", item).
 			First(&m)
 		ok := m.Id > constant.UI1
 		if !ok {
-			err = v1.ErrorIllegalParameter("%s: %s", biz.ActionNotFound.Message, code)
+			err = v1.ErrorIllegalParameter("%s: %s", biz.ActionNotFound.Message, item)
 			return
 		}
 	}
