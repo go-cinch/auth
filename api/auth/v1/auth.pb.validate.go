@@ -1239,6 +1239,10 @@ func (m *CreateRoleRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	if m.Action != nil {
+		// no validation rules for Action
+	}
+
 	if len(errors) > 0 {
 		return CreateRoleRequestMultiError(errors)
 	}
@@ -1353,6 +1357,10 @@ func (m *UpdateRoleRequest) validate(all bool) error {
 
 	if m.Status != nil {
 		// no validation rules for Status
+	}
+
+	if m.Action != nil {
+		// no validation rules for Action
 	}
 
 	if len(errors) > 0 {

@@ -46,3 +46,13 @@ func (ro actionRepo) Create(ctx context.Context, item *biz.Action) (err error) {
 	err = db.Create(&m).Error
 	return
 }
+
+func (ro actionRepo) CodeExists(ctx context.Context, code string) (ok bool) {
+	var m Action
+	db := ro.data.DB(ctx)
+	db.
+		Where("code = ?", code).
+		First(&m)
+	ok = m.Id > constant.UI1
+	return
+}

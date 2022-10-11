@@ -134,6 +134,7 @@ message CreateActionRequest {
 message CreateRoleRequest {
   string name = 1 [(validate.rules).string = {max_len: 50}];
   string key = 2 [(validate.rules).string = {max_len: 50}];
+  optional string action = 3;
 }
 
 message UpdateRoleRequest {
@@ -141,4 +142,5 @@ message UpdateRoleRequest {
   optional string name = 2;
   optional string key = 3;
   optional uint64 status = 4;
+  optional string action = 5;
 }

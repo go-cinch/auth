@@ -10,6 +10,7 @@ type Role struct {
 	Name   string `json:"name"`
 	Key    string `json:"key"`
 	Status uint64 `json:"status"`
+	Action string `json:"action"`
 }
 
 type UpdateRole struct {
@@ -17,6 +18,7 @@ type UpdateRole struct {
 	Name   *string `json:"name,omitempty"`
 	Key    *string `json:"key,omitempty"`
 	Status *uint64 `json:"status,omitempty"`
+	Action *string `json:"action,omitempty"`
 }
 
 type RoleRepo interface {
