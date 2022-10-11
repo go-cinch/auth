@@ -40,7 +40,7 @@ func (ro permissionRepo) Check(ctx context.Context, item *biz.Permission) (pass 
 		return
 	}
 	// 3. check user group permission
-	groups, err := ro.userGroup.FindGroupByUserCode(ctx, user.UserCode)
+	groups, err := ro.userGroup.FindGroupByUserCode(ctx, user.Code)
 	if err != nil {
 		return
 	}

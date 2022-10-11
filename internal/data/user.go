@@ -24,7 +24,7 @@ type User struct {
 	Role         Role            `json:"role" gorm:"foreignKey:RoleId"` // role
 	Action       string          `json:"action"`                        // user action code array
 	Username     string          `json:"username"`                      // user login name
-	UserCode     string          `json:"userCode"`                      // user code
+	Code         string          `json:"code"`                          // user code
 	Password     string          `json:"password"`                      // password
 	Mobile       string          `json:"mobile"`                        // mobile number
 	Avatar       string          `json:"avatar"`                        // avatar url
@@ -72,7 +72,7 @@ func (ro userRepo) Create(ctx context.Context, item *biz.User) (err error) {
 	}
 	copier.Copy(&m, item)
 	m.Id = ro.data.Id(ctx)
-	m.UserCode = id.NewCode(m.Id)
+	m.Code = id.NewCode(m.Id)
 	if m.Action != "" {
 		err = ro.action.CodeExists(ctx, m.Action)
 		if err != nil {
@@ -167,7 +167,7 @@ func (ro userRepo) GetByCode(ctx context.Context, code string) (item *biz.User, 
 	item = &biz.User{}
 	var m User
 	ro.data.DB(ctx).
-		Where("user_code = ?", code).
+		Where("code = ?", code).
 		Preload("Role").
 		First(&m)
 	if m.Id == constant.UI0 {

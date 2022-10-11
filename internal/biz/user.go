@@ -21,7 +21,7 @@ type User struct {
 	Role         Role            `json:"role"`
 	Action       string          `json:"action"`
 	Username     string          `json:"username"`
-	UserCode     string          `json:"userCode"`
+	Code         string          `json:"Code"`
 	Password     string          `json:"password"`
 	OldPassword  string          `json:"-"`
 	NewPassword  string          `json:"-"`
@@ -56,7 +56,7 @@ type LoginToken struct {
 
 type UserStatus struct {
 	Id          uint64  `json:"id,string"`
-	UserCode    string  `json:"userCode"`
+	Code        string  `json:"code"`
 	Password    string  `json:"password"`
 	Wrong       int64   `json:"wrong"`
 	Locked      uint64  `json:"locked"`
@@ -133,7 +133,7 @@ func (uc *UserUseCase) Login(ctx context.Context, item *Login) (rp *LoginToken, 
 				return
 			}
 			authUser := jwt.User{
-				Code: status.UserCode,
+				Code: status.Code,
 			}
 			token, expireTime := authUser.CreateToken(uc.c.Auth.Jwt.Key, uc.c.Auth.Jwt.Expires)
 			rp.Token = token

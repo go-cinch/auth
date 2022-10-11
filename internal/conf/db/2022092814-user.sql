@@ -8,7 +8,7 @@ CREATE TABLE user
     `role_id`      BIGINT UNSIGNED      NULL COMMENT 'role id',
     `action`       LONGTEXT             NULL COMMENT 'user action code array',
     `username`     VARCHAR(191)         NULL COMMENT 'user login name',
-    `user_code`    CHAR(8)              NOT NULL COMMENT 'user code',
+    `code`         CHAR(8)              NOT NULL COMMENT 'user code',
     `password`     LONGTEXT             NULL COMMENT 'password',
     `mobile`       LONGTEXT             NULL COMMENT 'mobile number',
     `avatar`       LONGTEXT             NULL COMMENT 'avatar url',
@@ -24,4 +24,4 @@ CREATE TABLE user
   COLLATE = utf8mb4_general_ci;
 
 CREATE UNIQUE INDEX idx_username ON user (`username`);
-CREATE UNIQUE INDEX idx_user_code ON user (`user_code`);
+CREATE UNIQUE INDEX idx_code ON user (`code`);
