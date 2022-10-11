@@ -16,11 +16,11 @@ type actionRepo struct {
 
 // Action is database fields map
 type Action struct {
-	Id   uint64 `json:"id,string"` // auto increment id
-	Code string `json:"code"`      // unique code
-	Name string `json:"name"`      // name
-	Key  string `json:"key"`       // keyword, must be unique, used as frontend display
-	Path string `json:"path"`      // url path array, split by break line str, example: GET,/user+\n+POST,/role+\n+GET,/action
+	Id       uint64 `json:"id,string"` // auto increment id
+	Code     string `json:"code"`      // unique code
+	Name     string `json:"name"`      // name
+	Key      string `json:"key"`       // keyword, must be unique, used as frontend display
+	Resource string `json:"resource"`  // resource array, split by break line str, example: GET,/user+\n+POST,/role+\n+GET,/action
 }
 
 func NewActionRepo(data *Data) biz.ActionRepo {
@@ -42,8 +42,8 @@ func (ro actionRepo) Create(ctx context.Context, item *biz.Action) (err error) {
 	copier.Copy(&m, item)
 	m.Id = ro.data.Id(ctx)
 	m.Code = id.NewCode(m.Id)
-	if m.Path == "" {
-		m.Path = "*"
+	if m.Resource == "" {
+		m.Resource = "*"
 	}
 	err = db.Create(&m).Error
 	return

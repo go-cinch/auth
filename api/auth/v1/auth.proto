@@ -134,7 +134,7 @@ message RefreshRequest {
 message CreateActionRequest {
   string name = 1 [(validate.rules).string = {max_len: 50}];
   string key = 2 [(validate.rules).string = {max_len: 50}];
-  string path = 3;
+  string resource = 3;
 }
 
 message CreateRoleRequest {

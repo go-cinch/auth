@@ -6,11 +6,11 @@ import (
 )
 
 type Action struct {
-	Id   uint64 `json:"id,string"`
-	Code string `json:"code"`
-	Name string `json:"name"`
-	Key  string `json:"key"`
-	Path string `json:"path"`
+	Id       uint64 `json:"id,string"`
+	Code     string `json:"code"`
+	Name     string `json:"name"`
+	Key      string `json:"key"`
+	Resource string `json:"resource"`
 }
 
 type ActionRepo interface {
