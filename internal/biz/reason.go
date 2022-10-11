@@ -7,6 +7,7 @@ import (
 var (
 	// TooManyRequests is too many requests in a short time
 	TooManyRequests    = v1.ErrorTooManyRequests(v1.ErrorReason_TOO_MANY_REQUESTS.String())
+	DataNotChange      = v1.ErrorIllegalParameter("data has not changed")
 	DuplicateUsername  = v1.ErrorIllegalParameter("duplicate username")
 	UserNotFound       = v1.ErrorNotFound("user not found")
 	IncorrectPassword  = v1.ErrorIllegalParameter("incorrect password")
@@ -16,4 +17,5 @@ var (
 	LoginFailed        = v1.ErrorIllegalParameter("incorrect username or password")
 	DuplicateActionKey = v1.ErrorIllegalParameter("duplicate key")
 	DuplicateRoleKey   = v1.ErrorIllegalParameter("duplicate key")
+	RoleNotFound       = v1.ErrorNotFound("role not found")
 )

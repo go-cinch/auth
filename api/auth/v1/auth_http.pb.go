@@ -29,6 +29,7 @@ const OperationAuthPwd = "/auth.v1.Auth/Pwd"
 const OperationAuthRefresh = "/auth.v1.Auth/Refresh"
 const OperationAuthRegister = "/auth.v1.Auth/Register"
 const OperationAuthStatus = "/auth.v1.Auth/Status"
+const OperationAuthUpdateRole = "/auth.v1.Auth/UpdateRole"
 
 type AuthHTTPServer interface {
 	Captcha(context.Context, *emptypb.Empty) (*CaptchaReply, error)
@@ -40,6 +41,7 @@ type AuthHTTPServer interface {
 	Refresh(context.Context, *RefreshRequest) (*LoginReply, error)
 	Register(context.Context, *RegisterRequest) (*emptypb.Empty, error)
 	Status(context.Context, *StatusRequest) (*StatusReply, error)
+	UpdateRole(context.Context, *UpdateRoleRequest) (*emptypb.Empty, error)
 }
 
 func RegisterAuthHTTPServer(s *http.Server, srv AuthHTTPServer) {
@@ -53,6 +55,8 @@ func RegisterAuthHTTPServer(s *http.Server, srv AuthHTTPServer) {
 	r.POST("/v1/logout", _Auth_Logout0_HTTP_Handler(srv))
 	r.POST("/v1/action", _Auth_CreateAction0_HTTP_Handler(srv))
 	r.POST("/v1/role", _Auth_CreateRole0_HTTP_Handler(srv))
+	r.PATCH("/v1/role/{id}", _Auth_UpdateRole0_HTTP_Handler(srv))
+	r.PUT("/v1/role/{id}", _Auth_UpdateRole1_HTTP_Handler(srv))
 }
 
 func _Auth_Register0_HTTP_Handler(srv AuthHTTPServer) func(ctx http.Context) error {
@@ -226,6 +230,50 @@ func _Auth_CreateRole0_HTTP_Handler(srv AuthHTTPServer) func(ctx http.Context) e
 	}
 }
 
+func _Auth_UpdateRole0_HTTP_Handler(srv AuthHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in UpdateRoleRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindVars(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationAuthUpdateRole)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.UpdateRole(ctx, req.(*UpdateRoleRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*emptypb.Empty)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _Auth_UpdateRole1_HTTP_Handler(srv AuthHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in UpdateRoleRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindVars(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationAuthUpdateRole)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.UpdateRole(ctx, req.(*UpdateRoleRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*emptypb.Empty)
+		return ctx.Result(200, reply)
+	}
+}
+
 type AuthHTTPClient interface {
 	Captcha(ctx context.Context, req *emptypb.Empty, opts ...http.CallOption) (rsp *CaptchaReply, err error)
 	CreateAction(ctx context.Context, req *CreateActionRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
@@ -236,6 +284,7 @@ type AuthHTTPClient interface {
 	Refresh(ctx context.Context, req *RefreshRequest, opts ...http.CallOption) (rsp *LoginReply, err error)
 	Register(ctx context.Context, req *RegisterRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
 	Status(ctx context.Context, req *StatusRequest, opts ...http.CallOption) (rsp *StatusReply, err error)
+	UpdateRole(ctx context.Context, req *UpdateRoleRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
 }
 
 type AuthHTTPClientImpl struct {
@@ -357,6 +406,19 @@ func (c *AuthHTTPClientImpl) Status(ctx context.Context, in *StatusRequest, opts
 	opts = append(opts, http.Operation(OperationAuthStatus))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, err
+}
+
+func (c *AuthHTTPClientImpl) UpdateRole(ctx context.Context, in *UpdateRoleRequest, opts ...http.CallOption) (*emptypb.Empty, error) {
+	var out emptypb.Empty
+	pattern := "/v1/role/{id}"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationAuthUpdateRole))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "PUT", path, in, &out, opts...)
 	if err != nil {
 		return nil, err
 	}

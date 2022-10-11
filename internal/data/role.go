@@ -4,6 +4,7 @@ import (
 	"auth/internal/biz"
 	"context"
 	"github.com/go-cinch/common/constant"
+	"github.com/go-cinch/common/utils"
 	"github.com/jinzhu/copier"
 )
 
@@ -39,5 +40,27 @@ func (ro roleRepo) Create(ctx context.Context, item *biz.Role) (err error) {
 	m.Id = ro.data.Id(ctx)
 	m.Status = constant.UI1
 	err = db.Create(&m).Error
+	return
+}
+
+func (ro roleRepo) Update(ctx context.Context, item *biz.UpdateRole) (err error) {
+	var m Role
+	db := ro.data.DB(ctx)
+	db.
+		Where("id = ?", item.Id).
+		First(&m)
+	if m.Id == constant.UI0 {
+		err = biz.RoleNotFound
+		return
+	}
+	change := make(map[string]interface{})
+	utils.CompareDiff(m, item, &change)
+	if len(change) == 0 {
+		err = biz.DataNotChange
+		return
+	}
+	err = db.
+		Model(&m).
+		Updates(&change).Error
 	return
 }

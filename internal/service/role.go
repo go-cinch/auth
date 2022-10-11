@@ -19,3 +19,14 @@ func (s *AuthService) CreateRole(ctx context.Context, req *v1.CreateRoleRequest)
 	err = s.role.Create(ctx, r)
 	return
 }
+
+func (s *AuthService) UpdateRole(ctx context.Context, req *v1.UpdateRoleRequest) (rp *emptypb.Empty, err error) {
+	tr := otel.Tracer("api")
+	ctx, span := tr.Start(ctx, "UpdateRole")
+	defer span.End()
+	rp = &emptypb.Empty{}
+	r := &biz.UpdateRole{}
+	copier.Copy(&r, req)
+	err = s.role.Update(ctx, r)
+	return
+}

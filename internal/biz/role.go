@@ -12,8 +12,16 @@ type Role struct {
 	Status uint64 `json:"status"`
 }
 
+type UpdateRole struct {
+	Id     *uint64 `json:"id,string,omitempty"`
+	Name   *string `json:"name,omitempty"`
+	Key    *string `json:"key,omitempty"`
+	Status *uint64 `json:"status,omitempty"`
+}
+
 type RoleRepo interface {
 	Create(ctx context.Context, item *Role) error
+	Update(ctx context.Context, item *UpdateRole) error
 }
 
 type RoleUseCase struct {
@@ -32,6 +40,14 @@ func (uc *RoleUseCase) Create(ctx context.Context, item *Role) error {
 	return uc.tx.Tx(ctx, func(ctx context.Context) error {
 		return uc.cache.Flush(ctx, func(ctx context.Context) error {
 			return uc.repo.Create(ctx, item)
+		})
+	})
+}
+
+func (uc *RoleUseCase) Update(ctx context.Context, item *UpdateRole) error {
+	return uc.tx.Tx(ctx, func(ctx context.Context) error {
+		return uc.cache.Flush(ctx, func(ctx context.Context) error {
+			return uc.repo.Update(ctx, item)
 		})
 	})
 }

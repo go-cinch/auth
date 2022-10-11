@@ -67,6 +67,16 @@ service Auth {
       body: "*"
     };
   }
+  rpc UpdateRole (UpdateRoleRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      put: "/v1/role/{id}"
+      body: "*",
+      additional_bindings {
+        patch: "/v1/role/{id}",
+        body: "*",
+      }
+    };
+  }
 }
 
 message Captcha {
@@ -124,4 +134,11 @@ message CreateActionRequest {
 message CreateRoleRequest {
   string name = 1 [(validate.rules).string = {max_len: 50}];
   string key = 2 [(validate.rules).string = {max_len: 50}];
+}
+
+message UpdateRoleRequest {
+  uint64 id = 1;
+  optional string name = 2;
+  optional string key = 3;
+  optional uint64 status = 4;
 }

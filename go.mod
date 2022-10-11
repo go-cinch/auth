@@ -11,10 +11,10 @@ require (
 	github.com/go-cinch/common/middleware v0.0.0-20220921090518-54e9eef45fde
 	github.com/go-cinch/common/migrate v0.0.0-20220915041442-c48afde5a28c
 	github.com/go-cinch/common/plugins/gorm/log v0.0.0-20220927074458-492682a7fa35
-	github.com/go-cinch/common/utils v0.0.0-20220929033119-a700c311d11f
+	github.com/go-cinch/common/utils v0.0.0-20221011021607-f3e5406fad3f
 	github.com/go-cinch/common/worker v0.0.0-20220929075000-0dd3fa2ef2a5
 	github.com/go-kratos/kratos/contrib/config/kubernetes/v2 v2.0.0-20220817101725-ba7223047727
-	github.com/go-kratos/kratos/v2 v2.5.0
+	github.com/go-kratos/kratos/v2 v2.5.1
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/golang-jwt/jwt/v4 v4.4.1
@@ -58,6 +58,7 @@ require (
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/gnostic v0.6.9 // indirect
+	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/gorhill/cronexpr v0.0.0-20180427100037-88b0669f7d75 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
@@ -73,6 +74,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mojocn/base64Captcha v1.3.5 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
+	github.com/r3labs/diff/v3 v3.0.0 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/rubenv/sql-migrate v1.2.0 // indirect
 	github.com/shirou/gopsutil/v3 v3.21.8 // indirect
@@ -81,14 +83,15 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/tklauser/go-sysconf v0.3.9 // indirect
 	github.com/tklauser/numcpus v0.3.0 // indirect
+	github.com/vmihailenco/msgpack v4.0.4+incompatible // indirect
 	go.opentelemetry.io/otel/exporters/otlp/internal/retry v1.10.0 // indirect
 	go.opentelemetry.io/otel/trace v1.10.0 // indirect
 	go.opentelemetry.io/proto/otlp v0.19.0 // indirect
 	golang.org/x/image v0.0.0-20220902085622-e7cb96979f69 // indirect
-	golang.org/x/net v0.0.0-20220909164309-bea034e7d591 // indirect
+	golang.org/x/net v0.0.0-20221004154528-8021a29435af // indirect
 	golang.org/x/oauth2 v0.0.0-20220909003341-f21342109be1 // indirect
 	golang.org/x/sync v0.0.0-20220513210516-0976fa681c29 // indirect
-	golang.org/x/sys v0.0.0-20220928140112-f11e5e49a4ec // indirect
+	golang.org/x/sys v0.0.0-20221010170243-090e33056c14 // indirect
 	golang.org/x/term v0.0.0-20220722155259-a9ba230a4035 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20220922220347-f3bd1da661af // indirect
