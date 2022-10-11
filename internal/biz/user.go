@@ -75,6 +75,7 @@ type UserRepo interface {
 	LastLogin(ctx context.Context, id uint64) error
 	WrongPwd(ctx context.Context, req LoginTime) error
 	UpdatePassword(ctx context.Context, item *User) error
+	IdExists(ctx context.Context, id uint64) error
 }
 
 type UserUseCase struct {

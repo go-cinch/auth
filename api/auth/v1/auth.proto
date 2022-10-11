@@ -77,6 +77,12 @@ service Auth {
       }
     };
   }
+  rpc CreateUserGroup (CreateUserGroupRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/v1/user/group"
+      body: "*"
+    };
+  }
 }
 
 message Captcha {
@@ -143,4 +149,11 @@ message UpdateRoleRequest {
   optional string key = 3;
   optional uint64 status = 4;
   optional string action = 5;
+}
+
+message CreateUserGroupRequest {
+  repeated uint64 users = 1;
+  string name = 2 [(validate.rules).string = {max_len: 50}];
+  string key = 3 [(validate.rules).string = {max_len: 50}];
+  optional string action = 4;
 }

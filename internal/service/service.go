@@ -14,13 +14,14 @@ var ProviderSet = wire.NewSet(NewAuthService)
 type AuthService struct {
 	v1.UnimplementedAuthServer
 
-	task   *task.Task
-	user   *biz.UserUseCase
-	action *biz.ActionUseCase
-	role   *biz.RoleUseCase
+	task      *task.Task
+	user      *biz.UserUseCase
+	action    *biz.ActionUseCase
+	role      *biz.RoleUseCase
+	userGroup *biz.UserGroupUseCase
 }
 
 // NewAuthService new an auth service.
-func NewAuthService(task *task.Task, user *biz.UserUseCase, action *biz.ActionUseCase, role *biz.RoleUseCase) *AuthService {
-	return &AuthService{task: task, user: user, action: action, role: role}
+func NewAuthService(task *task.Task, user *biz.UserUseCase, action *biz.ActionUseCase, role *biz.RoleUseCase, userGroup *biz.UserGroupUseCase) *AuthService {
+	return &AuthService{task: task, user: user, action: action, role: role, userGroup: userGroup}
 }

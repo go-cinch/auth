@@ -150,3 +150,15 @@ func (ro userRepo) UpdatePassword(ctx context.Context, item *biz.User) (err erro
 		Updates(&fields).Error
 	return
 }
+
+func (ro userRepo) IdExists(ctx context.Context, id uint64) (err error) {
+	var m User
+	ro.data.DB(ctx).
+		Where("id = ?", id).
+		First(&m)
+	if m.Id == constant.UI0 {
+		err = biz.UserNotFound
+		return
+	}
+	return
+}

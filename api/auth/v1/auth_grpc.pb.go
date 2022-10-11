@@ -33,6 +33,7 @@ type AuthClient interface {
 	CreateAction(ctx context.Context, in *CreateActionRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	CreateRole(ctx context.Context, in *CreateRoleRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	UpdateRole(ctx context.Context, in *UpdateRoleRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	CreateUserGroup(ctx context.Context, in *CreateUserGroupRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type authClient struct {
@@ -133,6 +134,15 @@ func (c *authClient) UpdateRole(ctx context.Context, in *UpdateRoleRequest, opts
 	return out, nil
 }
 
+func (c *authClient) CreateUserGroup(ctx context.Context, in *CreateUserGroupRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/auth.v1.Auth/CreateUserGroup", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AuthServer is the server API for Auth service.
 // All implementations must embed UnimplementedAuthServer
 // for forward compatibility
@@ -147,6 +157,7 @@ type AuthServer interface {
 	CreateAction(context.Context, *CreateActionRequest) (*emptypb.Empty, error)
 	CreateRole(context.Context, *CreateRoleRequest) (*emptypb.Empty, error)
 	UpdateRole(context.Context, *UpdateRoleRequest) (*emptypb.Empty, error)
+	CreateUserGroup(context.Context, *CreateUserGroupRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedAuthServer()
 }
 
@@ -183,6 +194,9 @@ func (UnimplementedAuthServer) CreateRole(context.Context, *CreateRoleRequest) (
 }
 func (UnimplementedAuthServer) UpdateRole(context.Context, *UpdateRoleRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateRole not implemented")
+}
+func (UnimplementedAuthServer) CreateUserGroup(context.Context, *CreateUserGroupRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateUserGroup not implemented")
 }
 func (UnimplementedAuthServer) mustEmbedUnimplementedAuthServer() {}
 
@@ -377,6 +391,24 @@ func _Auth_UpdateRole_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Auth_CreateUserGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateUserGroupRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServer).CreateUserGroup(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/auth.v1.Auth/CreateUserGroup",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServer).CreateUserGroup(ctx, req.(*CreateUserGroupRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Auth_ServiceDesc is the grpc.ServiceDesc for Auth service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -423,6 +455,10 @@ var Auth_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateRole",
 			Handler:    _Auth_UpdateRole_Handler,
+		},
+		{
+			MethodName: "CreateUserGroup",
+			Handler:    _Auth_CreateUserGroup_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

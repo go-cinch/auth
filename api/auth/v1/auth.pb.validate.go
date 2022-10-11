@@ -1442,3 +1442,131 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = UpdateRoleRequestValidationError{}
+
+// Validate checks the field values on CreateUserGroupRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *CreateUserGroupRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CreateUserGroupRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// CreateUserGroupRequestMultiError, or nil if none found.
+func (m *CreateUserGroupRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CreateUserGroupRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if utf8.RuneCountInString(m.GetName()) > 50 {
+		err := CreateUserGroupRequestValidationError{
+			field:  "Name",
+			reason: "value length must be at most 50 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetKey()) > 50 {
+		err := CreateUserGroupRequestValidationError{
+			field:  "Key",
+			reason: "value length must be at most 50 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if m.Action != nil {
+		// no validation rules for Action
+	}
+
+	if len(errors) > 0 {
+		return CreateUserGroupRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// CreateUserGroupRequestMultiError is an error wrapping multiple validation
+// errors returned by CreateUserGroupRequest.ValidateAll() if the designated
+// constraints aren't met.
+type CreateUserGroupRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CreateUserGroupRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CreateUserGroupRequestMultiError) AllErrors() []error { return m }
+
+// CreateUserGroupRequestValidationError is the validation error returned by
+// CreateUserGroupRequest.Validate if the designated constraints aren't met.
+type CreateUserGroupRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateUserGroupRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateUserGroupRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateUserGroupRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateUserGroupRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateUserGroupRequestValidationError) ErrorName() string {
+	return "CreateUserGroupRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateUserGroupRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateUserGroupRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateUserGroupRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateUserGroupRequestValidationError{}
