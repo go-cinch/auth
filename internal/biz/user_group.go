@@ -15,6 +15,7 @@ type UserGroup struct {
 
 type UserGroupRepo interface {
 	Create(ctx context.Context, item *UserGroup) error
+	FindGroupByUserCode(ctx context.Context, code string) ([]UserGroup, error)
 }
 
 type UserGroupUseCase struct {

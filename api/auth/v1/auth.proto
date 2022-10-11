@@ -55,6 +55,12 @@ service Auth {
       body: "*"
     };
   }
+  rpc Permission (PermissionRequest) returns (PermissionReply) {
+    option (google.api.http) = {
+      post: "/v1/permission"
+      body: "*"
+    };
+  }
   rpc CreateAction (CreateActionRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
       post: "/v1/action"
@@ -129,6 +135,16 @@ message CaptchaReply {
 
 message RefreshRequest {
   string token = 1;
+}
+
+message PermissionRequest {
+  string userCode = 1;
+  string method = 2;
+  string uri = 3;
+}
+
+message PermissionReply {
+  bool pass = 1;
 }
 
 message CreateActionRequest {

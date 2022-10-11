@@ -16,6 +16,7 @@ type Action struct {
 type ActionRepo interface {
 	Create(ctx context.Context, item *Action) error
 	CodeExists(ctx context.Context, code string) error
+	Permission(ctx context.Context, code, resource string) bool
 }
 
 type ActionUseCase struct {

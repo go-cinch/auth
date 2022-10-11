@@ -30,6 +30,7 @@ type AuthClient interface {
 	Captcha(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*CaptchaReply, error)
 	Refresh(ctx context.Context, in *RefreshRequest, opts ...grpc.CallOption) (*LoginReply, error)
 	Logout(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	Permission(ctx context.Context, in *PermissionRequest, opts ...grpc.CallOption) (*PermissionReply, error)
 	CreateAction(ctx context.Context, in *CreateActionRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	CreateRole(ctx context.Context, in *CreateRoleRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	UpdateRole(ctx context.Context, in *UpdateRoleRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
@@ -107,6 +108,15 @@ func (c *authClient) Logout(ctx context.Context, in *emptypb.Empty, opts ...grpc
 	return out, nil
 }
 
+func (c *authClient) Permission(ctx context.Context, in *PermissionRequest, opts ...grpc.CallOption) (*PermissionReply, error) {
+	out := new(PermissionReply)
+	err := c.cc.Invoke(ctx, "/auth.v1.Auth/Permission", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *authClient) CreateAction(ctx context.Context, in *CreateActionRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/auth.v1.Auth/CreateAction", in, out, opts...)
@@ -154,6 +164,7 @@ type AuthServer interface {
 	Captcha(context.Context, *emptypb.Empty) (*CaptchaReply, error)
 	Refresh(context.Context, *RefreshRequest) (*LoginReply, error)
 	Logout(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
+	Permission(context.Context, *PermissionRequest) (*PermissionReply, error)
 	CreateAction(context.Context, *CreateActionRequest) (*emptypb.Empty, error)
 	CreateRole(context.Context, *CreateRoleRequest) (*emptypb.Empty, error)
 	UpdateRole(context.Context, *UpdateRoleRequest) (*emptypb.Empty, error)
@@ -185,6 +196,9 @@ func (UnimplementedAuthServer) Refresh(context.Context, *RefreshRequest) (*Login
 }
 func (UnimplementedAuthServer) Logout(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Logout not implemented")
+}
+func (UnimplementedAuthServer) Permission(context.Context, *PermissionRequest) (*PermissionReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Permission not implemented")
 }
 func (UnimplementedAuthServer) CreateAction(context.Context, *CreateActionRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateAction not implemented")
@@ -337,6 +351,24 @@ func _Auth_Logout_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Auth_Permission_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PermissionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServer).Permission(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/auth.v1.Auth/Permission",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServer).Permission(ctx, req.(*PermissionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Auth_CreateAction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateActionRequest)
 	if err := dec(in); err != nil {
@@ -443,6 +475,10 @@ var Auth_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Logout",
 			Handler:    _Auth_Logout_Handler,
+		},
+		{
+			MethodName: "Permission",
+			Handler:    _Auth_Permission_Handler,
 		},
 		{
 			MethodName: "CreateAction",

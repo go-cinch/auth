@@ -18,6 +18,7 @@ type User struct {
 	CreatedAt    carbon.DateTime `json:"createdAt"`
 	UpdatedAt    carbon.DateTime `json:"updatedAt"`
 	RoleId       uint64          `json:"roleId,string"`
+	Role         Role            `json:"role"`
 	Action       string          `json:"action"`
 	Username     string          `json:"username"`
 	UserCode     string          `json:"userCode"`
@@ -76,6 +77,7 @@ type UserRepo interface {
 	WrongPwd(ctx context.Context, req LoginTime) error
 	UpdatePassword(ctx context.Context, item *User) error
 	IdExists(ctx context.Context, id uint64) error
+	GetByCode(ctx context.Context, code string) (*User, error)
 }
 
 type UserUseCase struct {

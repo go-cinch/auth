@@ -90,3 +90,14 @@ func (s *AuthService) Captcha(ctx context.Context, req *emptypb.Empty) (rp *v1.C
 	copier.Copy(&rp.Captcha, res)
 	return
 }
+
+func (s *AuthService) Permission(ctx context.Context, req *v1.PermissionRequest) (rp *v1.PermissionReply, err error) {
+	tr := otel.Tracer("api")
+	ctx, span := tr.Start(ctx, "Permission")
+	defer span.End()
+	rp = &v1.PermissionReply{}
+	r := &biz.Permission{}
+	copier.Copy(&r, req)
+	rp.Pass = s.permission.Check(ctx, r)
+	return
+}

@@ -22,6 +22,11 @@ type UserGroup struct {
 	Action string `json:"action"`                                         // user group action code array
 }
 
+type UserUserGroupRelation struct {
+	UserId      uint64 `json:"userId,string"`
+	UserGroupId uint64 `json:"userGroupId,string"`
+}
+
 func NewUserGroupRepo(data *Data, action biz.ActionRepo, user biz.UserRepo) biz.UserGroupRepo {
 	return &userGroupRepo{
 		data:   data,
@@ -61,5 +66,29 @@ func (ro userGroupRepo) Create(ctx context.Context, item *biz.UserGroup) (err er
 		}
 	}
 	err = db.Create(&m).Error
+	return
+}
+
+func (ro userGroupRepo) FindGroupByUserCode(ctx context.Context, code string) (list []biz.UserGroup, err error) {
+	list = make([]biz.UserGroup, 0)
+	user, err := ro.user.GetByCode(ctx, code)
+	if err != nil {
+		return
+	}
+	db := ro.data.DB(ctx)
+	groupIds := make([]uint64, 0)
+	db.
+		Model(&UserUserGroupRelation{}).
+		Where("user_id = ?", user.Id).
+		Pluck("user_group_id", &groupIds)
+	if len(groupIds) == 0 {
+		return
+	}
+	groups := make([]UserGroup, 0)
+	db.
+		Model(&UserGroup{}).
+		Where("id IN (?)", groupIds).
+		Find(&groups)
+	copier.Copy(&list, groups)
 	return
 }

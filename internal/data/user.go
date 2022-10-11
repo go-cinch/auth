@@ -17,24 +17,24 @@ type userRepo struct {
 
 // User is database fields map
 type User struct {
-	Id           uint64          `json:"id,string"`     // auto increment id
-	CreatedAt    carbon.DateTime `json:"createdAt"`     // create time
-	UpdatedAt    carbon.DateTime `json:"updatedAt"`     // update time
-	RoleId       uint64          `json:"roleId,string"` // role id
-	Role         Role            `json:"role"`          // role
-	Action       string          `json:"action"`        // user action code array
-	Username     string          `json:"username"`      // user login name
-	UserCode     string          `json:"userCode"`      // user code
-	Password     string          `json:"password"`      // password
-	Mobile       string          `json:"mobile"`        // mobile number
-	Avatar       string          `json:"avatar"`        // avatar url
-	Nickname     string          `json:"nickname"`      // nickname
-	Introduction string          `json:"introduction"`  // introduction
-	Status       uint64          `json:"status"`        // status(0: disabled, 1: enable)
-	LastLogin    carbon.DateTime `json:"lastLogin"`     // last login time
-	Locked       uint64          `json:"locked"`        // locked(0: unlock, 1: locked)
-	LockExpire   int64           `json:"lockExpire"`    // lock expiration time
-	Wrong        int64           `json:"wrong"`         // wrong password count
+	Id           uint64          `json:"id,string"`                     // auto increment id
+	CreatedAt    carbon.DateTime `json:"createdAt"`                     // create time
+	UpdatedAt    carbon.DateTime `json:"updatedAt"`                     // update time
+	RoleId       uint64          `json:"roleId,string"`                 // role id
+	Role         Role            `json:"role" gorm:"foreignKey:RoleId"` // role
+	Action       string          `json:"action"`                        // user action code array
+	Username     string          `json:"username"`                      // user login name
+	UserCode     string          `json:"userCode"`                      // user code
+	Password     string          `json:"password"`                      // password
+	Mobile       string          `json:"mobile"`                        // mobile number
+	Avatar       string          `json:"avatar"`                        // avatar url
+	Nickname     string          `json:"nickname"`                      // nickname
+	Introduction string          `json:"introduction"`                  // introduction
+	Status       uint64          `json:"status"`                        // status(0: disabled, 1: enable)
+	LastLogin    carbon.DateTime `json:"lastLogin"`                     // last login time
+	Locked       uint64          `json:"locked"`                        // locked(0: unlock, 1: locked)
+	LockExpire   int64           `json:"lockExpire"`                    // lock expiration time
+	Wrong        int64           `json:"wrong"`                         // wrong password count
 }
 
 // NewUserRepo .
@@ -160,5 +160,20 @@ func (ro userRepo) IdExists(ctx context.Context, id uint64) (err error) {
 		err = biz.UserNotFound
 		return
 	}
+	return
+}
+
+func (ro userRepo) GetByCode(ctx context.Context, code string) (item *biz.User, err error) {
+	item = &biz.User{}
+	var m User
+	ro.data.DB(ctx).
+		Where("user_code = ?", code).
+		Preload("Role").
+		First(&m)
+	if m.Id == constant.UI0 {
+		err = biz.UserNotFound
+		return
+	}
+	copier.Copy(item, m)
 	return
 }

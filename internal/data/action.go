@@ -65,3 +65,51 @@ func (ro actionRepo) CodeExists(ctx context.Context, code string) (err error) {
 	}
 	return
 }
+
+func (ro actionRepo) Permission(ctx context.Context, code, resource string) (pass bool) {
+	arr := strings.Split(code, ",")
+	for _, item := range arr {
+		pass = ro.permission(ctx, item, resource)
+		if pass {
+			return
+		}
+	}
+	return
+}
+
+func (ro actionRepo) permission(ctx context.Context, code, resource string) (pass bool) {
+	var m Action
+	db := ro.data.DB(ctx)
+	db.
+		Where("code = ?", code).
+		First(&m)
+	if m.Id == constant.UI0 {
+		return
+	}
+	targetMethod, targetUri := splitResource(resource)
+	arr1 := strings.Split(m.Resource, "\n")
+	for _, v := range arr1 {
+		method, uri := splitResource(v)
+		if method == "*" || method == targetMethod {
+			if uri == targetUri {
+				pass = true
+				return
+			}
+		}
+	}
+	return
+}
+
+func splitResource(resource string) (method, uri string) {
+	arr := strings.Split(resource, ",")
+	method = "*"
+	uri = ""
+	switch len(arr) {
+	case 1:
+		uri = arr[0]
+	case 2:
+		method = arr[0]
+		uri = arr[1]
+	}
+	return
+}

@@ -35,6 +35,7 @@ var ProviderSet = wire.NewSet(
 	NewActionRepo,
 	NewRoleRepo,
 	NewUserGroupRepo,
+	NewPermissionRepo,
 )
 
 // Data .
@@ -184,7 +185,7 @@ func NewSonyflake(c *conf.Bootstrap) (sf *id.Sonyflake, err error) {
 		}
 	}()
 	machineId, _ := strconv.ParseUint(c.Server.MachineId, 10, 16)
-	sf = id.NewSonyflake(id.WithSonyflakeMachineId(uint16(machineId)))
+	sf = id.NewSonyflake(id.WithSonyflakeMachineId(uint16(machineId)), id.WithSonyflakeStartTime(time.Date(100, 10, 10, 0, 0, 0, 0, time.UTC)))
 	if sf.Error != nil {
 		err = errors.WithMessage(sf.Error, "initialize sonyflake failed")
 		return

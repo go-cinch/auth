@@ -12,6 +12,7 @@ var ProviderSet = wire.NewSet(
 	NewActionUseCase,
 	NewRoleUseCase,
 	NewUserGroupUseCase,
+	NewPermissionUseCase,
 )
 
 type Transaction interface {

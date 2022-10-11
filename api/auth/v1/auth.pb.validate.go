@@ -1069,6 +1069,216 @@ var _ interface {
 	ErrorName() string
 } = RefreshRequestValidationError{}
 
+// Validate checks the field values on PermissionRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *PermissionRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on PermissionRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// PermissionRequestMultiError, or nil if none found.
+func (m *PermissionRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *PermissionRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for UserCode
+
+	// no validation rules for Method
+
+	// no validation rules for Uri
+
+	if len(errors) > 0 {
+		return PermissionRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// PermissionRequestMultiError is an error wrapping multiple validation errors
+// returned by PermissionRequest.ValidateAll() if the designated constraints
+// aren't met.
+type PermissionRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m PermissionRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m PermissionRequestMultiError) AllErrors() []error { return m }
+
+// PermissionRequestValidationError is the validation error returned by
+// PermissionRequest.Validate if the designated constraints aren't met.
+type PermissionRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e PermissionRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e PermissionRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e PermissionRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e PermissionRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e PermissionRequestValidationError) ErrorName() string {
+	return "PermissionRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e PermissionRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sPermissionRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = PermissionRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = PermissionRequestValidationError{}
+
+// Validate checks the field values on PermissionReply with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *PermissionReply) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on PermissionReply with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// PermissionReplyMultiError, or nil if none found.
+func (m *PermissionReply) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *PermissionReply) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Pass
+
+	if len(errors) > 0 {
+		return PermissionReplyMultiError(errors)
+	}
+
+	return nil
+}
+
+// PermissionReplyMultiError is an error wrapping multiple validation errors
+// returned by PermissionReply.ValidateAll() if the designated constraints
+// aren't met.
+type PermissionReplyMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m PermissionReplyMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m PermissionReplyMultiError) AllErrors() []error { return m }
+
+// PermissionReplyValidationError is the validation error returned by
+// PermissionReply.Validate if the designated constraints aren't met.
+type PermissionReplyValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e PermissionReplyValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e PermissionReplyValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e PermissionReplyValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e PermissionReplyValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e PermissionReplyValidationError) ErrorName() string { return "PermissionReplyValidationError" }
+
+// Error satisfies the builtin error interface
+func (e PermissionReplyValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sPermissionReply.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = PermissionReplyValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = PermissionReplyValidationError{}
+
 // Validate checks the field values on CreateActionRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.

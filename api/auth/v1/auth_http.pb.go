@@ -26,6 +26,7 @@ const OperationAuthCreateRole = "/auth.v1.Auth/CreateRole"
 const OperationAuthCreateUserGroup = "/auth.v1.Auth/CreateUserGroup"
 const OperationAuthLogin = "/auth.v1.Auth/Login"
 const OperationAuthLogout = "/auth.v1.Auth/Logout"
+const OperationAuthPermission = "/auth.v1.Auth/Permission"
 const OperationAuthPwd = "/auth.v1.Auth/Pwd"
 const OperationAuthRefresh = "/auth.v1.Auth/Refresh"
 const OperationAuthRegister = "/auth.v1.Auth/Register"
@@ -39,6 +40,7 @@ type AuthHTTPServer interface {
 	CreateUserGroup(context.Context, *CreateUserGroupRequest) (*emptypb.Empty, error)
 	Login(context.Context, *LoginRequest) (*LoginReply, error)
 	Logout(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
+	Permission(context.Context, *PermissionRequest) (*PermissionReply, error)
 	Pwd(context.Context, *PwdRequest) (*emptypb.Empty, error)
 	Refresh(context.Context, *RefreshRequest) (*LoginReply, error)
 	Register(context.Context, *RegisterRequest) (*emptypb.Empty, error)
@@ -55,6 +57,7 @@ func RegisterAuthHTTPServer(s *http.Server, srv AuthHTTPServer) {
 	r.GET("/v1/captcha", _Auth_Captcha0_HTTP_Handler(srv))
 	r.POST("/v1/refresh", _Auth_Refresh0_HTTP_Handler(srv))
 	r.POST("/v1/logout", _Auth_Logout0_HTTP_Handler(srv))
+	r.POST("/v1/permission", _Auth_Permission0_HTTP_Handler(srv))
 	r.POST("/v1/action", _Auth_CreateAction0_HTTP_Handler(srv))
 	r.POST("/v1/role", _Auth_CreateRole0_HTTP_Handler(srv))
 	r.PATCH("/v1/role/{id}", _Auth_UpdateRole0_HTTP_Handler(srv))
@@ -195,6 +198,25 @@ func _Auth_Logout0_HTTP_Handler(srv AuthHTTPServer) func(ctx http.Context) error
 	}
 }
 
+func _Auth_Permission0_HTTP_Handler(srv AuthHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in PermissionRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationAuthPermission)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.Permission(ctx, req.(*PermissionRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*PermissionReply)
+		return ctx.Result(200, reply)
+	}
+}
+
 func _Auth_CreateAction0_HTTP_Handler(srv AuthHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in CreateActionRequest
@@ -303,6 +325,7 @@ type AuthHTTPClient interface {
 	CreateUserGroup(ctx context.Context, req *CreateUserGroupRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
 	Login(ctx context.Context, req *LoginRequest, opts ...http.CallOption) (rsp *LoginReply, err error)
 	Logout(ctx context.Context, req *emptypb.Empty, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
+	Permission(ctx context.Context, req *PermissionRequest, opts ...http.CallOption) (rsp *PermissionReply, err error)
 	Pwd(ctx context.Context, req *PwdRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
 	Refresh(ctx context.Context, req *RefreshRequest, opts ...http.CallOption) (rsp *LoginReply, err error)
 	Register(ctx context.Context, req *RegisterRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
@@ -388,6 +411,19 @@ func (c *AuthHTTPClientImpl) Logout(ctx context.Context, in *emptypb.Empty, opts
 	pattern := "/v1/logout"
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationAuthLogout))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, err
+}
+
+func (c *AuthHTTPClientImpl) Permission(ctx context.Context, in *PermissionRequest, opts ...http.CallOption) (*PermissionReply, error) {
+	var out PermissionReply
+	pattern := "/v1/permission"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationAuthPermission))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
 	if err != nil {
