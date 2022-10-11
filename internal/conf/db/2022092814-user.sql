@@ -17,7 +17,9 @@ CREATE TABLE user
     `locked`       TINYINT(1) DEFAULT 0 NULL COMMENT 'locked(0: unlock, 1: locked)',
     `lock_expire`  BIGINT UNSIGNED      NULL COMMENT 'lock expiration time',
     `wrong`        BIGINT UNSIGNED      NULL COMMENT 'type wrong password count'
-);
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_general_ci;
 
 CREATE UNIQUE INDEX idx_username ON user (`username`);
 CREATE UNIQUE INDEX idx_user_code ON user (`user_code`);
