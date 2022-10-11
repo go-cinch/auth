@@ -1,11 +1,13 @@
 package data
 
 import (
+	v1 "auth/api/auth/v1"
 	"auth/internal/biz"
 	"context"
 	"github.com/go-cinch/common/constant"
 	"github.com/go-cinch/common/id"
 	"github.com/jinzhu/copier"
+	"strings"
 )
 
 type actionRepo struct {
@@ -47,12 +49,19 @@ func (ro actionRepo) Create(ctx context.Context, item *biz.Action) (err error) {
 	return
 }
 
-func (ro actionRepo) CodeExists(ctx context.Context, code string) (ok bool) {
+func (ro actionRepo) CodeExists(ctx context.Context, action string) (err error) {
 	var m Action
 	db := ro.data.DB(ctx)
-	db.
-		Where("code = ?", code).
-		First(&m)
-	ok = m.Id > constant.UI1
+	arr := strings.Split(action, ",")
+	for _, code := range arr {
+		db.
+			Where("code = ?", code).
+			First(&m)
+		ok := m.Id > constant.UI1
+		if !ok {
+			err = v1.ErrorIllegalParameter("%s: %s", biz.ActionNotFound.Message, code)
+			return
+		}
+	}
 	return
 }

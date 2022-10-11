@@ -5,6 +5,8 @@ CREATE TABLE user
     `id`           BIGINT UNSIGNED AUTO_INCREMENT COMMENT 'auto increment id' PRIMARY KEY,
     `created_at`   DATETIME(3)          NULL COMMENT 'create time',
     `updated_at`   DATETIME(3)          NULL COMMENT 'update time',
+    `role_id`      BIGINT UNSIGNED      NULL COMMENT 'role id',
+    `action`       LONGTEXT             NULL COMMENT 'user action code array',
     `username`     VARCHAR(191)         NULL COMMENT 'user login name',
     `user_code`    CHAR(8)              NOT NULL COMMENT 'user code',
     `password`     LONGTEXT             NULL COMMENT 'password',

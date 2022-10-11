@@ -1,13 +1,11 @@
 package data
 
 import (
-	v1 "auth/api/auth/v1"
 	"auth/internal/biz"
 	"context"
 	"github.com/go-cinch/common/constant"
 	"github.com/go-cinch/common/utils"
 	"github.com/jinzhu/copier"
-	"strings"
 )
 
 type roleRepo struct {
@@ -45,7 +43,7 @@ func (ro roleRepo) Create(ctx context.Context, item *biz.Role) (err error) {
 	m.Id = ro.data.Id(ctx)
 	m.Status = constant.UI1
 	if m.Action != "" {
-		err = ro.ActionCodeExists(ctx, m.Action)
+		err = ro.action.CodeExists(ctx, m.Action)
 		if err != nil {
 			return
 		}
@@ -72,7 +70,7 @@ func (ro roleRepo) Update(ctx context.Context, item *biz.UpdateRole) (err error)
 	}
 	if a, ok1 := change["action"]; ok1 {
 		if v, ok2 := a.(string); ok2 {
-			err = ro.ActionCodeExists(ctx, v)
+			err = ro.action.CodeExists(ctx, v)
 			if err != nil {
 				return
 			}
@@ -81,17 +79,5 @@ func (ro roleRepo) Update(ctx context.Context, item *biz.UpdateRole) (err error)
 	err = db.
 		Model(&m).
 		Updates(&change).Error
-	return
-}
-
-func (ro roleRepo) ActionCodeExists(ctx context.Context, action string) (err error) {
-	arr := strings.Split(action, ",")
-	for _, code := range arr {
-		ok := ro.action.CodeExists(ctx, code)
-		if !ok {
-			err = v1.ErrorIllegalParameter("%s: %s", biz.ActionNotFound.Message, code)
-			return
-		}
-	}
 	return
 }

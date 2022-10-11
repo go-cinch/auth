@@ -11,35 +11,37 @@ import (
 )
 
 type userRepo struct {
-	data *Data
+	data   *Data
+	action biz.ActionRepo
 }
 
 // User is database fields map
 type User struct {
-	Id           uint64          `json:"id,string"`                                      // auto increment id
-	CreatedAt    carbon.DateTime `json:"createdAt"`                                      // create time
-	UpdatedAt    carbon.DateTime `json:"updatedAt"`                                      // update time
-	RoleId       uint            `json:"roleId"`                                         // role id
-	Role         Role            `gorm:"foreignKey:RoleId" json:"role"`                  // role
-	Actions      []Action        `gorm:"many2many:user_action_relation;" json:"actions"` // user's actions
-	Username     string          `json:"username"`                                       // user login name
-	UserCode     string          `json:"userCode"`                                       // user code
-	Password     string          `json:"password"`                                       // password
-	Mobile       string          `json:"mobile"`                                         // mobile number
-	Avatar       string          `json:"avatar"`                                         // avatar url
-	Nickname     string          `json:"nickname"`                                       // nickname
-	Introduction string          `json:"introduction"`                                   // introduction
-	Status       uint64          `json:"status"`                                         // status(0: disabled, 1: enable)
-	LastLogin    carbon.DateTime `json:"lastLogin"`                                      // last login time
-	Locked       uint64          `json:"locked"`                                         // locked(0: unlock, 1: locked)
-	LockExpire   int64           `json:"lockExpire"`                                     // lock expiration time
-	Wrong        int64           `json:"wrong"`                                          // wrong password count
+	Id           uint64          `json:"id,string"`     // auto increment id
+	CreatedAt    carbon.DateTime `json:"createdAt"`     // create time
+	UpdatedAt    carbon.DateTime `json:"updatedAt"`     // update time
+	RoleId       uint64          `json:"roleId,string"` // role id
+	Role         Role            `json:"role"`          // role
+	Action       string          `json:"action"`        // user action code array
+	Username     string          `json:"username"`      // user login name
+	UserCode     string          `json:"userCode"`      // user code
+	Password     string          `json:"password"`      // password
+	Mobile       string          `json:"mobile"`        // mobile number
+	Avatar       string          `json:"avatar"`        // avatar url
+	Nickname     string          `json:"nickname"`      // nickname
+	Introduction string          `json:"introduction"`  // introduction
+	Status       uint64          `json:"status"`        // status(0: disabled, 1: enable)
+	LastLogin    carbon.DateTime `json:"lastLogin"`     // last login time
+	Locked       uint64          `json:"locked"`        // locked(0: unlock, 1: locked)
+	LockExpire   int64           `json:"lockExpire"`    // lock expiration time
+	Wrong        int64           `json:"wrong"`         // wrong password count
 }
 
 // NewUserRepo .
-func NewUserRepo(data *Data) biz.UserRepo {
+func NewUserRepo(data *Data, action biz.ActionRepo) biz.UserRepo {
 	return &userRepo{
-		data: data,
+		data:   data,
+		action: action,
 	}
 }
 
@@ -71,6 +73,12 @@ func (ro userRepo) Create(ctx context.Context, item *biz.User) (err error) {
 	copier.Copy(&m, item)
 	m.Id = ro.data.Id(ctx)
 	m.UserCode = id.NewCode(m.Id)
+	if m.Action != "" {
+		err = ro.action.CodeExists(ctx, m.Action)
+		if err != nil {
+			return
+		}
+	}
 	err = db.Create(&m).Error
 	return
 }

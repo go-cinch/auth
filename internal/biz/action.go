@@ -15,7 +15,7 @@ type Action struct {
 
 type ActionRepo interface {
 	Create(ctx context.Context, item *Action) error
-	CodeExists(ctx context.Context, code string) bool
+	CodeExists(ctx context.Context, code string) error
 }
 
 type ActionUseCase struct {

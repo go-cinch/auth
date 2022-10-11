@@ -17,6 +17,8 @@ type User struct {
 	Id           uint64          `json:"id,string"`
 	CreatedAt    carbon.DateTime `json:"createdAt"`
 	UpdatedAt    carbon.DateTime `json:"updatedAt"`
+	RoleId       uint64          `json:"roleId,string"`
+	Action       string          `json:"action"`
 	Username     string          `json:"username"`
 	UserCode     string          `json:"userCode"`
 	Password     string          `json:"password"`

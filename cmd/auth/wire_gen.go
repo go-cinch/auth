@@ -37,7 +37,8 @@ func wireApp(c *conf.Bootstrap) (*kratos.App, func(), error) {
 		return nil, nil, err
 	}
 	dataData, cleanup := data.NewData(universalClient, db, sonyflake, tracerProvider)
-	userRepo := data.NewUserRepo(dataData)
+	actionRepo := data.NewActionRepo(dataData)
+	userRepo := data.NewUserRepo(dataData, actionRepo)
 	transaction := data.NewTransaction(dataData)
 	cache := data.NewCache(universalClient)
 	userUseCase := biz.NewUserUseCase(c, userRepo, transaction, cache)
@@ -46,7 +47,6 @@ func wireApp(c *conf.Bootstrap) (*kratos.App, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	actionRepo := data.NewActionRepo(dataData)
 	actionUseCase := biz.NewActionUseCase(c, actionRepo, transaction, cache)
 	roleRepo := data.NewRoleRepo(dataData, actionRepo)
 	roleUseCase := biz.NewRoleUseCase(c, roleRepo, transaction, cache)
