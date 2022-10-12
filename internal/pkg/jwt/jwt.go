@@ -2,9 +2,10 @@ package jwt
 
 import (
 	"context"
-	"github.com/go-kratos/kratos/v2/middleware/auth/jwt"
 	jwtV4 "github.com/golang-jwt/jwt/v4"
 	"github.com/golang-module/carbon/v2"
+	"github.com/jinzhu/copier"
+	"strings"
 )
 
 const (
@@ -16,10 +17,29 @@ type User struct {
 	Code string
 }
 
+type user struct{}
+
+func NewContext(ctx context.Context, claims jwtV4.Claims) context.Context {
+	if mClaims, ok := claims.(jwtV4.MapClaims); ok {
+		if v, ok := mClaims[ClaimAuthorityId].(string); ok {
+			return NewContextByCode(ctx, v)
+		}
+	}
+	return ctx
+}
+
+func NewContextByCode(ctx context.Context, code string) context.Context {
+	c := strings.TrimSpace(code)
+	if c != "" {
+		ctx = context.WithValue(ctx, user{}, &User{Code: c})
+	}
+	return ctx
+}
+
 func FromContext(ctx context.Context) (u *User) {
 	u = new(User)
-	if claims, ok := jwt.FromContext(ctx); ok {
-		u.Code = claims.(jwtV4.MapClaims)[ClaimAuthorityId].(string)
+	if v, ok := ctx.Value(user{}).(*User); ok {
+		copier.Copy(u, v)
 	}
 	return
 }

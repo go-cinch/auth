@@ -20,4 +20,5 @@ var (
 	DuplicateRoleKey      = v1.ErrorIllegalParameter("duplicate key")
 	RoleNotFound          = v1.ErrorNotFound("role not found")
 	DuplicateUserGroupKey = v1.ErrorIllegalParameter("duplicate key")
+	NoPermission          = v1.ErrorForbidden("no permission to access this resource")
 )

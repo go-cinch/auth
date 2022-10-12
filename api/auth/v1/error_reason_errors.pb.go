@@ -35,6 +35,18 @@ func ErrorIllegalParameter(format string, args ...interface{}) *errors.Error {
 	return errors.New(400, ErrorReason_ILLEGAL_PARAMETER.String(), fmt.Sprintf(format, args...))
 }
 
+func IsUnauthorized(err error) bool {
+	if err == nil {
+		return false
+	}
+	e := errors.FromError(err)
+	return e.Reason == ErrorReason_UNAUTHORIZED.String() && e.Code == 401
+}
+
+func ErrorUnauthorized(format string, args ...interface{}) *errors.Error {
+	return errors.New(401, ErrorReason_UNAUTHORIZED.String(), fmt.Sprintf(format, args...))
+}
+
 func IsForbidden(err error) bool {
 	if err == nil {
 		return false

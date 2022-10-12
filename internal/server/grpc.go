@@ -28,6 +28,7 @@ func NewGRPCServer(c *conf.Bootstrap, svc *service.AuthService) *grpc.Server {
 		middlewares,
 		logging.Server(log.DefaultWrapper.Options().Logger()),
 		validate.Validator(),
+		permission(c, svc),
 	)
 	var opts = []grpc.ServerOption{grpc.Middleware(middlewares...)}
 	if c.Server.Grpc.Network != "" {
