@@ -1093,9 +1093,7 @@ func (m *PermissionRequest) validate(all bool) error {
 
 	// no validation rules for UserCode
 
-	// no validation rules for Method
-
-	// no validation rules for Uri
+	// no validation rules for Resource
 
 	if len(errors) > 0 {
 		return PermissionRequestMultiError(errors)

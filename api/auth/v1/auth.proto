@@ -139,8 +139,7 @@ message RefreshRequest {
 
 message PermissionRequest {
   string userCode = 1;
-  string method = 2;
-  string uri = 3;
+  string resource = 2;
 }
 
 message PermissionReply {

@@ -7,8 +7,7 @@ import (
 
 type Permission struct {
 	UserCode string `json:"userCode"`
-	Method   string `json:"method"`
-	Uri      string `json:"uri"`
+	Resource string `json:"resource"`
 }
 
 type PermissionRepo interface {

@@ -7,11 +7,9 @@ import (
 	jwtLocal "auth/internal/pkg/jwt"
 	"auth/internal/service"
 	"context"
-	"fmt"
 	"github.com/go-kratos/kratos/v2/middleware"
 	"github.com/go-kratos/kratos/v2/middleware/selector"
 	"github.com/go-kratos/kratos/v2/transport"
-	"github.com/go-kratos/kratos/v2/transport/http"
 	jwtV4 "github.com/golang-jwt/jwt/v4"
 	"strings"
 )
@@ -35,22 +33,14 @@ func permission(c *conf.Bootstrap, svc *service.AuthService) middleware.Middlewa
 		jwt(c),
 		func(handler middleware.Handler) middleware.Handler {
 			return func(ctx context.Context, req interface{}) (rp interface{}, err error) {
-				var method, uri string
+				var resource string
 				if tr, ok := transport.FromServerContext(ctx); ok {
-					switch tr.Kind() {
-					case transport.KindHTTP:
-						if ht, ok := tr.(http.Transporter); ok {
-							method = ht.Request().Method
-							uri = ht.Request().URL.Path
-						}
-						fmt.Println(tr.Operation())
-					}
+					resource = tr.Operation()
 				}
 				user := jwtLocal.FromContext(ctx)
 				res, err := svc.Permission(ctx, &v1.PermissionRequest{
 					UserCode: user.Code,
-					Method:   method,
-					Uri:      uri,
+					Resource: resource,
 				})
 				if err != nil {
 					return

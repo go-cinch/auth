@@ -3,7 +3,6 @@ package data
 import (
 	"auth/internal/biz"
 	"context"
-	"fmt"
 )
 
 type permissionRepo struct {
@@ -28,14 +27,13 @@ func (ro permissionRepo) Check(ctx context.Context, item *biz.Permission) (pass 
 	if err != nil {
 		return
 	}
-	resource := fmt.Sprintf("%s,%s", item.Method, item.Uri)
 	// 1. check user permission
-	pass = ro.action.Permission(ctx, user.Action, resource)
+	pass = ro.action.Permission(ctx, user.Action, item.Resource)
 	if pass {
 		return
 	}
 	// 2. check role permission
-	pass = ro.action.Permission(ctx, user.Role.Action, resource)
+	pass = ro.action.Permission(ctx, user.Role.Action, item.Resource)
 	if pass {
 		return
 	}
@@ -45,7 +43,7 @@ func (ro permissionRepo) Check(ctx context.Context, item *biz.Permission) (pass 
 		return
 	}
 	for _, group := range groups {
-		pass = ro.action.Permission(ctx, group.Action, resource)
+		pass = ro.action.Permission(ctx, group.Action, item.Resource)
 		if pass {
 			return
 		}
