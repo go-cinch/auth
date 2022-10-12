@@ -32,6 +32,7 @@ type AuthClient interface {
 	Logout(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	Permission(ctx context.Context, in *PermissionRequest, opts ...grpc.CallOption) (*PermissionReply, error)
 	CreateAction(ctx context.Context, in *CreateActionRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	FindAction(ctx context.Context, in *FindActionRequest, opts ...grpc.CallOption) (*FindActionReply, error)
 	CreateRole(ctx context.Context, in *CreateRoleRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	UpdateRole(ctx context.Context, in *UpdateRoleRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	CreateUserGroup(ctx context.Context, in *CreateUserGroupRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
@@ -126,6 +127,15 @@ func (c *authClient) CreateAction(ctx context.Context, in *CreateActionRequest, 
 	return out, nil
 }
 
+func (c *authClient) FindAction(ctx context.Context, in *FindActionRequest, opts ...grpc.CallOption) (*FindActionReply, error) {
+	out := new(FindActionReply)
+	err := c.cc.Invoke(ctx, "/auth.v1.Auth/FindAction", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *authClient) CreateRole(ctx context.Context, in *CreateRoleRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/auth.v1.Auth/CreateRole", in, out, opts...)
@@ -166,6 +176,7 @@ type AuthServer interface {
 	Logout(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 	Permission(context.Context, *PermissionRequest) (*PermissionReply, error)
 	CreateAction(context.Context, *CreateActionRequest) (*emptypb.Empty, error)
+	FindAction(context.Context, *FindActionRequest) (*FindActionReply, error)
 	CreateRole(context.Context, *CreateRoleRequest) (*emptypb.Empty, error)
 	UpdateRole(context.Context, *UpdateRoleRequest) (*emptypb.Empty, error)
 	CreateUserGroup(context.Context, *CreateUserGroupRequest) (*emptypb.Empty, error)
@@ -202,6 +213,9 @@ func (UnimplementedAuthServer) Permission(context.Context, *PermissionRequest) (
 }
 func (UnimplementedAuthServer) CreateAction(context.Context, *CreateActionRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateAction not implemented")
+}
+func (UnimplementedAuthServer) FindAction(context.Context, *FindActionRequest) (*FindActionReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FindAction not implemented")
 }
 func (UnimplementedAuthServer) CreateRole(context.Context, *CreateRoleRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateRole not implemented")
@@ -387,6 +401,24 @@ func _Auth_CreateAction_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Auth_FindAction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FindActionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServer).FindAction(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/auth.v1.Auth/FindAction",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServer).FindAction(ctx, req.(*FindActionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Auth_CreateRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateRoleRequest)
 	if err := dec(in); err != nil {
@@ -483,6 +515,10 @@ var Auth_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateAction",
 			Handler:    _Auth_CreateAction_Handler,
+		},
+		{
+			MethodName: "FindAction",
+			Handler:    _Auth_FindAction_Handler,
 		},
 		{
 			MethodName: "CreateRole",

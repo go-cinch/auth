@@ -67,6 +67,11 @@ service Auth {
       body: "*"
     };
   }
+  rpc FindAction (FindActionRequest) returns (FindActionReply) {
+    option (google.api.http) = {
+      get: "/v1/action"
+    };
+  }
   rpc CreateRole (CreateRoleRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
       post: "/v1/role"
@@ -150,6 +155,38 @@ message CreateActionRequest {
   string name = 1 [(validate.rules).string = {max_len: 50}];
   string key = 2 [(validate.rules).string = {max_len: 50}];
   string resource = 3;
+}
+
+message FindActionRequest {
+  message Page {
+    uint64 pageNum = 1;
+    uint64 pageSize = 2;
+    int64 total = 3;
+    bool disable = 4;
+  }
+  Page page = 1;
+  optional string code = 2;
+  optional string name = 3;
+  optional string key = 4;
+  optional string resource = 5;
+}
+
+message FindActionReply {
+  message Page {
+    uint64 pageNum = 1;
+    uint64 pageSize = 2;
+    int64 total = 3;
+    bool disable = 4;
+  }
+  message Action {
+    uint64 id = 1;
+    string code = 2;
+    string name = 3;
+    string key = 4;
+    string resource = 5;
+  }
+  Page page = 1;
+  repeated Action list = 2;
 }
 
 message CreateRoleRequest {

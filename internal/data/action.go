@@ -4,6 +4,7 @@ import (
 	v1 "auth/api/auth/v1"
 	"auth/internal/biz"
 	"context"
+	"fmt"
 	"github.com/go-cinch/common/constant"
 	"github.com/go-cinch/common/id"
 	"github.com/jinzhu/copier"
@@ -46,6 +47,32 @@ func (ro actionRepo) Create(ctx context.Context, item *biz.Action) (err error) {
 		m.Resource = "*"
 	}
 	err = db.Create(&m).Error
+	return
+}
+
+func (ro actionRepo) Find(ctx context.Context, condition *biz.FindAction) (rp []biz.Action, err error) {
+	db := ro.data.DB(ctx)
+	db = db.Model(&Action{})
+	rp = make([]biz.Action, 0)
+	list := make([]Action, 0)
+	if condition.Name != nil {
+		db.Where("`name` LIKE ?", fmt.Sprintf("%%%s%%", *condition.Name))
+	}
+	if condition.Code != nil {
+		db.Where("`code` LIKE ?", fmt.Sprintf("%%%s%%", *condition.Code))
+	}
+	if condition.Key != nil {
+		db.Where("`key` LIKE ?", fmt.Sprintf("%%%s%%", *condition.Key))
+	}
+	if condition.Resource != nil {
+		db.Where("`resource` LIKE ?", fmt.Sprintf("%%%s%%", *condition.Resource))
+	}
+	condition.Page.Primary = "id"
+	condition.Page.
+		WithContext(ctx).
+		Query(db).
+		Find(&list)
+	copier.Copy(&rp, list)
 	return
 }
 

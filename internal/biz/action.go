@@ -3,6 +3,7 @@ package biz
 import (
 	"auth/internal/conf"
 	"context"
+	"github.com/go-cinch/common/page"
 )
 
 type Action struct {
@@ -13,8 +14,17 @@ type Action struct {
 	Resource string `json:"resource"`
 }
 
+type FindAction struct {
+	Page     page.Page `json:"page"`
+	Code     *string   `json:"code"`
+	Name     *string   `json:"name"`
+	Key      *string   `json:"key"`
+	Resource *string   `json:"resource"`
+}
+
 type ActionRepo interface {
 	Create(ctx context.Context, item *Action) error
+	Find(ctx context.Context, condition *FindAction) ([]Action, error)
 	CodeExists(ctx context.Context, code string) error
 	Permission(ctx context.Context, code, resource string) bool
 }
@@ -37,4 +47,8 @@ func (uc *ActionUseCase) Create(ctx context.Context, item *Action) error {
 			return uc.repo.Create(ctx, item)
 		})
 	})
+}
+
+func (uc *ActionUseCase) Find(ctx context.Context, condition *FindAction) ([]Action, error) {
+	return uc.repo.Find(ctx, condition)
 }
