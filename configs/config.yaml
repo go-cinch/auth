@@ -1,10 +1,10 @@
 server:
   machineId: ''
   http:
-    addr: 0.0.0.0:6000
+    addr: 0.0.0.0:6060
     timeout: 20s
   grpc:
-    addr: 0.0.0.0:6100
+    addr: 0.0.0.0:6160
     timeout: 20s
 data:
   database:

@@ -15,8 +15,8 @@ import (
 
 type User struct {
 	Id           uint64          `json:"id,string"`
-	CreatedAt    carbon.DateTime `json:"createdAt"`
-	UpdatedAt    carbon.DateTime `json:"updatedAt"`
+	CreatedAt    carbon.DateTime `json:"createdAt,string"`
+	UpdatedAt    carbon.DateTime `json:"updatedAt,string"`
 	RoleId       uint64          `json:"roleId,string"`
 	Role         Role            `json:"role"`
 	Action       string          `json:"action"`
@@ -30,11 +30,21 @@ type User struct {
 	Nickname     string          `json:"nickname"`
 	Introduction string          `json:"introduction"`
 	Status       uint64          `json:"status"`
-	LastLogin    carbon.DateTime `json:"lastLogin"`
+	LastLogin    carbon.DateTime `json:"lastLogin,string,omitempty"`
 	Locked       uint64          `json:"locked"`
 	LockExpire   int64           `json:"lockExpire"`
 	Wrong        int64           `json:"wrong"`
 	Captcha      Captcha         `json:"-"`
+}
+
+type UserInfo struct {
+	Id           uint64 `json:"id,string"`
+	Username     string `json:"username"`
+	Code         string `json:"code"`
+	Mobile       string `json:"mobile"`
+	Avatar       string `json:"avatar"`
+	Nickname     string `json:"nickname"`
+	Introduction string `json:"introduction"`
 }
 
 type Login struct {
@@ -99,6 +109,21 @@ func (uc *UserUseCase) Create(ctx context.Context, item *User) error {
 			return uc.repo.Create(ctx, item)
 		})
 	})
+}
+
+func (uc *UserUseCase) Info(ctx context.Context, code string) (rp *UserInfo, err error) {
+	rp = &UserInfo{}
+	action := fmt.Sprintf("info_%s", code)
+	str, ok, lock, _ := uc.cache.Get(ctx, action, func(ctx context.Context) (string, bool) {
+		return uc.info(ctx, action, code)
+	})
+	if ok {
+		utils.Json2Struct(rp, str)
+	} else if !lock {
+		err = TooManyRequests
+		return
+	}
+	return
 }
 
 func (uc *UserUseCase) Login(ctx context.Context, item *Login) (rp *LoginToken, err error) {
@@ -223,6 +248,20 @@ func (uc *UserUseCase) status(ctx context.Context, action string, username strin
 	// read data from db and write to cache
 	rp := &UserStatus{}
 	user, err := uc.repo.GetByUsername(ctx, username)
+	if err != nil && err != UserNotFound {
+		return
+	}
+	copier.Copy(rp, user)
+	res = utils.Struct2Json(rp)
+	uc.cache.Set(ctx, action, res, err == UserNotFound)
+	ok = true
+	return
+}
+
+func (uc *UserUseCase) info(ctx context.Context, action string, code string) (res string, ok bool) {
+	// read data from db and write to cache
+	rp := &UserInfo{}
+	user, err := uc.repo.GetByCode(ctx, code)
 	if err != nil && err != UserNotFound {
 		return
 	}

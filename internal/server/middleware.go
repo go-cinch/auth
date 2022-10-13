@@ -19,6 +19,7 @@ func whitelist() selector.MatchFunc {
 	whiteList[v1.OperationAuthLogin] = struct{}{}
 	whiteList[v1.OperationAuthStatus] = struct{}{}
 	whiteList[v1.OperationAuthLogout] = struct{}{}
+	whiteList[v1.OperationAuthCaptcha] = struct{}{}
 	whiteList[v1.OperationAuthRegister] = struct{}{}
 	return func(ctx context.Context, operation string) bool {
 		if _, ok := whiteList[operation]; ok {

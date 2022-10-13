@@ -73,6 +73,7 @@ func (ro userRepo) Create(ctx context.Context, item *biz.User) (err error) {
 	copier.Copy(&m, item)
 	m.Id = ro.data.Id(ctx)
 	m.Code = id.NewCode(m.Id)
+	m.Status = constant.UI1
 	if m.Action != "" {
 		err = ro.action.CodeExists(ctx, m.Action)
 		if err != nil {
