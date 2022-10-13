@@ -13,6 +13,7 @@ import (
 	"github.com/go-kratos/kratos/v2/middleware/tracing"
 	"github.com/go-kratos/kratos/v2/middleware/validate"
 	"github.com/go-kratos/kratos/v2/transport/http"
+	"github.com/gorilla/handlers"
 )
 
 // NewHTTPServer new a HTTP server.
@@ -30,7 +31,15 @@ func NewHTTPServer(c *conf.Bootstrap, svc *service.AuthService) *http.Server {
 		validate.Validator(),
 		permission(c, svc),
 	)
-	var opts = []http.ServerOption{http.Middleware(middlewares...)}
+	var opts = []http.ServerOption{
+		http.Filter(handlers.CORS(
+			handlers.AllowedHeaders([]string{"Content-Type", "Authorization"}),
+			handlers.AllowedMethods([]string{"OPTIONS", "GET", "POST", "PUT", "PATCH", "DELETE"}),
+			handlers.AllowedOrigins([]string{"*"}),
+			handlers.AllowCredentials(),
+		)),
+		http.Middleware(middlewares...),
+	}
 	if c.Server.Http.Network != "" {
 		opts = append(opts, http.Network(c.Server.Http.Network))
 	}
