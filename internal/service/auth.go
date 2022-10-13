@@ -3,6 +3,7 @@ package service
 import (
 	v1 "auth/api/auth/v1"
 	"auth/internal/biz"
+	"auth/internal/pkg/jwt"
 	"context"
 	"github.com/go-cinch/common/utils"
 	"github.com/go-cinch/common/worker"
@@ -99,5 +100,19 @@ func (s *AuthService) Permission(ctx context.Context, req *v1.PermissionRequest)
 	r := &biz.Permission{}
 	copier.Copy(&r, req)
 	rp.Pass = s.permission.Check(ctx, r)
+	return
+}
+
+func (s *AuthService) Info(ctx context.Context, req *emptypb.Empty) (rp *v1.InfoReply, err error) {
+	tr := otel.Tracer("api")
+	ctx, span := tr.Start(ctx, "Info")
+	defer span.End()
+	rp = &v1.InfoReply{}
+	user := jwt.FromContext(ctx)
+	res, err := s.user.Info(ctx, user.Code)
+	if err != nil {
+		return
+	}
+	copier.Copy(&rp, res)
 	return
 }

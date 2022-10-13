@@ -17,80 +17,85 @@ option java_outer_classname = "AuthProtoV1";
 service Auth {
   rpc Register (RegisterRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
-      post: "/v1/register"
+      post: "/register"
       body: "*"
     };
   }
   rpc Pwd (PwdRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
-      post: "/v1/pwd"
+      post: "/pwd"
       body: "*"
     };
   }
   rpc Login (LoginRequest) returns (LoginReply) {
     option (google.api.http) = {
-      post: "/v1/login"
+      post: "/login"
       body: "*"
     };
   }
   rpc Status (StatusRequest) returns (StatusReply) {
     option (google.api.http) = {
-      get: "/v1/status"
+      get: "/status"
     };
   }
   rpc Captcha (google.protobuf.Empty) returns (CaptchaReply) {
     option (google.api.http) = {
-      get: "/v1/captcha"
+      get: "/captcha"
     };
   }
   rpc Refresh (RefreshRequest) returns (LoginReply) {
     option (google.api.http) = {
-      post: "/v1/refresh"
+      post: "/refresh"
       body: "*"
     };
   }
   rpc Logout (google.protobuf.Empty) returns (google.protobuf.Empty) {
     option (google.api.http) = {
-      post: "/v1/logout"
+      post: "/logout"
       body: "*"
+    };
+  }
+  rpc Info (google.protobuf.Empty) returns (InfoReply) {
+    option (google.api.http) = {
+      get: "/info"
     };
   }
   rpc Permission (PermissionRequest) returns (PermissionReply) {
     option (google.api.http) = {
-      post: "/v1/permission"
+      post: "/permission"
       body: "*"
     };
   }
   rpc CreateAction (CreateActionRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
-      post: "/v1/action"
+      post: "/action"
       body: "*"
     };
   }
   rpc FindAction (FindActionRequest) returns (FindActionReply) {
     option (google.api.http) = {
-      get: "/v1/action"
+      get: "/action"
     };
   }
   rpc CreateRole (CreateRoleRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
-      post: "/v1/role"
+      post: "/role"
       body: "*"
     };
   }
   rpc UpdateRole (UpdateRoleRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
-      put: "/v1/role/{id}"
+      put: "/role/{id}"
       body: "*",
       additional_bindings {
-        patch: "/v1/role/{id}",
+        patch: "/role/{id}",
         body: "*",
       }
     };
   }
   rpc CreateUserGroup (CreateUserGroupRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
-      post: "/v1/user/group"
+      post: "/user/group"
       body: "*"
     };
   }
@@ -140,6 +145,16 @@ message CaptchaReply {
 
 message RefreshRequest {
   string token = 1;
+}
+
+message InfoReply {
+  uint64 id = 1;
+  string username = 2;
+  string code = 3;
+  string mobile = 4;
+  string avatar = 5;
+  string nickname = 6;
+  string introduction = 7;
 }
 
 message PermissionRequest {

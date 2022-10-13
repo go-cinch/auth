@@ -25,6 +25,7 @@ const OperationAuthCreateAction = "/auth.v1.Auth/CreateAction"
 const OperationAuthCreateRole = "/auth.v1.Auth/CreateRole"
 const OperationAuthCreateUserGroup = "/auth.v1.Auth/CreateUserGroup"
 const OperationAuthFindAction = "/auth.v1.Auth/FindAction"
+const OperationAuthInfo = "/auth.v1.Auth/Info"
 const OperationAuthLogin = "/auth.v1.Auth/Login"
 const OperationAuthLogout = "/auth.v1.Auth/Logout"
 const OperationAuthPermission = "/auth.v1.Auth/Permission"
@@ -40,6 +41,7 @@ type AuthHTTPServer interface {
 	CreateRole(context.Context, *CreateRoleRequest) (*emptypb.Empty, error)
 	CreateUserGroup(context.Context, *CreateUserGroupRequest) (*emptypb.Empty, error)
 	FindAction(context.Context, *FindActionRequest) (*FindActionReply, error)
+	Info(context.Context, *emptypb.Empty) (*InfoReply, error)
 	Login(context.Context, *LoginRequest) (*LoginReply, error)
 	Logout(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 	Permission(context.Context, *PermissionRequest) (*PermissionReply, error)
@@ -52,20 +54,21 @@ type AuthHTTPServer interface {
 
 func RegisterAuthHTTPServer(s *http.Server, srv AuthHTTPServer) {
 	r := s.Route("/")
-	r.POST("/v1/register", _Auth_Register0_HTTP_Handler(srv))
-	r.POST("/v1/pwd", _Auth_Pwd0_HTTP_Handler(srv))
-	r.POST("/v1/login", _Auth_Login0_HTTP_Handler(srv))
-	r.GET("/v1/status", _Auth_Status0_HTTP_Handler(srv))
-	r.GET("/v1/captcha", _Auth_Captcha0_HTTP_Handler(srv))
-	r.POST("/v1/refresh", _Auth_Refresh0_HTTP_Handler(srv))
-	r.POST("/v1/logout", _Auth_Logout0_HTTP_Handler(srv))
-	r.POST("/v1/permission", _Auth_Permission0_HTTP_Handler(srv))
-	r.POST("/v1/action", _Auth_CreateAction0_HTTP_Handler(srv))
-	r.GET("/v1/action", _Auth_FindAction0_HTTP_Handler(srv))
-	r.POST("/v1/role", _Auth_CreateRole0_HTTP_Handler(srv))
-	r.PATCH("/v1/role/{id}", _Auth_UpdateRole0_HTTP_Handler(srv))
-	r.PUT("/v1/role/{id}", _Auth_UpdateRole1_HTTP_Handler(srv))
-	r.POST("/v1/user/group", _Auth_CreateUserGroup0_HTTP_Handler(srv))
+	r.POST("/register", _Auth_Register0_HTTP_Handler(srv))
+	r.POST("/pwd", _Auth_Pwd0_HTTP_Handler(srv))
+	r.POST("/login", _Auth_Login0_HTTP_Handler(srv))
+	r.GET("/status", _Auth_Status0_HTTP_Handler(srv))
+	r.GET("/captcha", _Auth_Captcha0_HTTP_Handler(srv))
+	r.POST("/refresh", _Auth_Refresh0_HTTP_Handler(srv))
+	r.POST("/logout", _Auth_Logout0_HTTP_Handler(srv))
+	r.GET("/info", _Auth_Info0_HTTP_Handler(srv))
+	r.POST("/permission", _Auth_Permission0_HTTP_Handler(srv))
+	r.POST("/action", _Auth_CreateAction0_HTTP_Handler(srv))
+	r.GET("/action", _Auth_FindAction0_HTTP_Handler(srv))
+	r.POST("/role", _Auth_CreateRole0_HTTP_Handler(srv))
+	r.PATCH("/role/{id}", _Auth_UpdateRole0_HTTP_Handler(srv))
+	r.PUT("/role/{id}", _Auth_UpdateRole1_HTTP_Handler(srv))
+	r.POST("/user/group", _Auth_CreateUserGroup0_HTTP_Handler(srv))
 }
 
 func _Auth_Register0_HTTP_Handler(srv AuthHTTPServer) func(ctx http.Context) error {
@@ -197,6 +200,25 @@ func _Auth_Logout0_HTTP_Handler(srv AuthHTTPServer) func(ctx http.Context) error
 			return err
 		}
 		reply := out.(*emptypb.Empty)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _Auth_Info0_HTTP_Handler(srv AuthHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in emptypb.Empty
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationAuthInfo)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.Info(ctx, req.(*emptypb.Empty))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*InfoReply)
 		return ctx.Result(200, reply)
 	}
 }
@@ -346,6 +368,7 @@ type AuthHTTPClient interface {
 	CreateRole(ctx context.Context, req *CreateRoleRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
 	CreateUserGroup(ctx context.Context, req *CreateUserGroupRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
 	FindAction(ctx context.Context, req *FindActionRequest, opts ...http.CallOption) (rsp *FindActionReply, err error)
+	Info(ctx context.Context, req *emptypb.Empty, opts ...http.CallOption) (rsp *InfoReply, err error)
 	Login(ctx context.Context, req *LoginRequest, opts ...http.CallOption) (rsp *LoginReply, err error)
 	Logout(ctx context.Context, req *emptypb.Empty, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
 	Permission(ctx context.Context, req *PermissionRequest, opts ...http.CallOption) (rsp *PermissionReply, err error)
@@ -366,7 +389,7 @@ func NewAuthHTTPClient(client *http.Client) AuthHTTPClient {
 
 func (c *AuthHTTPClientImpl) Captcha(ctx context.Context, in *emptypb.Empty, opts ...http.CallOption) (*CaptchaReply, error) {
 	var out CaptchaReply
-	pattern := "/v1/captcha"
+	pattern := "/captcha"
 	path := binding.EncodeURL(pattern, in, true)
 	opts = append(opts, http.Operation(OperationAuthCaptcha))
 	opts = append(opts, http.PathTemplate(pattern))
@@ -379,7 +402,7 @@ func (c *AuthHTTPClientImpl) Captcha(ctx context.Context, in *emptypb.Empty, opt
 
 func (c *AuthHTTPClientImpl) CreateAction(ctx context.Context, in *CreateActionRequest, opts ...http.CallOption) (*emptypb.Empty, error) {
 	var out emptypb.Empty
-	pattern := "/v1/action"
+	pattern := "/action"
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationAuthCreateAction))
 	opts = append(opts, http.PathTemplate(pattern))
@@ -392,7 +415,7 @@ func (c *AuthHTTPClientImpl) CreateAction(ctx context.Context, in *CreateActionR
 
 func (c *AuthHTTPClientImpl) CreateRole(ctx context.Context, in *CreateRoleRequest, opts ...http.CallOption) (*emptypb.Empty, error) {
 	var out emptypb.Empty
-	pattern := "/v1/role"
+	pattern := "/role"
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationAuthCreateRole))
 	opts = append(opts, http.PathTemplate(pattern))
@@ -405,7 +428,7 @@ func (c *AuthHTTPClientImpl) CreateRole(ctx context.Context, in *CreateRoleReque
 
 func (c *AuthHTTPClientImpl) CreateUserGroup(ctx context.Context, in *CreateUserGroupRequest, opts ...http.CallOption) (*emptypb.Empty, error) {
 	var out emptypb.Empty
-	pattern := "/v1/user/group"
+	pattern := "/user/group"
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationAuthCreateUserGroup))
 	opts = append(opts, http.PathTemplate(pattern))
@@ -418,7 +441,7 @@ func (c *AuthHTTPClientImpl) CreateUserGroup(ctx context.Context, in *CreateUser
 
 func (c *AuthHTTPClientImpl) FindAction(ctx context.Context, in *FindActionRequest, opts ...http.CallOption) (*FindActionReply, error) {
 	var out FindActionReply
-	pattern := "/v1/action"
+	pattern := "/action"
 	path := binding.EncodeURL(pattern, in, true)
 	opts = append(opts, http.Operation(OperationAuthFindAction))
 	opts = append(opts, http.PathTemplate(pattern))
@@ -429,9 +452,22 @@ func (c *AuthHTTPClientImpl) FindAction(ctx context.Context, in *FindActionReque
 	return &out, err
 }
 
+func (c *AuthHTTPClientImpl) Info(ctx context.Context, in *emptypb.Empty, opts ...http.CallOption) (*InfoReply, error) {
+	var out InfoReply
+	pattern := "/info"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationAuthInfo))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, err
+}
+
 func (c *AuthHTTPClientImpl) Login(ctx context.Context, in *LoginRequest, opts ...http.CallOption) (*LoginReply, error) {
 	var out LoginReply
-	pattern := "/v1/login"
+	pattern := "/login"
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationAuthLogin))
 	opts = append(opts, http.PathTemplate(pattern))
@@ -444,7 +480,7 @@ func (c *AuthHTTPClientImpl) Login(ctx context.Context, in *LoginRequest, opts .
 
 func (c *AuthHTTPClientImpl) Logout(ctx context.Context, in *emptypb.Empty, opts ...http.CallOption) (*emptypb.Empty, error) {
 	var out emptypb.Empty
-	pattern := "/v1/logout"
+	pattern := "/logout"
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationAuthLogout))
 	opts = append(opts, http.PathTemplate(pattern))
@@ -457,7 +493,7 @@ func (c *AuthHTTPClientImpl) Logout(ctx context.Context, in *emptypb.Empty, opts
 
 func (c *AuthHTTPClientImpl) Permission(ctx context.Context, in *PermissionRequest, opts ...http.CallOption) (*PermissionReply, error) {
 	var out PermissionReply
-	pattern := "/v1/permission"
+	pattern := "/permission"
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationAuthPermission))
 	opts = append(opts, http.PathTemplate(pattern))
@@ -470,7 +506,7 @@ func (c *AuthHTTPClientImpl) Permission(ctx context.Context, in *PermissionReque
 
 func (c *AuthHTTPClientImpl) Pwd(ctx context.Context, in *PwdRequest, opts ...http.CallOption) (*emptypb.Empty, error) {
 	var out emptypb.Empty
-	pattern := "/v1/pwd"
+	pattern := "/pwd"
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationAuthPwd))
 	opts = append(opts, http.PathTemplate(pattern))
@@ -483,7 +519,7 @@ func (c *AuthHTTPClientImpl) Pwd(ctx context.Context, in *PwdRequest, opts ...ht
 
 func (c *AuthHTTPClientImpl) Refresh(ctx context.Context, in *RefreshRequest, opts ...http.CallOption) (*LoginReply, error) {
 	var out LoginReply
-	pattern := "/v1/refresh"
+	pattern := "/refresh"
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationAuthRefresh))
 	opts = append(opts, http.PathTemplate(pattern))
@@ -496,7 +532,7 @@ func (c *AuthHTTPClientImpl) Refresh(ctx context.Context, in *RefreshRequest, op
 
 func (c *AuthHTTPClientImpl) Register(ctx context.Context, in *RegisterRequest, opts ...http.CallOption) (*emptypb.Empty, error) {
 	var out emptypb.Empty
-	pattern := "/v1/register"
+	pattern := "/register"
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationAuthRegister))
 	opts = append(opts, http.PathTemplate(pattern))
@@ -509,7 +545,7 @@ func (c *AuthHTTPClientImpl) Register(ctx context.Context, in *RegisterRequest, 
 
 func (c *AuthHTTPClientImpl) Status(ctx context.Context, in *StatusRequest, opts ...http.CallOption) (*StatusReply, error) {
 	var out StatusReply
-	pattern := "/v1/status"
+	pattern := "/status"
 	path := binding.EncodeURL(pattern, in, true)
 	opts = append(opts, http.Operation(OperationAuthStatus))
 	opts = append(opts, http.PathTemplate(pattern))
@@ -522,7 +558,7 @@ func (c *AuthHTTPClientImpl) Status(ctx context.Context, in *StatusRequest, opts
 
 func (c *AuthHTTPClientImpl) UpdateRole(ctx context.Context, in *UpdateRoleRequest, opts ...http.CallOption) (*emptypb.Empty, error) {
 	var out emptypb.Empty
-	pattern := "/v1/role/{id}"
+	pattern := "/role/{id}"
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationAuthUpdateRole))
 	opts = append(opts, http.PathTemplate(pattern))
