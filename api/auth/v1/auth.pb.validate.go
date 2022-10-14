@@ -35,6 +35,112 @@ var (
 	_ = sort.Sort
 )
 
+// Validate checks the field values on Page with the rules defined in the proto
+// definition for this message. If any rules are violated, the first error
+// encountered is returned, or nil if there are no violations.
+func (m *Page) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on Page with the rules defined in the
+// proto definition for this message. If any rules are violated, the result is
+// a list of violation errors wrapped in PageMultiError, or nil if none found.
+func (m *Page) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *Page) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Num
+
+	// no validation rules for Size
+
+	// no validation rules for Total
+
+	// no validation rules for Disable
+
+	if len(errors) > 0 {
+		return PageMultiError(errors)
+	}
+
+	return nil
+}
+
+// PageMultiError is an error wrapping multiple validation errors returned by
+// Page.ValidateAll() if the designated constraints aren't met.
+type PageMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m PageMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m PageMultiError) AllErrors() []error { return m }
+
+// PageValidationError is the validation error returned by Page.Validate if the
+// designated constraints aren't met.
+type PageValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e PageValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e PageValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e PageValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e PageValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e PageValidationError) ErrorName() string { return "PageValidationError" }
+
+// Error satisfies the builtin error interface
+func (e PageValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sPage.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = PageValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = PageValidationError{}
+
 // Validate checks the field values on Captcha with the rules defined in the
 // proto definition for this message. If any rules are violated, the first
 // error encountered is returned, or nil if there are no violations.
@@ -1182,6 +1288,334 @@ var _ interface {
 	ErrorName() string
 } = InfoReplyValidationError{}
 
+// Validate checks the field values on FindUserRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *FindUserRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on FindUserRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// FindUserRequestMultiError, or nil if none found.
+func (m *FindUserRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *FindUserRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if all {
+		switch v := interface{}(m.GetPage()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, FindUserRequestValidationError{
+					field:  "Page",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, FindUserRequestValidationError{
+					field:  "Page",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetPage()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return FindUserRequestValidationError{
+				field:  "Page",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if m.StartCreatedAt != nil {
+		// no validation rules for StartCreatedAt
+	}
+
+	if m.EndCreatedAt != nil {
+		// no validation rules for EndCreatedAt
+	}
+
+	if m.StartUpdatedAt != nil {
+		// no validation rules for StartUpdatedAt
+	}
+
+	if m.EndUpdatedAt != nil {
+		// no validation rules for EndUpdatedAt
+	}
+
+	if m.Username != nil {
+		// no validation rules for Username
+	}
+
+	if m.Code != nil {
+		// no validation rules for Code
+	}
+
+	if m.Mobile != nil {
+		// no validation rules for Mobile
+	}
+
+	if m.Status != nil {
+		// no validation rules for Status
+	}
+
+	if m.Locked != nil {
+		// no validation rules for Locked
+	}
+
+	if len(errors) > 0 {
+		return FindUserRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// FindUserRequestMultiError is an error wrapping multiple validation errors
+// returned by FindUserRequest.ValidateAll() if the designated constraints
+// aren't met.
+type FindUserRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m FindUserRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m FindUserRequestMultiError) AllErrors() []error { return m }
+
+// FindUserRequestValidationError is the validation error returned by
+// FindUserRequest.Validate if the designated constraints aren't met.
+type FindUserRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e FindUserRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e FindUserRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e FindUserRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e FindUserRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e FindUserRequestValidationError) ErrorName() string { return "FindUserRequestValidationError" }
+
+// Error satisfies the builtin error interface
+func (e FindUserRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sFindUserRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = FindUserRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = FindUserRequestValidationError{}
+
+// Validate checks the field values on FindUserReply with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *FindUserReply) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on FindUserReply with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in FindUserReplyMultiError, or
+// nil if none found.
+func (m *FindUserReply) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *FindUserReply) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if all {
+		switch v := interface{}(m.GetPage()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, FindUserReplyValidationError{
+					field:  "Page",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, FindUserReplyValidationError{
+					field:  "Page",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetPage()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return FindUserReplyValidationError{
+				field:  "Page",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	for idx, item := range m.GetList() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, FindUserReplyValidationError{
+						field:  fmt.Sprintf("List[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, FindUserReplyValidationError{
+						field:  fmt.Sprintf("List[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return FindUserReplyValidationError{
+					field:  fmt.Sprintf("List[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return FindUserReplyMultiError(errors)
+	}
+
+	return nil
+}
+
+// FindUserReplyMultiError is an error wrapping multiple validation errors
+// returned by FindUserReply.ValidateAll() if the designated constraints
+// aren't met.
+type FindUserReplyMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m FindUserReplyMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m FindUserReplyMultiError) AllErrors() []error { return m }
+
+// FindUserReplyValidationError is the validation error returned by
+// FindUserReply.Validate if the designated constraints aren't met.
+type FindUserReplyValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e FindUserReplyValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e FindUserReplyValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e FindUserReplyValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e FindUserReplyValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e FindUserReplyValidationError) ErrorName() string { return "FindUserReplyValidationError" }
+
+// Error satisfies the builtin error interface
+func (e FindUserReplyValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sFindUserReply.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = FindUserReplyValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = FindUserReplyValidationError{}
+
 // Validate checks the field values on PermissionRequest with the rules defined
 // in the proto definition for this message. If any rules are violated, the
 // first error encountered is returned, or nil if there are no violations.
@@ -2202,50 +2636,68 @@ var _ interface {
 	ErrorName() string
 } = CreateUserGroupRequestValidationError{}
 
-// Validate checks the field values on FindActionRequest_Page with the rules
+// Validate checks the field values on FindUserReply_User with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *FindActionRequest_Page) Validate() error {
+func (m *FindUserReply_User) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on FindActionRequest_Page with the rules
+// ValidateAll checks the field values on FindUserReply_User with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// FindActionRequest_PageMultiError, or nil if none found.
-func (m *FindActionRequest_Page) ValidateAll() error {
+// FindUserReply_UserMultiError, or nil if none found.
+func (m *FindUserReply_User) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *FindActionRequest_Page) validate(all bool) error {
+func (m *FindUserReply_User) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
 	var errors []error
 
-	// no validation rules for PageNum
+	// no validation rules for Id
 
-	// no validation rules for PageSize
+	// no validation rules for CreatedAt
 
-	// no validation rules for Total
+	// no validation rules for UpdatedAt
 
-	// no validation rules for Disable
+	// no validation rules for Username
+
+	// no validation rules for Code
+
+	// no validation rules for Mobile
+
+	// no validation rules for Status
+
+	// no validation rules for Locked
+
+	// no validation rules for Avatar
+
+	// no validation rules for Nickname
+
+	// no validation rules for Introduction
+
+	// no validation rules for LastLogin
+
+	// no validation rules for LockExpire
 
 	if len(errors) > 0 {
-		return FindActionRequest_PageMultiError(errors)
+		return FindUserReply_UserMultiError(errors)
 	}
 
 	return nil
 }
 
-// FindActionRequest_PageMultiError is an error wrapping multiple validation
-// errors returned by FindActionRequest_Page.ValidateAll() if the designated
-// constraints aren't met.
-type FindActionRequest_PageMultiError []error
+// FindUserReply_UserMultiError is an error wrapping multiple validation errors
+// returned by FindUserReply_User.ValidateAll() if the designated constraints
+// aren't met.
+type FindUserReply_UserMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m FindActionRequest_PageMultiError) Error() string {
+func (m FindUserReply_UserMultiError) Error() string {
 	var msgs []string
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -2254,11 +2706,11 @@ func (m FindActionRequest_PageMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m FindActionRequest_PageMultiError) AllErrors() []error { return m }
+func (m FindUserReply_UserMultiError) AllErrors() []error { return m }
 
-// FindActionRequest_PageValidationError is the validation error returned by
-// FindActionRequest_Page.Validate if the designated constraints aren't met.
-type FindActionRequest_PageValidationError struct {
+// FindUserReply_UserValidationError is the validation error returned by
+// FindUserReply_User.Validate if the designated constraints aren't met.
+type FindUserReply_UserValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -2266,24 +2718,24 @@ type FindActionRequest_PageValidationError struct {
 }
 
 // Field function returns field value.
-func (e FindActionRequest_PageValidationError) Field() string { return e.field }
+func (e FindUserReply_UserValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e FindActionRequest_PageValidationError) Reason() string { return e.reason }
+func (e FindUserReply_UserValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e FindActionRequest_PageValidationError) Cause() error { return e.cause }
+func (e FindUserReply_UserValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e FindActionRequest_PageValidationError) Key() bool { return e.key }
+func (e FindUserReply_UserValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e FindActionRequest_PageValidationError) ErrorName() string {
-	return "FindActionRequest_PageValidationError"
+func (e FindUserReply_UserValidationError) ErrorName() string {
+	return "FindUserReply_UserValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e FindActionRequest_PageValidationError) Error() string {
+func (e FindUserReply_UserValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -2295,14 +2747,14 @@ func (e FindActionRequest_PageValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sFindActionRequest_Page.%s: %s%s",
+		"invalid %sFindUserReply_User.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = FindActionRequest_PageValidationError{}
+var _ error = FindUserReply_UserValidationError{}
 
 var _ interface {
 	Field() string
@@ -2310,117 +2762,7 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = FindActionRequest_PageValidationError{}
-
-// Validate checks the field values on FindActionReply_Page with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *FindActionReply_Page) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on FindActionReply_Page with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// FindActionReply_PageMultiError, or nil if none found.
-func (m *FindActionReply_Page) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *FindActionReply_Page) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	// no validation rules for PageNum
-
-	// no validation rules for PageSize
-
-	// no validation rules for Total
-
-	// no validation rules for Disable
-
-	if len(errors) > 0 {
-		return FindActionReply_PageMultiError(errors)
-	}
-
-	return nil
-}
-
-// FindActionReply_PageMultiError is an error wrapping multiple validation
-// errors returned by FindActionReply_Page.ValidateAll() if the designated
-// constraints aren't met.
-type FindActionReply_PageMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m FindActionReply_PageMultiError) Error() string {
-	var msgs []string
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m FindActionReply_PageMultiError) AllErrors() []error { return m }
-
-// FindActionReply_PageValidationError is the validation error returned by
-// FindActionReply_Page.Validate if the designated constraints aren't met.
-type FindActionReply_PageValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e FindActionReply_PageValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e FindActionReply_PageValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e FindActionReply_PageValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e FindActionReply_PageValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e FindActionReply_PageValidationError) ErrorName() string {
-	return "FindActionReply_PageValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e FindActionReply_PageValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sFindActionReply_Page.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = FindActionReply_PageValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = FindActionReply_PageValidationError{}
+} = FindUserReply_UserValidationError{}
 
 // Validate checks the field values on FindActionReply_Action with the rules
 // defined in the proto definition for this message. If any rules are

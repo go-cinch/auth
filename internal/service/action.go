@@ -26,7 +26,7 @@ func (s *AuthService) FindAction(ctx context.Context, req *v1.FindActionRequest)
 	ctx, span := tr.Start(ctx, "FindAction")
 	defer span.End()
 	rp = &v1.FindActionReply{}
-	rp.Page = &v1.FindActionReply_Page{}
+	rp.Page = &v1.Page{}
 	r := &biz.FindAction{}
 	r.Page = page.Page{}
 	copier.Copy(&r, req)

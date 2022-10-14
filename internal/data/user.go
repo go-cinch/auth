@@ -3,6 +3,7 @@ package data
 import (
 	"auth/internal/biz"
 	"context"
+	"fmt"
 	"github.com/go-cinch/common/constant"
 	"github.com/go-cinch/common/id"
 	"github.com/golang-module/carbon/v2"
@@ -57,6 +58,47 @@ func (ro userRepo) GetByUsername(ctx context.Context, username string) (item *bi
 		return
 	}
 	copier.Copy(item, m)
+	return
+}
+
+func (ro userRepo) Find(ctx context.Context, condition *biz.FindUser) (rp []biz.User, err error) {
+	db := ro.data.DB(ctx)
+	db = db.Model(&User{})
+	rp = make([]biz.User, 0)
+	list := make([]User, 0)
+	if condition.StartCreatedAt != nil {
+		db.Where("`created_at` >= ?", condition.StartCreatedAt)
+	}
+	if condition.EndCreatedAt != nil {
+		db.Where("`created_at` < ?", condition.EndCreatedAt)
+	}
+	if condition.StartUpdatedAt != nil {
+		db.Where("`updated_at` >= ?", condition.StartUpdatedAt)
+	}
+	if condition.EndUpdatedAt != nil {
+		db.Where("`updated_at` < ?", condition.EndCreatedAt)
+	}
+	if condition.Username != nil {
+		db.Where("`username` LIKE ?", fmt.Sprintf("%%%s%%", *condition.Username))
+	}
+	if condition.Code != nil {
+		db.Where("`code` LIKE ?", fmt.Sprintf("%%%s%%", *condition.Code))
+	}
+	if condition.Mobile != nil {
+		db.Where("`mobile` LIKE ?", fmt.Sprintf("%%%s%%", *condition.Mobile))
+	}
+	if condition.Status != nil {
+		db.Where("`status` = ?", *condition.Status)
+	}
+	if condition.Locked != nil {
+		db.Where("`locked` = ?", *condition.Locked)
+	}
+	condition.Page.Primary = "id"
+	condition.Page.
+		WithContext(ctx).
+		Query(db).
+		Find(&list)
+	copier.Copy(&rp, list)
 	return
 }
 

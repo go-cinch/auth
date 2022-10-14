@@ -25,6 +25,7 @@ const OperationAuthCreateAction = "/auth.v1.Auth/CreateAction"
 const OperationAuthCreateRole = "/auth.v1.Auth/CreateRole"
 const OperationAuthCreateUserGroup = "/auth.v1.Auth/CreateUserGroup"
 const OperationAuthFindAction = "/auth.v1.Auth/FindAction"
+const OperationAuthFindUser = "/auth.v1.Auth/FindUser"
 const OperationAuthInfo = "/auth.v1.Auth/Info"
 const OperationAuthLogin = "/auth.v1.Auth/Login"
 const OperationAuthLogout = "/auth.v1.Auth/Logout"
@@ -41,6 +42,7 @@ type AuthHTTPServer interface {
 	CreateRole(context.Context, *CreateRoleRequest) (*emptypb.Empty, error)
 	CreateUserGroup(context.Context, *CreateUserGroupRequest) (*emptypb.Empty, error)
 	FindAction(context.Context, *FindActionRequest) (*FindActionReply, error)
+	FindUser(context.Context, *FindUserRequest) (*FindUserReply, error)
 	Info(context.Context, *emptypb.Empty) (*InfoReply, error)
 	Login(context.Context, *LoginRequest) (*LoginReply, error)
 	Logout(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
@@ -62,6 +64,7 @@ func RegisterAuthHTTPServer(s *http.Server, srv AuthHTTPServer) {
 	r.POST("/refresh", _Auth_Refresh0_HTTP_Handler(srv))
 	r.POST("/logout", _Auth_Logout0_HTTP_Handler(srv))
 	r.GET("/info", _Auth_Info0_HTTP_Handler(srv))
+	r.GET("/user", _Auth_FindUser0_HTTP_Handler(srv))
 	r.POST("/permission", _Auth_Permission0_HTTP_Handler(srv))
 	r.POST("/action", _Auth_CreateAction0_HTTP_Handler(srv))
 	r.GET("/action", _Auth_FindAction0_HTTP_Handler(srv))
@@ -223,6 +226,25 @@ func _Auth_Info0_HTTP_Handler(srv AuthHTTPServer) func(ctx http.Context) error {
 	}
 }
 
+func _Auth_FindUser0_HTTP_Handler(srv AuthHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in FindUserRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationAuthFindUser)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.FindUser(ctx, req.(*FindUserRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*FindUserReply)
+		return ctx.Result(200, reply)
+	}
+}
+
 func _Auth_Permission0_HTTP_Handler(srv AuthHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in PermissionRequest
@@ -368,6 +390,7 @@ type AuthHTTPClient interface {
 	CreateRole(ctx context.Context, req *CreateRoleRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
 	CreateUserGroup(ctx context.Context, req *CreateUserGroupRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
 	FindAction(ctx context.Context, req *FindActionRequest, opts ...http.CallOption) (rsp *FindActionReply, err error)
+	FindUser(ctx context.Context, req *FindUserRequest, opts ...http.CallOption) (rsp *FindUserReply, err error)
 	Info(ctx context.Context, req *emptypb.Empty, opts ...http.CallOption) (rsp *InfoReply, err error)
 	Login(ctx context.Context, req *LoginRequest, opts ...http.CallOption) (rsp *LoginReply, err error)
 	Logout(ctx context.Context, req *emptypb.Empty, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
@@ -444,6 +467,19 @@ func (c *AuthHTTPClientImpl) FindAction(ctx context.Context, in *FindActionReque
 	pattern := "/action"
 	path := binding.EncodeURL(pattern, in, true)
 	opts = append(opts, http.Operation(OperationAuthFindAction))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, err
+}
+
+func (c *AuthHTTPClientImpl) FindUser(ctx context.Context, in *FindUserRequest, opts ...http.CallOption) (*FindUserReply, error) {
+	var out FindUserReply
+	pattern := "/user"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationAuthFindUser))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
 	if err != nil {

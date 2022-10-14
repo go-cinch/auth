@@ -10,7 +10,7 @@ require (
 	github.com/go-cinch/common/log v0.0.0-20220927061933-ccf4ca4bccbe
 	github.com/go-cinch/common/middleware v0.0.0-20220921090518-54e9eef45fde
 	github.com/go-cinch/common/migrate v0.0.0-20220915041442-c48afde5a28c
-	github.com/go-cinch/common/page v0.0.0-20221012123229-30cb5ef6ff52
+	github.com/go-cinch/common/page v0.0.0-20221013114044-439a7159aba7
 	github.com/go-cinch/common/plugins/gorm/log v0.0.0-20220927074458-492682a7fa35
 	github.com/go-cinch/common/utils v0.0.0-20221011021607-f3e5406fad3f
 	github.com/go-cinch/common/worker v0.0.0-20220929075000-0dd3fa2ef2a5

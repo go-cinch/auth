@@ -140,8 +140,8 @@ github.com/go-cinch/common/middleware v0.0.0-20220921090518-54e9eef45fde h1:1ULp
 github.com/go-cinch/common/middleware v0.0.0-20220921090518-54e9eef45fde/go.mod h1:bBjM9OkdX7o6aHf/auXSQ2hcshf5qImrxq3Lhlq9WYU=
 github.com/go-cinch/common/migrate v0.0.0-20220915041442-c48afde5a28c h1:iSMIZ1Ux6do0EzdwETsFlFLG/Anna6p0a8qBtLfvGR4=
 github.com/go-cinch/common/migrate v0.0.0-20220915041442-c48afde5a28c/go.mod h1:dxeE/NqqmWl3/boP1DIHpkWQ3C2I/gePmBWKehAdbnQ=
-github.com/go-cinch/common/page v0.0.0-20221012123229-30cb5ef6ff52 h1:1STkIr4sRoq7J0UG0guGPNk+iR/SYgoyxBh8SSVnekM=
-github.com/go-cinch/common/page v0.0.0-20221012123229-30cb5ef6ff52/go.mod h1:sBrJsMpXOqJbZhNIz3jQxCUyslTec6N3yfe98a7+n5A=
+github.com/go-cinch/common/page v0.0.0-20221013114044-439a7159aba7 h1:HF/+Z0gpZV5fuH/S0u/BPtDJIKRrN177vJYztEK0ZBo=
+github.com/go-cinch/common/page v0.0.0-20221013114044-439a7159aba7/go.mod h1:sBrJsMpXOqJbZhNIz3jQxCUyslTec6N3yfe98a7+n5A=
 github.com/go-cinch/common/plugins/gorm/log v0.0.0-20220927074458-492682a7fa35 h1:c7XCb5H0nw8n/VplUC0abUylxe/lAznuox4EwGU2OSQ=
 github.com/go-cinch/common/plugins/gorm/log v0.0.0-20220927074458-492682a7fa35/go.mod h1:d6fop19eJEnrOUmAsosnwXjukVV+8XYSIrBm9f+jnVA=
 github.com/go-cinch/common/utils v0.0.0-20221011021607-f3e5406fad3f h1:lLMKaATq/gwt9e9p1rqJ6Y3zoDbKYj3qr0ro8Ku9oh4=

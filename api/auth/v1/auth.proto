@@ -60,6 +60,11 @@ service Auth {
       get: "/info"
     };
   }
+  rpc FindUser (FindUserRequest) returns (FindUserReply) {
+    option (google.api.http) = {
+      get: "/user"
+    };
+  }
   rpc Permission (PermissionRequest) returns (PermissionReply) {
     option (google.api.http) = {
       post: "/permission"
@@ -99,6 +104,13 @@ service Auth {
       body: "*"
     };
   }
+}
+
+message Page {
+  uint64 num = 1;
+  uint64 size = 2;
+  int64 total = 3;
+  bool disable = 4;
 }
 
 message Captcha {
@@ -157,8 +169,41 @@ message InfoReply {
   string introduction = 7;
 }
 
+message FindUserRequest {
+  Page page = 1;
+  optional string start_created_at = 2;
+  optional string end_created_at = 3;
+  optional string start_updated_at = 4;
+  optional string end_updated_at = 5;
+  optional string username = 6;
+  optional string code = 7;
+  optional string mobile = 8;
+  optional uint64 status = 9;
+  optional uint64 locked = 10;
+}
+
+message FindUserReply {
+  message User {
+    uint64 id = 1;
+    string created_at = 2;
+    string updated_at = 3;
+    string username = 4;
+    string code = 5;
+    string mobile = 6;
+    uint64 status = 7;
+    uint64 locked = 8;
+    string avatar = 9;
+    string nickname = 10;
+    string introduction = 12;
+    string last_login = 11;
+    int64 lock_expire = 13;
+  }
+  Page page = 1;
+  repeated User list = 2;
+}
+
 message PermissionRequest {
-  string userCode = 1;
+  string user_code = 1;
   string resource = 2;
 }
 
@@ -173,12 +218,6 @@ message CreateActionRequest {
 }
 
 message FindActionRequest {
-  message Page {
-    uint64 pageNum = 1;
-    uint64 pageSize = 2;
-    int64 total = 3;
-    bool disable = 4;
-  }
   Page page = 1;
   optional string code = 2;
   optional string name = 3;
@@ -187,12 +226,6 @@ message FindActionRequest {
 }
 
 message FindActionReply {
-  message Page {
-    uint64 pageNum = 1;
-    uint64 pageSize = 2;
-    int64 total = 3;
-    bool disable = 4;
-  }
   message Action {
     uint64 id = 1;
     string code = 2;

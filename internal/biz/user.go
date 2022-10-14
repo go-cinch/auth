@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/go-cinch/common/captcha"
 	"github.com/go-cinch/common/constant"
+	"github.com/go-cinch/common/page"
 	"github.com/go-cinch/common/utils"
 	"github.com/golang-module/carbon/v2"
 	"github.com/jinzhu/copier"
@@ -47,6 +48,19 @@ type UserInfo struct {
 	Introduction string `json:"introduction"`
 }
 
+type FindUser struct {
+	Page           page.Page `json:"page"`
+	StartCreatedAt *string   `json:"startCreatedAt"`
+	EndCreatedAt   *string   `json:"endCreatedAt"`
+	StartUpdatedAt *string   `json:"startUpdatedAt"`
+	EndUpdatedAt   *string   `json:"endUpdatedAt"`
+	Username       *string   `json:"username"`
+	Code           *string   `json:"code"`
+	Mobile         *string   `json:"mobile"`
+	Status         *uint64   `json:"status"`
+	Locked         *uint64   `json:"locked"`
+}
+
 type Login struct {
 	Username      string `json:"username"`
 	Password      string `json:"password"`
@@ -82,6 +96,7 @@ type Captcha struct {
 
 type UserRepo interface {
 	GetByUsername(ctx context.Context, username string) (*User, error)
+	Find(ctx context.Context, condition *FindUser) ([]User, error)
 	Create(ctx context.Context, item *User) error
 	LastLogin(ctx context.Context, id uint64) error
 	WrongPwd(ctx context.Context, req LoginTime) error
@@ -109,6 +124,10 @@ func (uc *UserUseCase) Create(ctx context.Context, item *User) error {
 			return uc.repo.Create(ctx, item)
 		})
 	})
+}
+
+func (uc *UserUseCase) Find(ctx context.Context, condition *FindUser) ([]User, error) {
+	return uc.repo.Find(ctx, condition)
 }
 
 func (uc *UserUseCase) Info(ctx context.Context, code string) (rp *UserInfo, err error) {
