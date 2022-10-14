@@ -10,9 +10,9 @@ require (
 	github.com/go-cinch/common/log v0.0.0-20220927061933-ccf4ca4bccbe
 	github.com/go-cinch/common/middleware v0.0.0-20220921090518-54e9eef45fde
 	github.com/go-cinch/common/migrate v0.0.0-20220915041442-c48afde5a28c
-	github.com/go-cinch/common/page v0.0.0-20221013114044-439a7159aba7
+	github.com/go-cinch/common/page v0.0.0-20221014020948-7abc48d6fd68
 	github.com/go-cinch/common/plugins/gorm/log v0.0.0-20220927074458-492682a7fa35
-	github.com/go-cinch/common/utils v0.0.0-20221011021607-f3e5406fad3f
+	github.com/go-cinch/common/utils v0.0.0-20221014085102-eaa6e3b75fff
 	github.com/go-cinch/common/worker v0.0.0-20220929075000-0dd3fa2ef2a5
 	github.com/go-kratos/kratos/contrib/config/kubernetes/v2 v2.0.0-20220817101725-ba7223047727
 	github.com/go-kratos/kratos/v2 v2.5.1
@@ -25,6 +25,7 @@ require (
 	github.com/gorilla/handlers v1.5.1
 	github.com/jinzhu/copier v0.3.5
 	github.com/pkg/errors v0.9.1
+	github.com/thoas/go-funk v0.9.2
 	go.opentelemetry.io/otel v1.10.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.10.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.10.0
@@ -91,10 +92,10 @@ require (
 	go.opentelemetry.io/otel/trace v1.10.0 // indirect
 	go.opentelemetry.io/proto/otlp v0.19.0 // indirect
 	golang.org/x/image v0.0.0-20220902085622-e7cb96979f69 // indirect
-	golang.org/x/net v0.0.0-20221004154528-8021a29435af // indirect
+	golang.org/x/net v0.0.0-20221014081412-f15817d10f9b // indirect
 	golang.org/x/oauth2 v0.0.0-20220909003341-f21342109be1 // indirect
 	golang.org/x/sync v0.0.0-20220513210516-0976fa681c29 // indirect
-	golang.org/x/sys v0.0.0-20221010170243-090e33056c14 // indirect
+	golang.org/x/sys v0.0.0-20221013171732-95e765b1cc43 // indirect
 	golang.org/x/term v0.0.0-20220722155259-a9ba230a4035 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20220922220347-f3bd1da661af // indirect

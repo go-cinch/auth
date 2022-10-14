@@ -65,6 +65,21 @@ service Auth {
       get: "/user"
     };
   }
+  rpc UpdateUser (UpdateUserRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      put: "/user/{id}",
+      body: "*",
+      additional_bindings {
+        patch: "/user/{id}",
+        body: "*",
+      }
+    };
+  }
+  rpc DeleteUser (DeleteUserRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/user/{ids}"
+    };
+  }
   rpc Permission (PermissionRequest) returns (PermissionReply) {
     option (google.api.http) = {
       post: "/permission"
@@ -121,6 +136,10 @@ message Captcha {
 message RegisterRequest {
   string username = 1 [(validate.rules).string = {min_len: 5, max_len: 50}];
   string password = 2 [(validate.rules).string = {min_len: 6, max_len: 50}];
+  string mobile = 3;
+  string avatar = 4;
+  string nickname = 5;
+  string introduction = 6;
 }
 
 message PwdRequest {
@@ -197,9 +216,24 @@ message FindUserReply {
     string introduction = 12;
     string last_login = 11;
     int64 lock_expire = 13;
+    string lock_msg = 14;
   }
   Page page = 1;
   repeated User list = 2;
+}
+
+message UpdateUserRequest {
+  uint64 id = 1;
+  optional string username = 2;
+  optional string password = 3;
+  optional string mobile = 4;
+  optional string avatar = 5;
+  optional string nickname = 6;
+  optional string introduction = 7;
+}
+
+message DeleteUserRequest {
+  string ids = 1;
 }
 
 message PermissionRequest {

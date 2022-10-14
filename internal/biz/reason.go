@@ -21,4 +21,5 @@ var (
 	RoleNotFound          = v1.ErrorNotFound("role not found")
 	DuplicateUserGroupKey = v1.ErrorIllegalParameter("duplicate key")
 	NoPermission          = v1.ErrorForbidden("no permission to access this resource")
+	DeleteYourself        = v1.ErrorIllegalParameter("you cannot delete yourself")
 )

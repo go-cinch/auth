@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/go-cinch/common/constant"
 	"github.com/go-cinch/common/id"
+	"github.com/go-cinch/common/utils"
 	"github.com/golang-module/carbon/v2"
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm/clause"
@@ -63,7 +64,9 @@ func (ro userRepo) GetByUsername(ctx context.Context, username string) (item *bi
 
 func (ro userRepo) Find(ctx context.Context, condition *biz.FindUser) (rp []biz.User, err error) {
 	db := ro.data.DB(ctx)
-	db = db.Model(&User{})
+	db = db.
+		Model(&User{}).
+		Order("created_at DESC")
 	rp = make([]biz.User, 0)
 	list := make([]User, 0)
 	if condition.StartCreatedAt != nil {
@@ -99,6 +102,36 @@ func (ro userRepo) Find(ctx context.Context, condition *biz.FindUser) (rp []biz.
 		Query(db).
 		Find(&list)
 	copier.Copy(&rp, list)
+	timestamp := carbon.Now().Timestamp()
+	for i, item := range rp {
+		if item.Locked == constant.UI0 || (item.LockExpire > constant.I0 && timestamp > item.LockExpire) {
+			rp[i].Locked = constant.UI0
+			continue
+		}
+		if item.LockExpire == constant.I0 {
+			rp[i].LockMsg = "forever"
+			continue
+		}
+		diff := item.LockExpire - timestamp
+		hours := diff / 3600
+		minutes := diff % 3600 / 60
+		seconds := diff % 3600 % 60
+		msg := ""
+		if hours < 24 {
+			if hours > 0 {
+				msg += fmt.Sprintf("%dh", hours)
+			}
+			if minutes > 0 {
+				msg += fmt.Sprintf("%dm", minutes)
+			}
+			if seconds > 0 {
+				msg += fmt.Sprintf("%ds", seconds)
+			}
+		} else {
+			msg = carbon.CreateFromTimestamp(item.LockExpire).ToDateTimeString()
+		}
+		rp[i].LockMsg = msg
+	}
 	return
 }
 
@@ -123,6 +156,36 @@ func (ro userRepo) Create(ctx context.Context, item *biz.User) (err error) {
 		}
 	}
 	err = db.Create(&m).Error
+	return
+}
+
+func (ro userRepo) Update(ctx context.Context, item *biz.UpdateUser) (err error) {
+	var m User
+	db := ro.data.DB(ctx)
+	db.
+		Where("id = ?", item.Id).
+		First(&m)
+	if m.Id == constant.UI0 {
+		err = biz.UserNotFound
+		return
+	}
+	change := make(map[string]interface{})
+	utils.CompareDiff(m, item, &change)
+	if len(change) == 0 {
+		err = biz.DataNotChange
+		return
+	}
+	err = db.
+		Model(&m).
+		Updates(&change).Error
+	return
+}
+
+func (ro userRepo) Delete(ctx context.Context, ids ...uint64) (err error) {
+	db := ro.data.DB(ctx)
+	err = db.
+		Where("id IN (?)", ids).
+		Delete(&User{}).Error
 	return
 }
 

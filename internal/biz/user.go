@@ -11,6 +11,7 @@ import (
 	"github.com/go-cinch/common/utils"
 	"github.com/golang-module/carbon/v2"
 	"github.com/jinzhu/copier"
+	"github.com/thoas/go-funk"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -34,6 +35,7 @@ type User struct {
 	LastLogin    carbon.DateTime `json:"lastLogin,string,omitempty"`
 	Locked       uint64          `json:"locked"`
 	LockExpire   int64           `json:"lockExpire"`
+	LockMsg      string          `json:"lockMsg"`
 	Wrong        int64           `json:"wrong"`
 	Captcha      Captcha         `json:"-"`
 }
@@ -59,6 +61,16 @@ type FindUser struct {
 	Mobile         *string   `json:"mobile"`
 	Status         *uint64   `json:"status"`
 	Locked         *uint64   `json:"locked"`
+}
+
+type UpdateUser struct {
+	Id           *uint64 `json:"id,string,omitempty"`
+	Username     *string `json:"username,omitempty"`
+	Password     *string `json:"password,omitempty"`
+	Mobile       *string `json:"mobile,omitempty"`
+	Avatar       *string `json:"avatar,omitempty"`
+	Nickname     *string `json:"nickname,omitempty"`
+	Introduction *string `json:"introduction,omitempty"`
 }
 
 type Login struct {
@@ -98,6 +110,8 @@ type UserRepo interface {
 	GetByUsername(ctx context.Context, username string) (*User, error)
 	Find(ctx context.Context, condition *FindUser) ([]User, error)
 	Create(ctx context.Context, item *User) error
+	Update(ctx context.Context, item *UpdateUser) error
+	Delete(ctx context.Context, ids ...uint64) error
 	LastLogin(ctx context.Context, id uint64) error
 	WrongPwd(ctx context.Context, req LoginTime) error
 	UpdatePassword(ctx context.Context, item *User) error
@@ -126,8 +140,43 @@ func (uc *UserUseCase) Create(ctx context.Context, item *User) error {
 	})
 }
 
+func (uc *UserUseCase) Update(ctx context.Context, item *UpdateUser) error {
+	return uc.tx.Tx(ctx, func(ctx context.Context) error {
+		return uc.cache.Flush(ctx, func(ctx context.Context) (err error) {
+			if item.Password != nil {
+				pwd := genPwd(*item.Password)
+				item.Password = &pwd
+			}
+			err = uc.repo.Update(ctx, item)
+			return
+		})
+	})
+}
+
+func (uc *UserUseCase) Delete(ctx context.Context, ids ...uint64) error {
+	return uc.tx.Tx(ctx, func(ctx context.Context) error {
+		return uc.cache.Flush(ctx, func(ctx context.Context) (err error) {
+			info, err := uc.InfoFromCtx(ctx)
+			if err != nil {
+				return
+			}
+			if funk.ContainsUInt64(ids, info.Id) {
+				err = DeleteYourself
+				return
+			}
+			err = uc.repo.Delete(ctx, ids...)
+			return
+		})
+	})
+}
+
 func (uc *UserUseCase) Find(ctx context.Context, condition *FindUser) ([]User, error) {
 	return uc.repo.Find(ctx, condition)
+}
+
+func (uc *UserUseCase) InfoFromCtx(ctx context.Context) (rp *UserInfo, err error) {
+	user := jwt.FromContext(ctx)
+	return uc.Info(ctx, user.Code)
 }
 
 func (uc *UserUseCase) Info(ctx context.Context, code string) (rp *UserInfo, err error) {

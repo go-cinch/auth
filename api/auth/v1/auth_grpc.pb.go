@@ -32,6 +32,8 @@ type AuthClient interface {
 	Logout(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	Info(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*InfoReply, error)
 	FindUser(ctx context.Context, in *FindUserRequest, opts ...grpc.CallOption) (*FindUserReply, error)
+	UpdateUser(ctx context.Context, in *UpdateUserRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	DeleteUser(ctx context.Context, in *DeleteUserRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	Permission(ctx context.Context, in *PermissionRequest, opts ...grpc.CallOption) (*PermissionReply, error)
 	CreateAction(ctx context.Context, in *CreateActionRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	FindAction(ctx context.Context, in *FindActionRequest, opts ...grpc.CallOption) (*FindActionReply, error)
@@ -129,6 +131,24 @@ func (c *authClient) FindUser(ctx context.Context, in *FindUserRequest, opts ...
 	return out, nil
 }
 
+func (c *authClient) UpdateUser(ctx context.Context, in *UpdateUserRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/auth.v1.Auth/UpdateUser", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authClient) DeleteUser(ctx context.Context, in *DeleteUserRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/auth.v1.Auth/DeleteUser", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *authClient) Permission(ctx context.Context, in *PermissionRequest, opts ...grpc.CallOption) (*PermissionReply, error) {
 	out := new(PermissionReply)
 	err := c.cc.Invoke(ctx, "/auth.v1.Auth/Permission", in, out, opts...)
@@ -196,6 +216,8 @@ type AuthServer interface {
 	Logout(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 	Info(context.Context, *emptypb.Empty) (*InfoReply, error)
 	FindUser(context.Context, *FindUserRequest) (*FindUserReply, error)
+	UpdateUser(context.Context, *UpdateUserRequest) (*emptypb.Empty, error)
+	DeleteUser(context.Context, *DeleteUserRequest) (*emptypb.Empty, error)
 	Permission(context.Context, *PermissionRequest) (*PermissionReply, error)
 	CreateAction(context.Context, *CreateActionRequest) (*emptypb.Empty, error)
 	FindAction(context.Context, *FindActionRequest) (*FindActionReply, error)
@@ -235,6 +257,12 @@ func (UnimplementedAuthServer) Info(context.Context, *emptypb.Empty) (*InfoReply
 }
 func (UnimplementedAuthServer) FindUser(context.Context, *FindUserRequest) (*FindUserReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FindUser not implemented")
+}
+func (UnimplementedAuthServer) UpdateUser(context.Context, *UpdateUserRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateUser not implemented")
+}
+func (UnimplementedAuthServer) DeleteUser(context.Context, *DeleteUserRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteUser not implemented")
 }
 func (UnimplementedAuthServer) Permission(context.Context, *PermissionRequest) (*PermissionReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Permission not implemented")
@@ -429,6 +457,42 @@ func _Auth_FindUser_Handler(srv interface{}, ctx context.Context, dec func(inter
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Auth_UpdateUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateUserRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServer).UpdateUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/auth.v1.Auth/UpdateUser",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServer).UpdateUser(ctx, req.(*UpdateUserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Auth_DeleteUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteUserRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServer).DeleteUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/auth.v1.Auth/DeleteUser",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServer).DeleteUser(ctx, req.(*DeleteUserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Auth_Permission_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(PermissionRequest)
 	if err := dec(in); err != nil {
@@ -579,6 +643,14 @@ var Auth_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "FindUser",
 			Handler:    _Auth_FindUser_Handler,
+		},
+		{
+			MethodName: "UpdateUser",
+			Handler:    _Auth_UpdateUser_Handler,
+		},
+		{
+			MethodName: "DeleteUser",
+			Handler:    _Auth_DeleteUser_Handler,
 		},
 		{
 			MethodName: "Permission",

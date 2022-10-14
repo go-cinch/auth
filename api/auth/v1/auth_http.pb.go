@@ -24,6 +24,7 @@ const OperationAuthCaptcha = "/auth.v1.Auth/Captcha"
 const OperationAuthCreateAction = "/auth.v1.Auth/CreateAction"
 const OperationAuthCreateRole = "/auth.v1.Auth/CreateRole"
 const OperationAuthCreateUserGroup = "/auth.v1.Auth/CreateUserGroup"
+const OperationAuthDeleteUser = "/auth.v1.Auth/DeleteUser"
 const OperationAuthFindAction = "/auth.v1.Auth/FindAction"
 const OperationAuthFindUser = "/auth.v1.Auth/FindUser"
 const OperationAuthInfo = "/auth.v1.Auth/Info"
@@ -35,12 +36,14 @@ const OperationAuthRefresh = "/auth.v1.Auth/Refresh"
 const OperationAuthRegister = "/auth.v1.Auth/Register"
 const OperationAuthStatus = "/auth.v1.Auth/Status"
 const OperationAuthUpdateRole = "/auth.v1.Auth/UpdateRole"
+const OperationAuthUpdateUser = "/auth.v1.Auth/UpdateUser"
 
 type AuthHTTPServer interface {
 	Captcha(context.Context, *emptypb.Empty) (*CaptchaReply, error)
 	CreateAction(context.Context, *CreateActionRequest) (*emptypb.Empty, error)
 	CreateRole(context.Context, *CreateRoleRequest) (*emptypb.Empty, error)
 	CreateUserGroup(context.Context, *CreateUserGroupRequest) (*emptypb.Empty, error)
+	DeleteUser(context.Context, *DeleteUserRequest) (*emptypb.Empty, error)
 	FindAction(context.Context, *FindActionRequest) (*FindActionReply, error)
 	FindUser(context.Context, *FindUserRequest) (*FindUserReply, error)
 	Info(context.Context, *emptypb.Empty) (*InfoReply, error)
@@ -52,6 +55,7 @@ type AuthHTTPServer interface {
 	Register(context.Context, *RegisterRequest) (*emptypb.Empty, error)
 	Status(context.Context, *StatusRequest) (*StatusReply, error)
 	UpdateRole(context.Context, *UpdateRoleRequest) (*emptypb.Empty, error)
+	UpdateUser(context.Context, *UpdateUserRequest) (*emptypb.Empty, error)
 }
 
 func RegisterAuthHTTPServer(s *http.Server, srv AuthHTTPServer) {
@@ -65,6 +69,9 @@ func RegisterAuthHTTPServer(s *http.Server, srv AuthHTTPServer) {
 	r.POST("/logout", _Auth_Logout0_HTTP_Handler(srv))
 	r.GET("/info", _Auth_Info0_HTTP_Handler(srv))
 	r.GET("/user", _Auth_FindUser0_HTTP_Handler(srv))
+	r.PATCH("/user/{id}", _Auth_UpdateUser0_HTTP_Handler(srv))
+	r.PUT("/user/{id}", _Auth_UpdateUser1_HTTP_Handler(srv))
+	r.DELETE("/user/{ids}", _Auth_DeleteUser0_HTTP_Handler(srv))
 	r.POST("/permission", _Auth_Permission0_HTTP_Handler(srv))
 	r.POST("/action", _Auth_CreateAction0_HTTP_Handler(srv))
 	r.GET("/action", _Auth_FindAction0_HTTP_Handler(srv))
@@ -245,6 +252,72 @@ func _Auth_FindUser0_HTTP_Handler(srv AuthHTTPServer) func(ctx http.Context) err
 	}
 }
 
+func _Auth_UpdateUser0_HTTP_Handler(srv AuthHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in UpdateUserRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindVars(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationAuthUpdateUser)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.UpdateUser(ctx, req.(*UpdateUserRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*emptypb.Empty)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _Auth_UpdateUser1_HTTP_Handler(srv AuthHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in UpdateUserRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindVars(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationAuthUpdateUser)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.UpdateUser(ctx, req.(*UpdateUserRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*emptypb.Empty)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _Auth_DeleteUser0_HTTP_Handler(srv AuthHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in DeleteUserRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindVars(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationAuthDeleteUser)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.DeleteUser(ctx, req.(*DeleteUserRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*emptypb.Empty)
+		return ctx.Result(200, reply)
+	}
+}
+
 func _Auth_Permission0_HTTP_Handler(srv AuthHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in PermissionRequest
@@ -389,6 +462,7 @@ type AuthHTTPClient interface {
 	CreateAction(ctx context.Context, req *CreateActionRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
 	CreateRole(ctx context.Context, req *CreateRoleRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
 	CreateUserGroup(ctx context.Context, req *CreateUserGroupRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
+	DeleteUser(ctx context.Context, req *DeleteUserRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
 	FindAction(ctx context.Context, req *FindActionRequest, opts ...http.CallOption) (rsp *FindActionReply, err error)
 	FindUser(ctx context.Context, req *FindUserRequest, opts ...http.CallOption) (rsp *FindUserReply, err error)
 	Info(ctx context.Context, req *emptypb.Empty, opts ...http.CallOption) (rsp *InfoReply, err error)
@@ -400,6 +474,7 @@ type AuthHTTPClient interface {
 	Register(ctx context.Context, req *RegisterRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
 	Status(ctx context.Context, req *StatusRequest, opts ...http.CallOption) (rsp *StatusReply, err error)
 	UpdateRole(ctx context.Context, req *UpdateRoleRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
+	UpdateUser(ctx context.Context, req *UpdateUserRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
 }
 
 type AuthHTTPClientImpl struct {
@@ -456,6 +531,19 @@ func (c *AuthHTTPClientImpl) CreateUserGroup(ctx context.Context, in *CreateUser
 	opts = append(opts, http.Operation(OperationAuthCreateUserGroup))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, err
+}
+
+func (c *AuthHTTPClientImpl) DeleteUser(ctx context.Context, in *DeleteUserRequest, opts ...http.CallOption) (*emptypb.Empty, error) {
+	var out emptypb.Empty
+	pattern := "/user/{ids}"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationAuthDeleteUser))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "DELETE", path, nil, &out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -597,6 +685,19 @@ func (c *AuthHTTPClientImpl) UpdateRole(ctx context.Context, in *UpdateRoleReque
 	pattern := "/role/{id}"
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationAuthUpdateRole))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "PUT", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, err
+}
+
+func (c *AuthHTTPClientImpl) UpdateUser(ctx context.Context, in *UpdateUserRequest, opts ...http.CallOption) (*emptypb.Empty, error) {
+	var out emptypb.Empty
+	pattern := "/user/{id}"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationAuthUpdateUser))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "PUT", path, in, &out, opts...)
 	if err != nil {

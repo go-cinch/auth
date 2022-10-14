@@ -52,7 +52,9 @@ func (ro actionRepo) Create(ctx context.Context, item *biz.Action) (err error) {
 
 func (ro actionRepo) Find(ctx context.Context, condition *biz.FindAction) (rp []biz.Action, err error) {
 	db := ro.data.DB(ctx)
-	db = db.Model(&Action{})
+	db = db.
+		Model(&Action{}).
+		Order("created_at DESC")
 	rp = make([]biz.Action, 0)
 	list := make([]Action, 0)
 	if condition.Name != nil {
