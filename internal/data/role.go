@@ -4,8 +4,8 @@ import (
 	"auth/internal/biz"
 	"context"
 	"github.com/go-cinch/common/constant"
+	"github.com/go-cinch/common/copierx"
 	"github.com/go-cinch/common/utils"
-	"github.com/jinzhu/copier"
 )
 
 type roleRepo struct {
@@ -39,7 +39,7 @@ func (ro roleRepo) Create(ctx context.Context, item *biz.Role) (err error) {
 		err = biz.DuplicateRoleKey
 		return
 	}
-	copier.Copy(&m, item)
+	copierx.Copy(&m, item)
 	m.Id = ro.data.Id(ctx)
 	m.Status = constant.UI1
 	if m.Action != "" {

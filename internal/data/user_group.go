@@ -4,7 +4,7 @@ import (
 	"auth/internal/biz"
 	"context"
 	"github.com/go-cinch/common/constant"
-	"github.com/jinzhu/copier"
+	"github.com/go-cinch/common/copierx"
 )
 
 type userGroupRepo struct {
@@ -45,7 +45,7 @@ func (ro userGroupRepo) Create(ctx context.Context, item *biz.UserGroup) (err er
 		err = biz.DuplicateUserGroupKey
 		return
 	}
-	copier.Copy(&m, item)
+	copierx.Copy(&m, item)
 	m.Id = ro.data.Id(ctx)
 	if m.Action != "" {
 		err = ro.action.CodeExists(ctx, m.Action)
@@ -89,6 +89,6 @@ func (ro userGroupRepo) FindGroupByUserCode(ctx context.Context, code string) (l
 		Model(&UserGroup{}).
 		Where("id IN (?)", groupIds).
 		Find(&groups)
-	copier.Copy(&list, groups)
+	copierx.Copy(&list, groups)
 	return
 }

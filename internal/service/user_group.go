@@ -4,7 +4,7 @@ import (
 	v1 "auth/api/auth/v1"
 	"auth/internal/biz"
 	"context"
-	"github.com/jinzhu/copier"
+	"github.com/go-cinch/common/copierx"
 	"go.opentelemetry.io/otel"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
@@ -15,7 +15,7 @@ func (s *AuthService) CreateUserGroup(ctx context.Context, req *v1.CreateUserGro
 	defer span.End()
 	rp = &emptypb.Empty{}
 	r := &biz.UserGroup{}
-	copier.Copy(&r, req)
+	copierx.Copy(&r, req)
 	err = s.userGroup.Create(ctx, r)
 	return
 }

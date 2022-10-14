@@ -2,9 +2,9 @@ package jwt
 
 import (
 	"context"
+	"github.com/go-cinch/common/copierx"
 	jwtV4 "github.com/golang-jwt/jwt/v4"
 	"github.com/golang-module/carbon/v2"
-	"github.com/jinzhu/copier"
 	"strings"
 )
 
@@ -39,7 +39,7 @@ func NewContextByCode(ctx context.Context, code string) context.Context {
 func FromContext(ctx context.Context) (u *User) {
 	u = new(User)
 	if v, ok := ctx.Value(user{}).(*User); ok {
-		copier.Copy(u, v)
+		copierx.Copy(&u, v)
 	}
 	return
 }

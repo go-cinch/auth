@@ -6,8 +6,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-cinch/common/constant"
+	"github.com/go-cinch/common/copierx"
 	"github.com/go-cinch/common/id"
-	"github.com/jinzhu/copier"
 	"strings"
 )
 
@@ -40,7 +40,7 @@ func (ro actionRepo) Create(ctx context.Context, item *biz.Action) (err error) {
 		err = biz.DuplicateActionKey
 		return
 	}
-	copier.Copy(&m, item)
+	copierx.Copy(&m, item)
 	m.Id = ro.data.Id(ctx)
 	m.Code = id.NewCode(m.Id)
 	if m.Resource == "" {
@@ -74,7 +74,7 @@ func (ro actionRepo) Find(ctx context.Context, condition *biz.FindAction) (rp []
 		WithContext(ctx).
 		Query(db).
 		Find(&list)
-	copier.Copy(&rp, list)
+	copierx.Copy(&rp, list)
 	return
 }
 

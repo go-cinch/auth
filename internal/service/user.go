@@ -4,9 +4,9 @@ import (
 	v1 "auth/api/auth/v1"
 	"auth/internal/biz"
 	"context"
+	"github.com/go-cinch/common/copierx"
 	"github.com/go-cinch/common/page"
 	"github.com/go-cinch/common/utils"
-	"github.com/jinzhu/copier"
 	"go.opentelemetry.io/otel"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
@@ -19,11 +19,11 @@ func (s *AuthService) FindUser(ctx context.Context, req *v1.FindUserRequest) (rp
 	rp.Page = &v1.Page{}
 	r := &biz.FindUser{}
 	r.Page = page.Page{}
-	copier.Copy(&r, req)
-	copier.Copy(&r.Page, req.Page)
+	copierx.Copy(&r, req)
+	copierx.Copy(&r.Page, req.Page)
 	res, err := s.user.Find(ctx, r)
-	copier.Copy(&rp.Page, r.Page)
-	copier.Copy(&rp.List, res)
+	copierx.Copy(&rp.Page, r.Page)
+	copierx.Copy(&rp.List, res)
 	return
 }
 
@@ -33,7 +33,7 @@ func (s *AuthService) UpdateUser(ctx context.Context, req *v1.UpdateUserRequest)
 	defer span.End()
 	rp = &emptypb.Empty{}
 	r := &biz.UpdateUser{}
-	copier.Copy(&r, req)
+	copierx.Copy(&r, req)
 	err = s.user.Update(ctx, r)
 	return
 }

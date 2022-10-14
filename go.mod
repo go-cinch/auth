@@ -6,6 +6,7 @@ require (
 	github.com/envoyproxy/protoc-gen-validate v0.1.0
 	github.com/go-cinch/common/captcha v0.0.0-20220928085003-afd18d35661d
 	github.com/go-cinch/common/constant v0.0.0-20220928094747-1b24c1dd963f
+	github.com/go-cinch/common/copierx v0.0.0-20221014090947-8c8ed2810141
 	github.com/go-cinch/common/id v0.0.0-20221010030633-b6fcfb8a6767
 	github.com/go-cinch/common/log v0.0.0-20220927061933-ccf4ca4bccbe
 	github.com/go-cinch/common/middleware v0.0.0-20220921090518-54e9eef45fde
@@ -23,7 +24,6 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/google/wire v0.5.0
 	github.com/gorilla/handlers v1.5.1
-	github.com/jinzhu/copier v0.3.5
 	github.com/pkg/errors v0.9.1
 	github.com/thoas/go-funk v0.9.2
 	go.opentelemetry.io/otel v1.10.0
@@ -69,6 +69,7 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.7.0 // indirect
 	github.com/hibiken/asynq v0.23.0 // indirect
 	github.com/imdario/mergo v0.3.13 // indirect
+	github.com/jinzhu/copier v0.3.5 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/josharian/intern v1.0.0 // indirect

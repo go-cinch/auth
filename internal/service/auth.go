@@ -5,11 +5,11 @@ import (
 	"auth/internal/biz"
 	"auth/internal/pkg/jwt"
 	"context"
+	"github.com/go-cinch/common/copierx"
 	"github.com/go-cinch/common/utils"
 	"github.com/go-cinch/common/worker"
 	"github.com/golang-module/carbon/v2"
 	"github.com/google/uuid"
-	"github.com/jinzhu/copier"
 	"go.opentelemetry.io/otel"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
@@ -20,7 +20,7 @@ func (s *AuthService) Register(ctx context.Context, req *v1.RegisterRequest) (rp
 	defer span.End()
 	rp = &emptypb.Empty{}
 	r := &biz.User{}
-	copier.Copy(&r, req)
+	copierx.Copy(&r, req)
 	err = s.user.Create(ctx, r)
 	return
 }
@@ -31,7 +31,7 @@ func (s *AuthService) Pwd(ctx context.Context, req *v1.PwdRequest) (rp *emptypb.
 	defer span.End()
 	rp = &emptypb.Empty{}
 	r := &biz.User{}
-	copier.Copy(&r, req)
+	copierx.Copy(&r, req)
 	err = s.user.Pwd(ctx, r)
 	return
 }
@@ -42,7 +42,7 @@ func (s *AuthService) Login(ctx context.Context, req *v1.LoginRequest) (rp *v1.L
 	defer span.End()
 	rp = &v1.LoginReply{}
 	r := &biz.Login{}
-	copier.Copy(&r, req)
+	copierx.Copy(&r, req)
 	res, err := s.user.Login(ctx, r)
 	if err != nil {
 		if err == biz.LoginFailed {
@@ -64,7 +64,7 @@ func (s *AuthService) Login(ctx context.Context, req *v1.LoginRequest) (rp *v1.L
 		}
 		return
 	}
-	copier.Copy(&rp, res)
+	copierx.Copy(&rp, res)
 	return
 }
 
@@ -77,7 +77,7 @@ func (s *AuthService) Status(ctx context.Context, req *v1.StatusRequest) (rp *v1
 	if err != nil {
 		return
 	}
-	copier.Copy(&rp, res)
+	copierx.Copy(&rp, res)
 	return
 }
 
@@ -88,7 +88,7 @@ func (s *AuthService) Captcha(ctx context.Context, req *emptypb.Empty) (rp *v1.C
 	rp = &v1.CaptchaReply{}
 	rp.Captcha = &v1.Captcha{}
 	res := s.user.Captcha(ctx)
-	copier.Copy(&rp.Captcha, res)
+	copierx.Copy(&rp.Captcha, res)
 	return
 }
 
@@ -98,7 +98,7 @@ func (s *AuthService) Permission(ctx context.Context, req *v1.PermissionRequest)
 	defer span.End()
 	rp = &v1.PermissionReply{}
 	r := &biz.Permission{}
-	copier.Copy(&r, req)
+	copierx.Copy(&r, req)
 	rp.Pass = s.permission.Check(ctx, r)
 	return
 }
@@ -113,6 +113,6 @@ func (s *AuthService) Info(ctx context.Context, req *emptypb.Empty) (rp *v1.Info
 	if err != nil {
 		return
 	}
-	copier.Copy(&rp, res)
+	copierx.Copy(&rp, res)
 	return
 }

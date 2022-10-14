@@ -5,10 +5,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-cinch/common/constant"
+	"github.com/go-cinch/common/copierx"
 	"github.com/go-cinch/common/id"
 	"github.com/go-cinch/common/utils"
 	"github.com/golang-module/carbon/v2"
-	"github.com/jinzhu/copier"
 	"gorm.io/gorm/clause"
 )
 
@@ -58,7 +58,7 @@ func (ro userRepo) GetByUsername(ctx context.Context, username string) (item *bi
 		err = biz.UserNotFound
 		return
 	}
-	copier.Copy(item, m)
+	copierx.Copy(&item, m)
 	return
 }
 
@@ -101,7 +101,7 @@ func (ro userRepo) Find(ctx context.Context, condition *biz.FindUser) (rp []biz.
 		WithContext(ctx).
 		Query(db).
 		Find(&list)
-	copier.Copy(&rp, list)
+	copierx.Copy(&rp, list)
 	timestamp := carbon.Now().Timestamp()
 	for i, item := range rp {
 		if item.Locked == constant.UI0 || (item.LockExpire > constant.I0 && timestamp > item.LockExpire) {
@@ -145,7 +145,7 @@ func (ro userRepo) Create(ctx context.Context, item *biz.User) (err error) {
 		err = biz.DuplicateUsername
 		return
 	}
-	copier.Copy(&m, item)
+	copierx.Copy(&m, item)
 	m.Id = ro.data.Id(ctx)
 	m.Code = id.NewCode(m.Id)
 	m.Status = constant.UI1
@@ -280,6 +280,6 @@ func (ro userRepo) GetByCode(ctx context.Context, code string) (item *biz.User, 
 		err = biz.UserNotFound
 		return
 	}
-	copier.Copy(item, m)
+	copierx.Copy(&item, m)
 	return
 }

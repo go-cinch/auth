@@ -4,7 +4,7 @@ import (
 	v1 "auth/api/auth/v1"
 	"auth/internal/biz"
 	"context"
-	"github.com/jinzhu/copier"
+	"github.com/go-cinch/common/copierx"
 	"go.opentelemetry.io/otel"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
@@ -15,7 +15,7 @@ func (s *AuthService) CreateRole(ctx context.Context, req *v1.CreateRoleRequest)
 	defer span.End()
 	rp = &emptypb.Empty{}
 	r := &biz.Role{}
-	copier.Copy(&r, req)
+	copierx.Copy(&r, req)
 	err = s.role.Create(ctx, r)
 	return
 }
@@ -26,7 +26,7 @@ func (s *AuthService) UpdateRole(ctx context.Context, req *v1.UpdateRoleRequest)
 	defer span.End()
 	rp = &emptypb.Empty{}
 	r := &biz.UpdateRole{}
-	copier.Copy(&r, req)
+	copierx.Copy(&r, req)
 	err = s.role.Update(ctx, r)
 	return
 }

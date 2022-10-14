@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"github.com/go-cinch/common/captcha"
 	"github.com/go-cinch/common/constant"
+	"github.com/go-cinch/common/copierx"
 	"github.com/go-cinch/common/page"
 	"github.com/go-cinch/common/utils"
 	"github.com/golang-module/carbon/v2"
-	"github.com/jinzhu/copier"
 	"github.com/thoas/go-funk"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -319,7 +319,7 @@ func (uc *UserUseCase) status(ctx context.Context, action string, username strin
 	if err != nil && err != UserNotFound {
 		return
 	}
-	copier.Copy(rp, user)
+	copierx.Copy(&rp, user)
 	res = utils.Struct2Json(rp)
 	uc.cache.Set(ctx, action, res, err == UserNotFound)
 	ok = true
@@ -333,7 +333,7 @@ func (uc *UserUseCase) info(ctx context.Context, action string, code string) (re
 	if err != nil && err != UserNotFound {
 		return
 	}
-	copier.Copy(rp, user)
+	copierx.Copy(&rp, user)
 	res = utils.Struct2Json(rp)
 	uc.cache.Set(ctx, action, res, err == UserNotFound)
 	ok = true
