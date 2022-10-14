@@ -17,7 +17,7 @@ type roleRepo struct {
 type Role struct {
 	Id     uint64 `json:"id,string"` // auto increment id
 	Name   string `json:"name"`      // name
-	Key    string `json:"key"`       // keyword, must be unique, used as frontend display
+	Word   string `json:"word"`      // keyword, must be unique, used as frontend display
 	Status uint64 `json:"status"`    // status(0: disabled, 1: enable)
 	Action string `json:"action"`    // role action code array
 }
@@ -33,10 +33,10 @@ func (ro roleRepo) Create(ctx context.Context, item *biz.Role) (err error) {
 	var m Role
 	db := ro.data.DB(ctx)
 	db.
-		Where("`key` = ?", item.Key).
+		Where("`word` = ?", item.Word).
 		First(&m)
 	if m.Id > constant.UI0 {
-		err = biz.DuplicateRoleKey
+		err = biz.DuplicateRoleWord
 		return
 	}
 	copierx.Copy(&m, item)

@@ -9,7 +9,7 @@ type UserGroup struct {
 	Id     uint64   `json:"id,string"`
 	Users  []uint64 `json:"users"`
 	Name   string   `json:"name"`
-	Key    string   `json:"key"`
+	Word   string   `json:"word"`
 	Action string   `json:"action"`
 }
 

@@ -8,7 +8,7 @@ import (
 type Role struct {
 	Id     uint64 `json:"id,string"`
 	Name   string `json:"name"`
-	Key    string `json:"key"`
+	Word   string `json:"word"`
 	Status uint64 `json:"status"`
 	Action string `json:"action"`
 }
@@ -16,7 +16,7 @@ type Role struct {
 type UpdateRole struct {
 	Id     *uint64 `json:"id,string,omitempty"`
 	Name   *string `json:"name,omitempty"`
-	Key    *string `json:"key,omitempty"`
+	Word   *string `json:"word,omitempty"`
 	Status *uint64 `json:"status,omitempty"`
 	Action *string `json:"action,omitempty"`
 }

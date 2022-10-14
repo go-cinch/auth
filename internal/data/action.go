@@ -20,7 +20,7 @@ type Action struct {
 	Id       uint64 `json:"id,string"` // auto increment id
 	Code     string `json:"code"`      // unique code
 	Name     string `json:"name"`      // name
-	Key      string `json:"key"`       // keyword, must be unique, used as frontend display
+	Word     string `json:"word"`      // keyword, must be unique, used as frontend display
 	Resource string `json:"resource"`  // resource array, split by break line str, example: GET,/user+\n+POST,/role+\n+GET,/action
 }
 
@@ -34,10 +34,10 @@ func (ro actionRepo) Create(ctx context.Context, item *biz.Action) (err error) {
 	var m Action
 	db := ro.data.DB(ctx)
 	db.
-		Where("`key` = ?", item.Key).
+		Where("`word` = ?", item.Word).
 		First(&m)
 	if m.Id > constant.UI0 {
-		err = biz.DuplicateActionKey
+		err = biz.DuplicateActionWord
 		return
 	}
 	copierx.Copy(&m, item)
@@ -54,7 +54,7 @@ func (ro actionRepo) Find(ctx context.Context, condition *biz.FindAction) (rp []
 	db := ro.data.DB(ctx)
 	db = db.
 		Model(&Action{}).
-		Order("created_at DESC")
+		Order("id DESC")
 	rp = make([]biz.Action, 0)
 	list := make([]Action, 0)
 	if condition.Name != nil {
@@ -63,8 +63,8 @@ func (ro actionRepo) Find(ctx context.Context, condition *biz.FindAction) (rp []
 	if condition.Code != nil {
 		db.Where("`code` LIKE ?", fmt.Sprintf("%%%s%%", *condition.Code))
 	}
-	if condition.Key != nil {
-		db.Where("`key` LIKE ?", fmt.Sprintf("%%%s%%", *condition.Key))
+	if condition.Word != nil {
+		db.Where("`word` LIKE ?", fmt.Sprintf("%%%s%%", *condition.Word))
 	}
 	if condition.Resource != nil {
 		db.Where("`resource` LIKE ?", fmt.Sprintf("%%%s%%", *condition.Resource))

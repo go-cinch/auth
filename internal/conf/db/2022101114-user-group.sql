@@ -4,13 +4,13 @@ CREATE TABLE user_group
 (
     `id`     BIGINT UNSIGNED AUTO_INCREMENT COMMENT 'auto increment id' PRIMARY KEY,
     `name`   VARCHAR(50) NULL COMMENT 'name',
-    `key`    VARCHAR(50) NULL COMMENT 'keyword, must be unique, used as frontend display',
+    `word`   VARCHAR(50) NULL COMMENT 'keyword, must be unique, used as frontend display',
     `action` LONGTEXT    NULL COMMENT 'user group action code array'
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_general_ci;
 
-CREATE UNIQUE INDEX idx_key ON user_group (`key`);
+CREATE UNIQUE INDEX idx_word ON user_group (`word`);
 
 CREATE TABLE `user_user_group_relation`
 (

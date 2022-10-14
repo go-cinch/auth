@@ -2097,9 +2097,9 @@ func (m *CreateActionRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if utf8.RuneCountInString(m.GetKey()) > 50 {
+	if utf8.RuneCountInString(m.GetWord()) > 50 {
 		err := CreateActionRequestValidationError{
-			field:  "Key",
+			field:  "Word",
 			reason: "value length must be at most 50 runes",
 		}
 		if !all {
@@ -2249,8 +2249,8 @@ func (m *FindActionRequest) validate(all bool) error {
 		// no validation rules for Name
 	}
 
-	if m.Key != nil {
-		// no validation rules for Key
+	if m.Word != nil {
+		// no validation rules for Word
 	}
 
 	if m.Resource != nil {
@@ -2533,9 +2533,9 @@ func (m *CreateRoleRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if utf8.RuneCountInString(m.GetKey()) > 50 {
+	if utf8.RuneCountInString(m.GetWord()) > 50 {
 		err := CreateRoleRequestValidationError{
-			field:  "Key",
+			field:  "Word",
 			reason: "value length must be at most 50 runes",
 		}
 		if !all {
@@ -2656,8 +2656,8 @@ func (m *UpdateRoleRequest) validate(all bool) error {
 		// no validation rules for Name
 	}
 
-	if m.Key != nil {
-		// no validation rules for Key
+	if m.Word != nil {
+		// no validation rules for Word
 	}
 
 	if m.Status != nil {
@@ -2781,9 +2781,9 @@ func (m *CreateUserGroupRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if utf8.RuneCountInString(m.GetKey()) > 50 {
+	if utf8.RuneCountInString(m.GetWord()) > 50 {
 		err := CreateUserGroupRequestValidationError{
-			field:  "Key",
+			field:  "Word",
 			reason: "value length must be at most 50 runes",
 		}
 		if !all {
@@ -3034,7 +3034,7 @@ func (m *FindActionReply_Action) validate(all bool) error {
 
 	// no validation rules for Name
 
-	// no validation rules for Key
+	// no validation rules for Word
 
 	// no validation rules for Resource
 

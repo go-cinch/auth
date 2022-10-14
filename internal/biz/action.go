@@ -10,7 +10,7 @@ type Action struct {
 	Id       uint64 `json:"id,string"`
 	Code     string `json:"code"`
 	Name     string `json:"name"`
-	Key      string `json:"key"`
+	Word     string `json:"word"`
 	Resource string `json:"resource"`
 }
 
@@ -18,7 +18,7 @@ type FindAction struct {
 	Page     page.Page `json:"page"`
 	Code     *string   `json:"code"`
 	Name     *string   `json:"name"`
-	Key      *string   `json:"key"`
+	Word     *string   `json:"word"`
 	Resource *string   `json:"resource"`
 }
 

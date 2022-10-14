@@ -18,7 +18,7 @@ type UserGroup struct {
 	Id     uint64 `json:"id,string"`                                      // auto increment id
 	Users  []User `gorm:"many2many:user_user_group_relation" json:"user"` // User and UserGroup many2many relation
 	Name   string `json:"name"`                                           // name
-	Key    string `json:"key"`                                            // keyword, must be unique, used as frontend display
+	Word   string `json:"word"`                                           // keyword, must be unique, used as frontend display
 	Action string `json:"action"`                                         // user group action code array
 }
 
@@ -39,10 +39,10 @@ func (ro userGroupRepo) Create(ctx context.Context, item *biz.UserGroup) (err er
 	var m UserGroup
 	db := ro.data.DB(ctx)
 	db.
-		Where("`key` = ?", item.Key).
+		Where("`word` = ?", item.Word).
 		First(&m)
 	if m.Id > constant.UI0 {
-		err = biz.DuplicateUserGroupKey
+		err = biz.DuplicateUserGroupWord
 		return
 	}
 	copierx.Copy(&m, item)
