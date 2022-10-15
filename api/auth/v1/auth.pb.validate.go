@@ -2989,6 +2989,430 @@ var _ interface {
 	ErrorName() string
 } = CreateUserGroupRequestValidationError{}
 
+// Validate checks the field values on FindUserGroupRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *FindUserGroupRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on FindUserGroupRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// FindUserGroupRequestMultiError, or nil if none found.
+func (m *FindUserGroupRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *FindUserGroupRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if all {
+		switch v := interface{}(m.GetPage()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, FindUserGroupRequestValidationError{
+					field:  "Page",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, FindUserGroupRequestValidationError{
+					field:  "Page",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetPage()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return FindUserGroupRequestValidationError{
+				field:  "Page",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if m.Name != nil {
+		// no validation rules for Name
+	}
+
+	if m.Word != nil {
+		// no validation rules for Word
+	}
+
+	if m.Action != nil {
+		// no validation rules for Action
+	}
+
+	if len(errors) > 0 {
+		return FindUserGroupRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// FindUserGroupRequestMultiError is an error wrapping multiple validation
+// errors returned by FindUserGroupRequest.ValidateAll() if the designated
+// constraints aren't met.
+type FindUserGroupRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m FindUserGroupRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m FindUserGroupRequestMultiError) AllErrors() []error { return m }
+
+// FindUserGroupRequestValidationError is the validation error returned by
+// FindUserGroupRequest.Validate if the designated constraints aren't met.
+type FindUserGroupRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e FindUserGroupRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e FindUserGroupRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e FindUserGroupRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e FindUserGroupRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e FindUserGroupRequestValidationError) ErrorName() string {
+	return "FindUserGroupRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e FindUserGroupRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sFindUserGroupRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = FindUserGroupRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = FindUserGroupRequestValidationError{}
+
+// Validate checks the field values on FindUserGroupReply with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *FindUserGroupReply) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on FindUserGroupReply with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// FindUserGroupReplyMultiError, or nil if none found.
+func (m *FindUserGroupReply) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *FindUserGroupReply) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if all {
+		switch v := interface{}(m.GetPage()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, FindUserGroupReplyValidationError{
+					field:  "Page",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, FindUserGroupReplyValidationError{
+					field:  "Page",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetPage()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return FindUserGroupReplyValidationError{
+				field:  "Page",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	for idx, item := range m.GetList() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, FindUserGroupReplyValidationError{
+						field:  fmt.Sprintf("List[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, FindUserGroupReplyValidationError{
+						field:  fmt.Sprintf("List[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return FindUserGroupReplyValidationError{
+					field:  fmt.Sprintf("List[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return FindUserGroupReplyMultiError(errors)
+	}
+
+	return nil
+}
+
+// FindUserGroupReplyMultiError is an error wrapping multiple validation errors
+// returned by FindUserGroupReply.ValidateAll() if the designated constraints
+// aren't met.
+type FindUserGroupReplyMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m FindUserGroupReplyMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m FindUserGroupReplyMultiError) AllErrors() []error { return m }
+
+// FindUserGroupReplyValidationError is the validation error returned by
+// FindUserGroupReply.Validate if the designated constraints aren't met.
+type FindUserGroupReplyValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e FindUserGroupReplyValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e FindUserGroupReplyValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e FindUserGroupReplyValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e FindUserGroupReplyValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e FindUserGroupReplyValidationError) ErrorName() string {
+	return "FindUserGroupReplyValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e FindUserGroupReplyValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sFindUserGroupReply.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = FindUserGroupReplyValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = FindUserGroupReplyValidationError{}
+
+// Validate checks the field values on UpdateUserGroupRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *UpdateUserGroupRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UpdateUserGroupRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UpdateUserGroupRequestMultiError, or nil if none found.
+func (m *UpdateUserGroupRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UpdateUserGroupRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Id
+
+	if m.Name != nil {
+		// no validation rules for Name
+	}
+
+	if m.Word != nil {
+		// no validation rules for Word
+	}
+
+	if m.Action != nil {
+		// no validation rules for Action
+	}
+
+	if len(errors) > 0 {
+		return UpdateUserGroupRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// UpdateUserGroupRequestMultiError is an error wrapping multiple validation
+// errors returned by UpdateUserGroupRequest.ValidateAll() if the designated
+// constraints aren't met.
+type UpdateUserGroupRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UpdateUserGroupRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UpdateUserGroupRequestMultiError) AllErrors() []error { return m }
+
+// UpdateUserGroupRequestValidationError is the validation error returned by
+// UpdateUserGroupRequest.Validate if the designated constraints aren't met.
+type UpdateUserGroupRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateUserGroupRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateUserGroupRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateUserGroupRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateUserGroupRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateUserGroupRequestValidationError) ErrorName() string {
+	return "UpdateUserGroupRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateUserGroupRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateUserGroupRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateUserGroupRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateUserGroupRequestValidationError{}
+
 // Validate checks the field values on FindUserReply_User with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
@@ -3230,3 +3654,114 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = FindActionReply_ActionValidationError{}
+
+// Validate checks the field values on FindUserGroupReply_UserGroup with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *FindUserGroupReply_UserGroup) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on FindUserGroupReply_UserGroup with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// FindUserGroupReply_UserGroupMultiError, or nil if none found.
+func (m *FindUserGroupReply_UserGroup) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *FindUserGroupReply_UserGroup) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Id
+
+	// no validation rules for Name
+
+	// no validation rules for Word
+
+	// no validation rules for Action
+
+	if len(errors) > 0 {
+		return FindUserGroupReply_UserGroupMultiError(errors)
+	}
+
+	return nil
+}
+
+// FindUserGroupReply_UserGroupMultiError is an error wrapping multiple
+// validation errors returned by FindUserGroupReply_UserGroup.ValidateAll() if
+// the designated constraints aren't met.
+type FindUserGroupReply_UserGroupMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m FindUserGroupReply_UserGroupMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m FindUserGroupReply_UserGroupMultiError) AllErrors() []error { return m }
+
+// FindUserGroupReply_UserGroupValidationError is the validation error returned
+// by FindUserGroupReply_UserGroup.Validate if the designated constraints
+// aren't met.
+type FindUserGroupReply_UserGroupValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e FindUserGroupReply_UserGroupValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e FindUserGroupReply_UserGroupValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e FindUserGroupReply_UserGroupValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e FindUserGroupReply_UserGroupValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e FindUserGroupReply_UserGroupValidationError) ErrorName() string {
+	return "FindUserGroupReply_UserGroupValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e FindUserGroupReply_UserGroupValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sFindUserGroupReply_UserGroup.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = FindUserGroupReply_UserGroupValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = FindUserGroupReply_UserGroupValidationError{}

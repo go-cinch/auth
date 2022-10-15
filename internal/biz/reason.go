@@ -23,4 +23,5 @@ var (
 	DuplicateUserGroupWord = v1.ErrorIllegalParameter("duplicate word")
 	NoPermission           = v1.ErrorForbidden("no permission to access this resource")
 	DeleteYourself         = v1.ErrorIllegalParameter("you cannot delete yourself")
+	UserGroupNotFound      = v1.ErrorNotFound("user group not found")
 )

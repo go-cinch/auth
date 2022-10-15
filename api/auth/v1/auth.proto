@@ -134,6 +134,26 @@ service Auth {
       body: "*"
     };
   }
+  rpc FindUserGroup (FindUserGroupRequest) returns (FindUserGroupReply) {
+    option (google.api.http) = {
+      get: "/user/group"
+    };
+  }
+  rpc UpdateUserGroup (UpdateUserGroupRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      put: "/user/group/{id}"
+      body: "*",
+      additional_bindings {
+        patch: "/user/group/{id}",
+        body: "*",
+      }
+    };
+  }
+  rpc DeleteUserGroup (IdsRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/user/group/{ids}"
+    };
+  }
 }
 
 message Page {
@@ -288,9 +308,9 @@ message FindActionReply {
 
 message UpdateActionRequest {
   uint64 id = 1;
-  optional string name = 3;
-  optional string word = 4;
-  optional string resource = 5;
+  optional string name = 2;
+  optional string word = 3;
+  optional string resource = 4;
 }
 
 message CreateRoleRequest {
@@ -311,5 +331,30 @@ message CreateUserGroupRequest {
   repeated uint64 users = 1;
   string name = 2 [(validate.rules).string = {max_len: 50}];
   string word = 3 [(validate.rules).string = {max_len: 50}];
+  optional string action = 4;
+}
+
+message FindUserGroupRequest {
+  Page page = 1;
+  optional string name = 2;
+  optional string word = 3;
+  optional string action = 4;
+}
+
+message FindUserGroupReply {
+  message UserGroup {
+    uint64 id = 1;
+    string name = 2;
+    string word = 3;
+    string action = 4;
+  }
+  Page page = 1;
+  repeated UserGroup list = 2;
+}
+
+message UpdateUserGroupRequest {
+  uint64 id = 1;
+  optional string name = 2;
+  optional string word = 3;
   optional string action = 4;
 }

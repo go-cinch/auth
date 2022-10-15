@@ -1,10 +1,14 @@
 package data
 
 import (
+	v1 "auth/api/auth/v1"
 	"auth/internal/biz"
 	"context"
+	"fmt"
 	"github.com/go-cinch/common/constant"
 	"github.com/go-cinch/common/copierx"
+	"github.com/go-cinch/common/utils"
+	"strings"
 )
 
 type userGroupRepo struct {
@@ -90,5 +94,87 @@ func (ro userGroupRepo) FindGroupByUserCode(ctx context.Context, code string) (l
 		Where("id IN (?)", groupIds).
 		Find(&groups)
 	copierx.Copy(&list, groups)
+	return
+}
+
+func (ro userGroupRepo) Find(ctx context.Context, condition *biz.FindUserGroup) (rp []biz.UserGroup, err error) {
+	db := ro.data.DB(ctx)
+	db = db.
+		Model(&UserGroup{}).
+		Order("id DESC")
+	rp = make([]biz.UserGroup, 0)
+	list := make([]UserGroup, 0)
+	if condition.Name != nil {
+		db.Where("`name` LIKE ?", fmt.Sprintf("%%%s%%", *condition.Name))
+	}
+	if condition.Code != nil {
+		db.Where("`code` LIKE ?", fmt.Sprintf("%%%s%%", *condition.Code))
+	}
+	if condition.Word != nil {
+		db.Where("`word` LIKE ?", fmt.Sprintf("%%%s%%", *condition.Word))
+	}
+	if condition.Action != nil {
+		db.Where("`action` LIKE ?", fmt.Sprintf("%%%s%%", *condition.Action))
+	}
+	condition.Page.Primary = "id"
+	condition.Page.
+		WithContext(ctx).
+		Query(db).
+		Find(&list)
+	copierx.Copy(&rp, list)
+	return
+}
+
+func (ro userGroupRepo) Update(ctx context.Context, item *biz.UpdateUserGroup) (err error) {
+	var m UserGroup
+	db := ro.data.DB(ctx)
+	db.
+		Where("id = ?", item.Id).
+		First(&m)
+	if m.Id == constant.UI0 {
+		err = biz.UserGroupNotFound
+		return
+	}
+	change := make(map[string]interface{})
+	utils.CompareDiff(m, item, &change)
+	if len(change) == 0 {
+		err = biz.DataNotChange
+		return
+	}
+	if item.Word != nil {
+		err = ro.WordExists(ctx, *item.Word)
+		if err == nil {
+			err = biz.DuplicateUserGroupWord
+			return
+		}
+	}
+	err = db.
+		Model(&m).
+		Updates(&change).Error
+	return
+}
+
+func (ro userGroupRepo) Delete(ctx context.Context, ids ...uint64) (err error) {
+	db := ro.data.DB(ctx)
+	err = db.
+		Where("id IN (?)", ids).
+		Delete(&UserGroup{}).Error
+	return
+}
+
+func (ro userGroupRepo) WordExists(ctx context.Context, word string) (err error) {
+	var m UserGroup
+	db := ro.data.DB(ctx)
+	arr := strings.Split(word, ",")
+	for _, item := range arr {
+		db.
+			Where("word = ?", item).
+			First(&m)
+		ok := m.Id > constant.UI1
+		if !ok {
+			err = v1.ErrorIllegalParameter("%s: %s", biz.UserGroupNotFound.Message, item)
+			return
+		}
+	}
 	return
 }

@@ -42,6 +42,9 @@ type AuthClient interface {
 	CreateRole(ctx context.Context, in *CreateRoleRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	UpdateRole(ctx context.Context, in *UpdateRoleRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	CreateUserGroup(ctx context.Context, in *CreateUserGroupRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	FindUserGroup(ctx context.Context, in *FindUserGroupRequest, opts ...grpc.CallOption) (*FindUserGroupReply, error)
+	UpdateUserGroup(ctx context.Context, in *UpdateUserGroupRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	DeleteUserGroup(ctx context.Context, in *IdsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type authClient struct {
@@ -223,6 +226,33 @@ func (c *authClient) CreateUserGroup(ctx context.Context, in *CreateUserGroupReq
 	return out, nil
 }
 
+func (c *authClient) FindUserGroup(ctx context.Context, in *FindUserGroupRequest, opts ...grpc.CallOption) (*FindUserGroupReply, error) {
+	out := new(FindUserGroupReply)
+	err := c.cc.Invoke(ctx, "/auth.v1.Auth/FindUserGroup", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authClient) UpdateUserGroup(ctx context.Context, in *UpdateUserGroupRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/auth.v1.Auth/UpdateUserGroup", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authClient) DeleteUserGroup(ctx context.Context, in *IdsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/auth.v1.Auth/DeleteUserGroup", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AuthServer is the server API for Auth service.
 // All implementations must embed UnimplementedAuthServer
 // for forward compatibility
@@ -246,6 +276,9 @@ type AuthServer interface {
 	CreateRole(context.Context, *CreateRoleRequest) (*emptypb.Empty, error)
 	UpdateRole(context.Context, *UpdateRoleRequest) (*emptypb.Empty, error)
 	CreateUserGroup(context.Context, *CreateUserGroupRequest) (*emptypb.Empty, error)
+	FindUserGroup(context.Context, *FindUserGroupRequest) (*FindUserGroupReply, error)
+	UpdateUserGroup(context.Context, *UpdateUserGroupRequest) (*emptypb.Empty, error)
+	DeleteUserGroup(context.Context, *IdsRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedAuthServer()
 }
 
@@ -309,6 +342,15 @@ func (UnimplementedAuthServer) UpdateRole(context.Context, *UpdateRoleRequest) (
 }
 func (UnimplementedAuthServer) CreateUserGroup(context.Context, *CreateUserGroupRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateUserGroup not implemented")
+}
+func (UnimplementedAuthServer) FindUserGroup(context.Context, *FindUserGroupRequest) (*FindUserGroupReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FindUserGroup not implemented")
+}
+func (UnimplementedAuthServer) UpdateUserGroup(context.Context, *UpdateUserGroupRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateUserGroup not implemented")
+}
+func (UnimplementedAuthServer) DeleteUserGroup(context.Context, *IdsRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteUserGroup not implemented")
 }
 func (UnimplementedAuthServer) mustEmbedUnimplementedAuthServer() {}
 
@@ -665,6 +707,60 @@ func _Auth_CreateUserGroup_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Auth_FindUserGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FindUserGroupRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServer).FindUserGroup(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/auth.v1.Auth/FindUserGroup",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServer).FindUserGroup(ctx, req.(*FindUserGroupRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Auth_UpdateUserGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateUserGroupRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServer).UpdateUserGroup(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/auth.v1.Auth/UpdateUserGroup",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServer).UpdateUserGroup(ctx, req.(*UpdateUserGroupRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Auth_DeleteUserGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IdsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServer).DeleteUserGroup(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/auth.v1.Auth/DeleteUserGroup",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServer).DeleteUserGroup(ctx, req.(*IdsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Auth_ServiceDesc is the grpc.ServiceDesc for Auth service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -747,6 +843,18 @@ var Auth_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateUserGroup",
 			Handler:    _Auth_CreateUserGroup_Handler,
+		},
+		{
+			MethodName: "FindUserGroup",
+			Handler:    _Auth_FindUserGroup_Handler,
+		},
+		{
+			MethodName: "UpdateUserGroup",
+			Handler:    _Auth_UpdateUserGroup_Handler,
+		},
+		{
+			MethodName: "DeleteUserGroup",
+			Handler:    _Auth_DeleteUserGroup_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
