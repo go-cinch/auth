@@ -31,7 +31,6 @@ type User struct {
 	Avatar       string          `json:"avatar"`
 	Nickname     string          `json:"nickname"`
 	Introduction string          `json:"introduction"`
-	Status       uint64          `json:"status"`
 	LastLogin    carbon.DateTime `json:"lastLogin,string,omitempty"`
 	Locked       uint64          `json:"locked"`
 	LockExpire   int64           `json:"lockExpire"`
@@ -59,7 +58,6 @@ type FindUser struct {
 	Username       *string   `json:"username"`
 	Code           *string   `json:"code"`
 	Mobile         *string   `json:"mobile"`
-	Status         *uint64   `json:"status"`
 	Locked         *uint64   `json:"locked"`
 }
 

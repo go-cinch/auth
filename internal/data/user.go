@@ -32,7 +32,6 @@ type User struct {
 	Avatar       string          `json:"avatar"`                        // avatar url
 	Nickname     string          `json:"nickname"`                      // nickname
 	Introduction string          `json:"introduction"`                  // introduction
-	Status       uint64          `json:"status"`                        // status(0: disabled, 1: enable)
 	LastLogin    carbon.DateTime `json:"lastLogin"`                     // last login time
 	Locked       uint64          `json:"locked"`                        // locked(0: unlock, 1: locked)
 	LockExpire   int64           `json:"lockExpire"`                    // lock expiration time
@@ -90,9 +89,6 @@ func (ro userRepo) Find(ctx context.Context, condition *biz.FindUser) (rp []biz.
 	if condition.Mobile != nil {
 		db.Where("`mobile` LIKE ?", fmt.Sprintf("%%%s%%", *condition.Mobile))
 	}
-	if condition.Status != nil {
-		db.Where("`status` = ?", *condition.Status)
-	}
 	if condition.Locked != nil {
 		db.Where("`locked` = ?", *condition.Locked)
 	}
@@ -148,7 +144,6 @@ func (ro userRepo) Create(ctx context.Context, item *biz.User) (err error) {
 	copierx.Copy(&m, item)
 	m.Id = ro.data.Id(ctx)
 	m.Code = id.NewCode(m.Id)
-	m.Status = constant.UI1
 	if m.Action != "" {
 		err = ro.action.CodeExists(ctx, m.Action)
 		if err != nil {

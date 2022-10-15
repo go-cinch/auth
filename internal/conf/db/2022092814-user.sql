@@ -14,7 +14,6 @@ CREATE TABLE user
     `avatar`       LONGTEXT             NULL COMMENT 'avatar url',
     `nickname`     LONGTEXT             NULL COMMENT 'nickname',
     `introduction` LONGTEXT             NULL COMMENT 'introduction',
-    `status`       TINYINT(1) DEFAULT 1 NULL COMMENT 'status(0: disabled, 1: enable)',
     `last_login`   DATETIME(3)          NULL COMMENT 'last login time',
     `locked`       TINYINT(1) DEFAULT 0 NULL COMMENT 'locked(0: unlock, 1: locked)',
     `lock_expire`  BIGINT UNSIGNED      NULL COMMENT 'lock expiration time',

@@ -9,7 +9,6 @@ type Role struct {
 	Id     uint64 `json:"id,string"`
 	Name   string `json:"name"`
 	Word   string `json:"word"`
-	Status uint64 `json:"status"`
 	Action string `json:"action"`
 }
 
@@ -17,7 +16,6 @@ type UpdateRole struct {
 	Id     *uint64 `json:"id,string,omitempty"`
 	Name   *string `json:"name,omitempty"`
 	Word   *string `json:"word,omitempty"`
-	Status *uint64 `json:"status,omitempty"`
 	Action *string `json:"action,omitempty"`
 }
 

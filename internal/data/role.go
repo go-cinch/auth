@@ -18,7 +18,6 @@ type Role struct {
 	Id     uint64 `json:"id,string"` // auto increment id
 	Name   string `json:"name"`      // name
 	Word   string `json:"word"`      // keyword, must be unique, used as frontend display
-	Status uint64 `json:"status"`    // status(0: disabled, 1: enable)
 	Action string `json:"action"`    // role action code array
 }
 
@@ -41,7 +40,6 @@ func (ro roleRepo) Create(ctx context.Context, item *biz.Role) (err error) {
 	}
 	copierx.Copy(&m, item)
 	m.Id = ro.data.Id(ctx)
-	m.Status = constant.UI1
 	if m.Action != "" {
 		err = ro.action.CodeExists(ctx, m.Action)
 		if err != nil {

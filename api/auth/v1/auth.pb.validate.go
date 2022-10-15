@@ -1375,10 +1375,6 @@ func (m *FindUserRequest) validate(all bool) error {
 		// no validation rules for Mobile
 	}
 
-	if m.Status != nil {
-		// no validation rules for Status
-	}
-
 	if m.Locked != nil {
 		// no validation rules for Locked
 	}
@@ -2773,10 +2769,6 @@ func (m *UpdateRoleRequest) validate(all bool) error {
 		// no validation rules for Word
 	}
 
-	if m.Status != nil {
-		// no validation rules for Status
-	}
-
 	if m.Action != nil {
 		// no validation rules for Action
 	}
@@ -3446,8 +3438,6 @@ func (m *FindUserReply_User) validate(all bool) error {
 	// no validation rules for Code
 
 	// no validation rules for Mobile
-
-	// no validation rules for Status
 
 	// no validation rules for Locked
 

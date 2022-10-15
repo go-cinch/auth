@@ -232,8 +232,7 @@ message FindUserRequest {
   optional string username = 6;
   optional string code = 7;
   optional string mobile = 8;
-  optional uint64 status = 9;
-  optional uint64 locked = 10;
+  optional uint64 locked = 9;
 }
 
 message FindUserReply {
@@ -244,14 +243,13 @@ message FindUserReply {
     string username = 4;
     string code = 5;
     string mobile = 6;
-    uint64 status = 7;
-    uint64 locked = 8;
-    string avatar = 9;
-    string nickname = 10;
-    string introduction = 12;
+    uint64 locked = 7;
+    string avatar = 8;
+    string nickname = 9;
+    string introduction = 10;
     string last_login = 11;
-    int64 lock_expire = 13;
-    string lock_msg = 14;
+    int64 lock_expire = 12;
+    string lock_msg = 13;
   }
   Page page = 1;
   repeated User list = 2;
@@ -323,8 +321,7 @@ message UpdateRoleRequest {
   uint64 id = 1;
   optional string name = 2;
   optional string word = 3;
-  optional uint64 status = 4;
-  optional string action = 5;
+  optional string action = 4;
 }
 
 message CreateUserGroupRequest {
