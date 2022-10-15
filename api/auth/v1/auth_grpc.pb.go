@@ -40,7 +40,9 @@ type AuthClient interface {
 	UpdateAction(ctx context.Context, in *UpdateActionRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	DeleteAction(ctx context.Context, in *IdsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	CreateRole(ctx context.Context, in *CreateRoleRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	FindRole(ctx context.Context, in *FindRoleRequest, opts ...grpc.CallOption) (*FindRoleReply, error)
 	UpdateRole(ctx context.Context, in *UpdateRoleRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	DeleteRole(ctx context.Context, in *IdsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	CreateUserGroup(ctx context.Context, in *CreateUserGroupRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	FindUserGroup(ctx context.Context, in *FindUserGroupRequest, opts ...grpc.CallOption) (*FindUserGroupReply, error)
 	UpdateUserGroup(ctx context.Context, in *UpdateUserGroupRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
@@ -208,9 +210,27 @@ func (c *authClient) CreateRole(ctx context.Context, in *CreateRoleRequest, opts
 	return out, nil
 }
 
+func (c *authClient) FindRole(ctx context.Context, in *FindRoleRequest, opts ...grpc.CallOption) (*FindRoleReply, error) {
+	out := new(FindRoleReply)
+	err := c.cc.Invoke(ctx, "/auth.v1.Auth/FindRole", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *authClient) UpdateRole(ctx context.Context, in *UpdateRoleRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/auth.v1.Auth/UpdateRole", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authClient) DeleteRole(ctx context.Context, in *IdsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/auth.v1.Auth/DeleteRole", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -274,7 +294,9 @@ type AuthServer interface {
 	UpdateAction(context.Context, *UpdateActionRequest) (*emptypb.Empty, error)
 	DeleteAction(context.Context, *IdsRequest) (*emptypb.Empty, error)
 	CreateRole(context.Context, *CreateRoleRequest) (*emptypb.Empty, error)
+	FindRole(context.Context, *FindRoleRequest) (*FindRoleReply, error)
 	UpdateRole(context.Context, *UpdateRoleRequest) (*emptypb.Empty, error)
+	DeleteRole(context.Context, *IdsRequest) (*emptypb.Empty, error)
 	CreateUserGroup(context.Context, *CreateUserGroupRequest) (*emptypb.Empty, error)
 	FindUserGroup(context.Context, *FindUserGroupRequest) (*FindUserGroupReply, error)
 	UpdateUserGroup(context.Context, *UpdateUserGroupRequest) (*emptypb.Empty, error)
@@ -337,8 +359,14 @@ func (UnimplementedAuthServer) DeleteAction(context.Context, *IdsRequest) (*empt
 func (UnimplementedAuthServer) CreateRole(context.Context, *CreateRoleRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateRole not implemented")
 }
+func (UnimplementedAuthServer) FindRole(context.Context, *FindRoleRequest) (*FindRoleReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FindRole not implemented")
+}
 func (UnimplementedAuthServer) UpdateRole(context.Context, *UpdateRoleRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateRole not implemented")
+}
+func (UnimplementedAuthServer) DeleteRole(context.Context, *IdsRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteRole not implemented")
 }
 func (UnimplementedAuthServer) CreateUserGroup(context.Context, *CreateUserGroupRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateUserGroup not implemented")
@@ -671,6 +699,24 @@ func _Auth_CreateRole_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Auth_FindRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FindRoleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServer).FindRole(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/auth.v1.Auth/FindRole",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServer).FindRole(ctx, req.(*FindRoleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Auth_UpdateRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateRoleRequest)
 	if err := dec(in); err != nil {
@@ -685,6 +731,24 @@ func _Auth_UpdateRole_Handler(srv interface{}, ctx context.Context, dec func(int
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AuthServer).UpdateRole(ctx, req.(*UpdateRoleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Auth_DeleteRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IdsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServer).DeleteRole(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/auth.v1.Auth/DeleteRole",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServer).DeleteRole(ctx, req.(*IdsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -837,8 +901,16 @@ var Auth_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Auth_CreateRole_Handler,
 		},
 		{
+			MethodName: "FindRole",
+			Handler:    _Auth_FindRole_Handler,
+		},
+		{
 			MethodName: "UpdateRole",
 			Handler:    _Auth_UpdateRole_Handler,
+		},
+		{
+			MethodName: "DeleteRole",
+			Handler:    _Auth_DeleteRole_Handler,
 		},
 		{
 			MethodName: "CreateUserGroup",

@@ -25,9 +25,11 @@ const OperationAuthCreateAction = "/auth.v1.Auth/CreateAction"
 const OperationAuthCreateRole = "/auth.v1.Auth/CreateRole"
 const OperationAuthCreateUserGroup = "/auth.v1.Auth/CreateUserGroup"
 const OperationAuthDeleteAction = "/auth.v1.Auth/DeleteAction"
+const OperationAuthDeleteRole = "/auth.v1.Auth/DeleteRole"
 const OperationAuthDeleteUser = "/auth.v1.Auth/DeleteUser"
 const OperationAuthDeleteUserGroup = "/auth.v1.Auth/DeleteUserGroup"
 const OperationAuthFindAction = "/auth.v1.Auth/FindAction"
+const OperationAuthFindRole = "/auth.v1.Auth/FindRole"
 const OperationAuthFindUser = "/auth.v1.Auth/FindUser"
 const OperationAuthFindUserGroup = "/auth.v1.Auth/FindUserGroup"
 const OperationAuthInfo = "/auth.v1.Auth/Info"
@@ -49,9 +51,11 @@ type AuthHTTPServer interface {
 	CreateRole(context.Context, *CreateRoleRequest) (*emptypb.Empty, error)
 	CreateUserGroup(context.Context, *CreateUserGroupRequest) (*emptypb.Empty, error)
 	DeleteAction(context.Context, *IdsRequest) (*emptypb.Empty, error)
+	DeleteRole(context.Context, *IdsRequest) (*emptypb.Empty, error)
 	DeleteUser(context.Context, *IdsRequest) (*emptypb.Empty, error)
 	DeleteUserGroup(context.Context, *IdsRequest) (*emptypb.Empty, error)
 	FindAction(context.Context, *FindActionRequest) (*FindActionReply, error)
+	FindRole(context.Context, *FindRoleRequest) (*FindRoleReply, error)
 	FindUser(context.Context, *FindUserRequest) (*FindUserReply, error)
 	FindUserGroup(context.Context, *FindUserGroupRequest) (*FindUserGroupReply, error)
 	Info(context.Context, *emptypb.Empty) (*InfoReply, error)
@@ -89,8 +93,10 @@ func RegisterAuthHTTPServer(s *http.Server, srv AuthHTTPServer) {
 	r.PUT("/action/{id}", _Auth_UpdateAction1_HTTP_Handler(srv))
 	r.DELETE("/action/{ids}", _Auth_DeleteAction0_HTTP_Handler(srv))
 	r.POST("/role", _Auth_CreateRole0_HTTP_Handler(srv))
+	r.GET("/role", _Auth_FindRole0_HTTP_Handler(srv))
 	r.PATCH("/role/{id}", _Auth_UpdateRole0_HTTP_Handler(srv))
 	r.PUT("/role/{id}", _Auth_UpdateRole1_HTTP_Handler(srv))
+	r.DELETE("/role/{ids}", _Auth_DeleteRole0_HTTP_Handler(srv))
 	r.POST("/user/group", _Auth_CreateUserGroup0_HTTP_Handler(srv))
 	r.GET("/user/group", _Auth_FindUserGroup0_HTTP_Handler(srv))
 	r.PATCH("/user/group/{id}", _Auth_UpdateUserGroup0_HTTP_Handler(srv))
@@ -477,6 +483,25 @@ func _Auth_CreateRole0_HTTP_Handler(srv AuthHTTPServer) func(ctx http.Context) e
 	}
 }
 
+func _Auth_FindRole0_HTTP_Handler(srv AuthHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in FindRoleRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationAuthFindRole)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.FindRole(ctx, req.(*FindRoleRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*FindRoleReply)
+		return ctx.Result(200, reply)
+	}
+}
+
 func _Auth_UpdateRole0_HTTP_Handler(srv AuthHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in UpdateRoleRequest
@@ -511,6 +536,28 @@ func _Auth_UpdateRole1_HTTP_Handler(srv AuthHTTPServer) func(ctx http.Context) e
 		http.SetOperation(ctx, OperationAuthUpdateRole)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
 			return srv.UpdateRole(ctx, req.(*UpdateRoleRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*emptypb.Empty)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _Auth_DeleteRole0_HTTP_Handler(srv AuthHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in IdsRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindVars(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationAuthDeleteRole)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.DeleteRole(ctx, req.(*IdsRequest))
 		})
 		out, err := h(ctx, &in)
 		if err != nil {
@@ -631,9 +678,11 @@ type AuthHTTPClient interface {
 	CreateRole(ctx context.Context, req *CreateRoleRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
 	CreateUserGroup(ctx context.Context, req *CreateUserGroupRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
 	DeleteAction(ctx context.Context, req *IdsRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
+	DeleteRole(ctx context.Context, req *IdsRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
 	DeleteUser(ctx context.Context, req *IdsRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
 	DeleteUserGroup(ctx context.Context, req *IdsRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
 	FindAction(ctx context.Context, req *FindActionRequest, opts ...http.CallOption) (rsp *FindActionReply, err error)
+	FindRole(ctx context.Context, req *FindRoleRequest, opts ...http.CallOption) (rsp *FindRoleReply, err error)
 	FindUser(ctx context.Context, req *FindUserRequest, opts ...http.CallOption) (rsp *FindUserReply, err error)
 	FindUserGroup(ctx context.Context, req *FindUserGroupRequest, opts ...http.CallOption) (rsp *FindUserGroupReply, err error)
 	Info(ctx context.Context, req *emptypb.Empty, opts ...http.CallOption) (rsp *InfoReply, err error)
@@ -723,6 +772,19 @@ func (c *AuthHTTPClientImpl) DeleteAction(ctx context.Context, in *IdsRequest, o
 	return &out, err
 }
 
+func (c *AuthHTTPClientImpl) DeleteRole(ctx context.Context, in *IdsRequest, opts ...http.CallOption) (*emptypb.Empty, error) {
+	var out emptypb.Empty
+	pattern := "/role/{ids}"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationAuthDeleteRole))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "DELETE", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, err
+}
+
 func (c *AuthHTTPClientImpl) DeleteUser(ctx context.Context, in *IdsRequest, opts ...http.CallOption) (*emptypb.Empty, error) {
 	var out emptypb.Empty
 	pattern := "/user/{ids}"
@@ -754,6 +816,19 @@ func (c *AuthHTTPClientImpl) FindAction(ctx context.Context, in *FindActionReque
 	pattern := "/action"
 	path := binding.EncodeURL(pattern, in, true)
 	opts = append(opts, http.Operation(OperationAuthFindAction))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, err
+}
+
+func (c *AuthHTTPClientImpl) FindRole(ctx context.Context, in *FindRoleRequest, opts ...http.CallOption) (*FindRoleReply, error) {
+	var out FindRoleReply
+	pattern := "/role"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationAuthFindRole))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
 	if err != nil {

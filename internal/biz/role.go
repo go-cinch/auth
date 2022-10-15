@@ -3,6 +3,7 @@ package biz
 import (
 	"auth/internal/conf"
 	"context"
+	"github.com/go-cinch/common/page"
 )
 
 type Role struct {
@@ -10,6 +11,13 @@ type Role struct {
 	Name   string `json:"name"`
 	Word   string `json:"word"`
 	Action string `json:"action"`
+}
+
+type FindRole struct {
+	Page   page.Page `json:"page"`
+	Name   *string   `json:"name"`
+	Word   *string   `json:"word"`
+	Action *string   `json:"action"`
 }
 
 type UpdateRole struct {
@@ -21,7 +29,9 @@ type UpdateRole struct {
 
 type RoleRepo interface {
 	Create(ctx context.Context, item *Role) error
+	Find(ctx context.Context, condition *FindRole) ([]Role, error)
 	Update(ctx context.Context, item *UpdateRole) error
+	Delete(ctx context.Context, ids ...uint64) error
 }
 
 type RoleUseCase struct {
@@ -44,10 +54,23 @@ func (uc *RoleUseCase) Create(ctx context.Context, item *Role) error {
 	})
 }
 
+func (uc *RoleUseCase) Find(ctx context.Context, condition *FindRole) ([]Role, error) {
+	return uc.repo.Find(ctx, condition)
+}
+
 func (uc *RoleUseCase) Update(ctx context.Context, item *UpdateRole) error {
 	return uc.tx.Tx(ctx, func(ctx context.Context) error {
 		return uc.cache.Flush(ctx, func(ctx context.Context) error {
 			return uc.repo.Update(ctx, item)
+		})
+	})
+}
+
+func (uc *RoleUseCase) Delete(ctx context.Context, ids ...uint64) error {
+	return uc.tx.Tx(ctx, func(ctx context.Context) error {
+		return uc.cache.Flush(ctx, func(ctx context.Context) (err error) {
+			err = uc.repo.Delete(ctx, ids...)
+			return
 		})
 	})
 }

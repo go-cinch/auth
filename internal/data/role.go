@@ -1,11 +1,14 @@
 package data
 
 import (
+	v1 "auth/api/auth/v1"
 	"auth/internal/biz"
 	"context"
+	"fmt"
 	"github.com/go-cinch/common/constant"
 	"github.com/go-cinch/common/copierx"
 	"github.com/go-cinch/common/utils"
+	"strings"
 )
 
 type roleRepo struct {
@@ -30,15 +33,13 @@ func NewRoleRepo(data *Data, action biz.ActionRepo) biz.RoleRepo {
 
 func (ro roleRepo) Create(ctx context.Context, item *biz.Role) (err error) {
 	var m Role
-	db := ro.data.DB(ctx)
-	db.
-		Where("`word` = ?", item.Word).
-		First(&m)
-	if m.Id > constant.UI0 {
+	err = ro.WordExists(ctx, item.Word)
+	if err == nil {
 		err = biz.DuplicateRoleWord
 		return
 	}
 	copierx.Copy(&m, item)
+	db := ro.data.DB(ctx)
 	m.Id = ro.data.Id(ctx)
 	if m.Action != "" {
 		err = ro.action.CodeExists(ctx, m.Action)
@@ -47,6 +48,28 @@ func (ro roleRepo) Create(ctx context.Context, item *biz.Role) (err error) {
 		}
 	}
 	err = db.Create(&m).Error
+	return
+}
+
+func (ro roleRepo) Find(ctx context.Context, condition *biz.FindRole) (rp []biz.Role, err error) {
+	db := ro.data.DB(ctx)
+	db = db.
+		Model(&Role{}).
+		Order("id DESC")
+	rp = make([]biz.Role, 0)
+	list := make([]Role, 0)
+	if condition.Name != nil {
+		db.Where("`name` LIKE ?", fmt.Sprintf("%%%s%%", *condition.Name))
+	}
+	if condition.Word != nil {
+		db.Where("`word` LIKE ?", fmt.Sprintf("%%%s%%", *condition.Word))
+	}
+	condition.Page.Primary = "id"
+	condition.Page.
+		WithContext(ctx).
+		Query(db).
+		Find(&list)
+	copierx.Copy(&rp, list)
 	return
 }
 
@@ -74,8 +97,40 @@ func (ro roleRepo) Update(ctx context.Context, item *biz.UpdateRole) (err error)
 			}
 		}
 	}
+	if item.Word != nil {
+		err = ro.WordExists(ctx, *item.Word)
+		if err == nil {
+			err = biz.DuplicateRoleWord
+			return
+		}
+	}
 	err = db.
 		Model(&m).
 		Updates(&change).Error
+	return
+}
+
+func (ro roleRepo) Delete(ctx context.Context, ids ...uint64) (err error) {
+	db := ro.data.DB(ctx)
+	err = db.
+		Where("id IN (?)", ids).
+		Delete(&Role{}).Error
+	return
+}
+
+func (ro roleRepo) WordExists(ctx context.Context, word string) (err error) {
+	var m Role
+	db := ro.data.DB(ctx)
+	arr := strings.Split(word, ",")
+	for _, item := range arr {
+		db.
+			Where("word = ?", item).
+			First(&m)
+		ok := m.Id > constant.UI1
+		if !ok {
+			err = v1.ErrorIllegalParameter("%s: %s", biz.RoleNotFound.Message, item)
+			return
+		}
+	}
 	return
 }

@@ -118,6 +118,11 @@ service Auth {
       body: "*"
     };
   }
+  rpc FindRole (FindRoleRequest) returns (FindRoleReply) {
+    option (google.api.http) = {
+      get: "/role"
+    };
+  }
   rpc UpdateRole (UpdateRoleRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
       put: "/role/{id}"
@@ -126,6 +131,11 @@ service Auth {
         patch: "/role/{id}",
         body: "*",
       }
+    };
+  }
+  rpc DeleteRole (IdsRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/role/{ids}"
     };
   }
   rpc CreateUserGroup (CreateUserGroupRequest) returns (google.protobuf.Empty) {
@@ -315,6 +325,24 @@ message CreateRoleRequest {
   string name = 1 [(validate.rules).string = {max_len: 50}];
   string word = 2 [(validate.rules).string = {max_len: 50}];
   optional string action = 3;
+}
+
+message FindRoleRequest {
+  Page page = 1;
+  optional string name = 2;
+  optional string word = 3;
+  optional string action = 4;
+}
+
+message FindRoleReply {
+  message Role {
+    uint64 id = 1;
+    string name = 2;
+    string word = 3;
+    string action = 4;
+  }
+  Page page = 1;
+  repeated Role list = 2;
 }
 
 message UpdateRoleRequest {

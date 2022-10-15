@@ -2737,6 +2737,310 @@ var _ interface {
 	ErrorName() string
 } = CreateRoleRequestValidationError{}
 
+// Validate checks the field values on FindRoleRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *FindRoleRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on FindRoleRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// FindRoleRequestMultiError, or nil if none found.
+func (m *FindRoleRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *FindRoleRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if all {
+		switch v := interface{}(m.GetPage()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, FindRoleRequestValidationError{
+					field:  "Page",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, FindRoleRequestValidationError{
+					field:  "Page",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetPage()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return FindRoleRequestValidationError{
+				field:  "Page",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if m.Name != nil {
+		// no validation rules for Name
+	}
+
+	if m.Word != nil {
+		// no validation rules for Word
+	}
+
+	if m.Action != nil {
+		// no validation rules for Action
+	}
+
+	if len(errors) > 0 {
+		return FindRoleRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// FindRoleRequestMultiError is an error wrapping multiple validation errors
+// returned by FindRoleRequest.ValidateAll() if the designated constraints
+// aren't met.
+type FindRoleRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m FindRoleRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m FindRoleRequestMultiError) AllErrors() []error { return m }
+
+// FindRoleRequestValidationError is the validation error returned by
+// FindRoleRequest.Validate if the designated constraints aren't met.
+type FindRoleRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e FindRoleRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e FindRoleRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e FindRoleRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e FindRoleRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e FindRoleRequestValidationError) ErrorName() string { return "FindRoleRequestValidationError" }
+
+// Error satisfies the builtin error interface
+func (e FindRoleRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sFindRoleRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = FindRoleRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = FindRoleRequestValidationError{}
+
+// Validate checks the field values on FindRoleReply with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *FindRoleReply) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on FindRoleReply with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in FindRoleReplyMultiError, or
+// nil if none found.
+func (m *FindRoleReply) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *FindRoleReply) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if all {
+		switch v := interface{}(m.GetPage()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, FindRoleReplyValidationError{
+					field:  "Page",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, FindRoleReplyValidationError{
+					field:  "Page",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetPage()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return FindRoleReplyValidationError{
+				field:  "Page",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	for idx, item := range m.GetList() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, FindRoleReplyValidationError{
+						field:  fmt.Sprintf("List[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, FindRoleReplyValidationError{
+						field:  fmt.Sprintf("List[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return FindRoleReplyValidationError{
+					field:  fmt.Sprintf("List[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return FindRoleReplyMultiError(errors)
+	}
+
+	return nil
+}
+
+// FindRoleReplyMultiError is an error wrapping multiple validation errors
+// returned by FindRoleReply.ValidateAll() if the designated constraints
+// aren't met.
+type FindRoleReplyMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m FindRoleReplyMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m FindRoleReplyMultiError) AllErrors() []error { return m }
+
+// FindRoleReplyValidationError is the validation error returned by
+// FindRoleReply.Validate if the designated constraints aren't met.
+type FindRoleReplyValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e FindRoleReplyValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e FindRoleReplyValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e FindRoleReplyValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e FindRoleReplyValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e FindRoleReplyValidationError) ErrorName() string { return "FindRoleReplyValidationError" }
+
+// Error satisfies the builtin error interface
+func (e FindRoleReplyValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sFindRoleReply.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = FindRoleReplyValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = FindRoleReplyValidationError{}
+
 // Validate checks the field values on UpdateRoleRequest with the rules defined
 // in the proto definition for this message. If any rules are violated, the
 // first error encountered is returned, or nil if there are no violations.
@@ -3644,6 +3948,116 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = FindActionReply_ActionValidationError{}
+
+// Validate checks the field values on FindRoleReply_Role with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *FindRoleReply_Role) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on FindRoleReply_Role with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// FindRoleReply_RoleMultiError, or nil if none found.
+func (m *FindRoleReply_Role) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *FindRoleReply_Role) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Id
+
+	// no validation rules for Name
+
+	// no validation rules for Word
+
+	// no validation rules for Action
+
+	if len(errors) > 0 {
+		return FindRoleReply_RoleMultiError(errors)
+	}
+
+	return nil
+}
+
+// FindRoleReply_RoleMultiError is an error wrapping multiple validation errors
+// returned by FindRoleReply_Role.ValidateAll() if the designated constraints
+// aren't met.
+type FindRoleReply_RoleMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m FindRoleReply_RoleMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m FindRoleReply_RoleMultiError) AllErrors() []error { return m }
+
+// FindRoleReply_RoleValidationError is the validation error returned by
+// FindRoleReply_Role.Validate if the designated constraints aren't met.
+type FindRoleReply_RoleValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e FindRoleReply_RoleValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e FindRoleReply_RoleValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e FindRoleReply_RoleValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e FindRoleReply_RoleValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e FindRoleReply_RoleValidationError) ErrorName() string {
+	return "FindRoleReply_RoleValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e FindRoleReply_RoleValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sFindRoleReply_Role.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = FindRoleReply_RoleValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = FindRoleReply_RoleValidationError{}
 
 // Validate checks the field values on FindUserGroupReply_UserGroup with the
 // rules defined in the proto definition for this message. If any rules are
