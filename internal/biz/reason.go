@@ -17,6 +17,7 @@ var (
 	LoginFailed            = v1.ErrorIllegalParameter("incorrect username or password")
 	DuplicateActionWord    = v1.ErrorIllegalParameter("duplicate word")
 	ActionNotFound         = v1.ErrorNotFound("action not found")
+	KeepLeastOntAction     = v1.ErrorIllegalParameter("keep at least one action")
 	DuplicateRoleWord      = v1.ErrorIllegalParameter("duplicate word")
 	RoleNotFound           = v1.ErrorNotFound("role not found")
 	DuplicateUserGroupWord = v1.ErrorIllegalParameter("duplicate word")

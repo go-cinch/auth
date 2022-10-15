@@ -75,7 +75,7 @@ service Auth {
       }
     };
   }
-  rpc DeleteUser (DeleteUserRequest) returns (google.protobuf.Empty) {
+  rpc DeleteUser (IdsRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
       delete: "/user/{ids}"
     };
@@ -95,6 +95,21 @@ service Auth {
   rpc FindAction (FindActionRequest) returns (FindActionReply) {
     option (google.api.http) = {
       get: "/action"
+    };
+  }
+  rpc UpdateAction (UpdateActionRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      put: "/action/{id}"
+      body: "*",
+      additional_bindings {
+        patch: "/action/{id}",
+        body: "*",
+      }
+    };
+  }
+  rpc DeleteAction (IdsRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/action/{ids}"
     };
   }
   rpc CreateRole (CreateRoleRequest) returns (google.protobuf.Empty) {
@@ -232,7 +247,7 @@ message UpdateUserRequest {
   optional string introduction = 7;
 }
 
-message DeleteUserRequest {
+message IdsRequest {
   string ids = 1;
 }
 
@@ -269,6 +284,13 @@ message FindActionReply {
   }
   Page page = 1;
   repeated Action list = 2;
+}
+
+message UpdateActionRequest {
+  uint64 id = 1;
+  optional string name = 3;
+  optional string word = 4;
+  optional string resource = 5;
 }
 
 message CreateRoleRequest {

@@ -1752,22 +1752,22 @@ var _ interface {
 	ErrorName() string
 } = UpdateUserRequestValidationError{}
 
-// Validate checks the field values on DeleteUserRequest with the rules defined
-// in the proto definition for this message. If any rules are violated, the
-// first error encountered is returned, or nil if there are no violations.
-func (m *DeleteUserRequest) Validate() error {
+// Validate checks the field values on IdsRequest with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *IdsRequest) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on DeleteUserRequest with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// DeleteUserRequestMultiError, or nil if none found.
-func (m *DeleteUserRequest) ValidateAll() error {
+// ValidateAll checks the field values on IdsRequest with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in IdsRequestMultiError, or
+// nil if none found.
+func (m *IdsRequest) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *DeleteUserRequest) validate(all bool) error {
+func (m *IdsRequest) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -1777,19 +1777,18 @@ func (m *DeleteUserRequest) validate(all bool) error {
 	// no validation rules for Ids
 
 	if len(errors) > 0 {
-		return DeleteUserRequestMultiError(errors)
+		return IdsRequestMultiError(errors)
 	}
 
 	return nil
 }
 
-// DeleteUserRequestMultiError is an error wrapping multiple validation errors
-// returned by DeleteUserRequest.ValidateAll() if the designated constraints
-// aren't met.
-type DeleteUserRequestMultiError []error
+// IdsRequestMultiError is an error wrapping multiple validation errors
+// returned by IdsRequest.ValidateAll() if the designated constraints aren't met.
+type IdsRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m DeleteUserRequestMultiError) Error() string {
+func (m IdsRequestMultiError) Error() string {
 	var msgs []string
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -1798,11 +1797,11 @@ func (m DeleteUserRequestMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m DeleteUserRequestMultiError) AllErrors() []error { return m }
+func (m IdsRequestMultiError) AllErrors() []error { return m }
 
-// DeleteUserRequestValidationError is the validation error returned by
-// DeleteUserRequest.Validate if the designated constraints aren't met.
-type DeleteUserRequestValidationError struct {
+// IdsRequestValidationError is the validation error returned by
+// IdsRequest.Validate if the designated constraints aren't met.
+type IdsRequestValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -1810,24 +1809,22 @@ type DeleteUserRequestValidationError struct {
 }
 
 // Field function returns field value.
-func (e DeleteUserRequestValidationError) Field() string { return e.field }
+func (e IdsRequestValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e DeleteUserRequestValidationError) Reason() string { return e.reason }
+func (e IdsRequestValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e DeleteUserRequestValidationError) Cause() error { return e.cause }
+func (e IdsRequestValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e DeleteUserRequestValidationError) Key() bool { return e.key }
+func (e IdsRequestValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e DeleteUserRequestValidationError) ErrorName() string {
-	return "DeleteUserRequestValidationError"
-}
+func (e IdsRequestValidationError) ErrorName() string { return "IdsRequestValidationError" }
 
 // Error satisfies the builtin error interface
-func (e DeleteUserRequestValidationError) Error() string {
+func (e IdsRequestValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -1839,14 +1836,14 @@ func (e DeleteUserRequestValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sDeleteUserRequest.%s: %s%s",
+		"invalid %sIdsRequest.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = DeleteUserRequestValidationError{}
+var _ error = IdsRequestValidationError{}
 
 var _ interface {
 	Field() string
@@ -1854,7 +1851,7 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = DeleteUserRequestValidationError{}
+} = IdsRequestValidationError{}
 
 // Validate checks the field values on PermissionRequest with the rules defined
 // in the proto definition for this message. If any rules are violated, the
@@ -2499,6 +2496,122 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = FindActionReplyValidationError{}
+
+// Validate checks the field values on UpdateActionRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *UpdateActionRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UpdateActionRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UpdateActionRequestMultiError, or nil if none found.
+func (m *UpdateActionRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UpdateActionRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Id
+
+	if m.Name != nil {
+		// no validation rules for Name
+	}
+
+	if m.Word != nil {
+		// no validation rules for Word
+	}
+
+	if m.Resource != nil {
+		// no validation rules for Resource
+	}
+
+	if len(errors) > 0 {
+		return UpdateActionRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// UpdateActionRequestMultiError is an error wrapping multiple validation
+// errors returned by UpdateActionRequest.ValidateAll() if the designated
+// constraints aren't met.
+type UpdateActionRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UpdateActionRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UpdateActionRequestMultiError) AllErrors() []error { return m }
+
+// UpdateActionRequestValidationError is the validation error returned by
+// UpdateActionRequest.Validate if the designated constraints aren't met.
+type UpdateActionRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateActionRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateActionRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateActionRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateActionRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateActionRequestValidationError) ErrorName() string {
+	return "UpdateActionRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateActionRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateActionRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateActionRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateActionRequestValidationError{}
 
 // Validate checks the field values on CreateRoleRequest with the rules defined
 // in the proto definition for this message. If any rules are violated, the

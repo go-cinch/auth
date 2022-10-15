@@ -38,7 +38,7 @@ func (s *AuthService) UpdateUser(ctx context.Context, req *v1.UpdateUserRequest)
 	return
 }
 
-func (s *AuthService) DeleteUser(ctx context.Context, req *v1.DeleteUserRequest) (rp *emptypb.Empty, err error) {
+func (s *AuthService) DeleteUser(ctx context.Context, req *v1.IdsRequest) (rp *emptypb.Empty, err error) {
 	tr := otel.Tracer("api")
 	ctx, span := tr.Start(ctx, "DeleteUser")
 	defer span.End()

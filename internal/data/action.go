@@ -8,6 +8,7 @@ import (
 	"github.com/go-cinch/common/constant"
 	"github.com/go-cinch/common/copierx"
 	"github.com/go-cinch/common/id"
+	"github.com/go-cinch/common/utils"
 	"strings"
 )
 
@@ -32,15 +33,13 @@ func NewActionRepo(data *Data) biz.ActionRepo {
 
 func (ro actionRepo) Create(ctx context.Context, item *biz.Action) (err error) {
 	var m Action
-	db := ro.data.DB(ctx)
-	db.
-		Where("`word` = ?", item.Word).
-		First(&m)
-	if m.Id > constant.UI0 {
+	err = ro.WordExists(ctx, item.Word)
+	if err == nil {
 		err = biz.DuplicateActionWord
 		return
 	}
 	copierx.Copy(&m, item)
+	db := ro.data.DB(ctx)
 	m.Id = ro.data.Id(ctx)
 	m.Code = id.NewCode(m.Id)
 	if m.Resource == "" {
@@ -78,6 +77,53 @@ func (ro actionRepo) Find(ctx context.Context, condition *biz.FindAction) (rp []
 	return
 }
 
+func (ro actionRepo) Update(ctx context.Context, item *biz.UpdateAction) (err error) {
+	var m Action
+	db := ro.data.DB(ctx)
+	db.
+		Where("id = ?", item.Id).
+		First(&m)
+	if m.Id == constant.UI0 {
+		err = biz.ActionNotFound
+		return
+	}
+	change := make(map[string]interface{})
+	utils.CompareDiff(m, item, &change)
+	if len(change) == 0 {
+		err = biz.DataNotChange
+		return
+	}
+	if item.Word != nil {
+		err = ro.WordExists(ctx, *item.Word)
+		if err == nil {
+			err = biz.DuplicateActionWord
+			return
+		}
+	}
+	err = db.
+		Model(&m).
+		Updates(&change).Error
+	return
+}
+
+func (ro actionRepo) Delete(ctx context.Context, ids ...uint64) (err error) {
+	db := ro.data.DB(ctx)
+	err = db.
+		Where("id IN (?)", ids).
+		Delete(&Action{}).Error
+	if err != nil {
+		return
+	}
+	var count int64
+	db.
+		Model(&Action{}).
+		Count(&count)
+	if count == 0 {
+		err = biz.KeepLeastOntAction
+	}
+	return
+}
+
 func (ro actionRepo) CodeExists(ctx context.Context, code string) (err error) {
 	var m Action
 	db := ro.data.DB(ctx)
@@ -85,6 +131,23 @@ func (ro actionRepo) CodeExists(ctx context.Context, code string) (err error) {
 	for _, item := range arr {
 		db.
 			Where("code = ?", item).
+			First(&m)
+		ok := m.Id > constant.UI1
+		if !ok {
+			err = v1.ErrorIllegalParameter("%s: %s", biz.ActionNotFound.Message, item)
+			return
+		}
+	}
+	return
+}
+
+func (ro actionRepo) WordExists(ctx context.Context, word string) (err error) {
+	var m Action
+	db := ro.data.DB(ctx)
+	arr := strings.Split(word, ",")
+	for _, item := range arr {
+		db.
+			Where("word = ?", item).
 			First(&m)
 		ok := m.Id > constant.UI1
 		if !ok {

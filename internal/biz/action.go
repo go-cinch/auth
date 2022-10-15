@@ -22,9 +22,18 @@ type FindAction struct {
 	Resource *string   `json:"resource"`
 }
 
+type UpdateAction struct {
+	Id       *uint64 `json:"id,string,omitempty"`
+	Name     *string `json:"name,omitempty"`
+	Word     *string `json:"word,omitempty"`
+	Resource *string `json:"resource,omitempty"`
+}
+
 type ActionRepo interface {
 	Create(ctx context.Context, item *Action) error
 	Find(ctx context.Context, condition *FindAction) ([]Action, error)
+	Update(ctx context.Context, item *UpdateAction) error
+	Delete(ctx context.Context, ids ...uint64) error
 	CodeExists(ctx context.Context, code string) error
 	Permission(ctx context.Context, code, resource string) bool
 }
@@ -51,4 +60,22 @@ func (uc *ActionUseCase) Create(ctx context.Context, item *Action) error {
 
 func (uc *ActionUseCase) Find(ctx context.Context, condition *FindAction) ([]Action, error) {
 	return uc.repo.Find(ctx, condition)
+}
+
+func (uc *ActionUseCase) Update(ctx context.Context, item *UpdateAction) error {
+	return uc.tx.Tx(ctx, func(ctx context.Context) error {
+		return uc.cache.Flush(ctx, func(ctx context.Context) (err error) {
+			err = uc.repo.Update(ctx, item)
+			return
+		})
+	})
+}
+
+func (uc *ActionUseCase) Delete(ctx context.Context, ids ...uint64) error {
+	return uc.tx.Tx(ctx, func(ctx context.Context) error {
+		return uc.cache.Flush(ctx, func(ctx context.Context) (err error) {
+			err = uc.repo.Delete(ctx, ids...)
+			return
+		})
+	})
 }
