@@ -8,12 +8,12 @@ require (
 	github.com/go-cinch/common/constant v0.0.0-20220928094747-1b24c1dd963f
 	github.com/go-cinch/common/copierx v0.0.0-20221014090947-8c8ed2810141
 	github.com/go-cinch/common/id v0.0.0-20221010030633-b6fcfb8a6767
-	github.com/go-cinch/common/log v0.0.0-20220927061933-ccf4ca4bccbe
+	github.com/go-cinch/common/log v0.0.0-20221015075911-b53511ab155f
 	github.com/go-cinch/common/middleware v0.0.0-20220921090518-54e9eef45fde
 	github.com/go-cinch/common/migrate v0.0.0-20220915041442-c48afde5a28c
 	github.com/go-cinch/common/page v0.0.0-20221014020948-7abc48d6fd68
 	github.com/go-cinch/common/plugins/gorm/log v0.0.0-20220927074458-492682a7fa35
-	github.com/go-cinch/common/utils v0.0.0-20221014085102-eaa6e3b75fff
+	github.com/go-cinch/common/utils v0.0.0-20221015075911-b53511ab155f
 	github.com/go-cinch/common/worker v0.0.0-20220929075000-0dd3fa2ef2a5
 	github.com/go-kratos/kratos/contrib/config/kubernetes/v2 v2.0.0-20220817101725-ba7223047727
 	github.com/go-kratos/kratos/v2 v2.5.1

@@ -69,6 +69,8 @@ type UpdateUser struct {
 	Avatar       *string `json:"avatar,omitempty"`
 	Nickname     *string `json:"nickname,omitempty"`
 	Introduction *string `json:"introduction,omitempty"`
+	Locked       *uint64 `json:"locked,omitempty"`
+	LockExpire   *int64  `json:"lockExpire,omitempty"`
 }
 
 type Login struct {

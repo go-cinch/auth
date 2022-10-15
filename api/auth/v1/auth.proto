@@ -273,6 +273,8 @@ message UpdateUserRequest {
   optional string avatar = 5;
   optional string nickname = 6;
   optional string introduction = 7;
+  optional uint64 locked = 8;
+  optional string lock_expire_time = 9;
 }
 
 message IdsRequest {

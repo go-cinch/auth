@@ -170,6 +170,22 @@ func (ro userRepo) Update(ctx context.Context, item *biz.UpdateUser) (err error)
 		err = biz.DataNotChange
 		return
 	}
+	// check lock or unlock
+	if locked, ok1 := change["locked"]; ok1 {
+		if v1, ok2 := locked.(uint64); ok2 {
+			var lockExpire int64
+			if expire, ok3 := change["lock_expire"]; ok3 {
+				if v2, ok4 := expire.(int64); ok4 {
+					lockExpire = v2
+				}
+			}
+			if m.Locked == constant.UI1 && v1 == constant.UI0 {
+				change["lock_expire"] = constant.I0
+			} else if m.Locked == constant.UI0 && v1 == constant.UI1 {
+				change["lock_expire"] = lockExpire
+			}
+		}
+	}
 	err = db.
 		Model(&m).
 		Updates(&change).Error

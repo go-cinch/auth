@@ -7,6 +7,7 @@ import (
 	"github.com/go-cinch/common/copierx"
 	"github.com/go-cinch/common/page"
 	"github.com/go-cinch/common/utils"
+	"github.com/golang-module/carbon/v2"
 	"go.opentelemetry.io/otel"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
@@ -34,6 +35,10 @@ func (s *AuthService) UpdateUser(ctx context.Context, req *v1.UpdateUserRequest)
 	rp = &emptypb.Empty{}
 	r := &biz.UpdateUser{}
 	copierx.Copy(&r, req)
+	if req.LockExpireTime != nil {
+		lockExpire := carbon.Parse(*req.LockExpireTime).Timestamp()
+		r.LockExpire = &lockExpire
+	}
 	err = s.user.Update(ctx, r)
 	return
 }

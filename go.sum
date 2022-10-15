@@ -136,8 +136,8 @@ github.com/go-cinch/common/id v0.0.0-20221010030633-b6fcfb8a6767 h1:+lNca2xTpG9e
 github.com/go-cinch/common/id v0.0.0-20221010030633-b6fcfb8a6767/go.mod h1:y2bgFgbiqOgiMGyztMTJUZU7MyBvFSedzUH4BSZpZog=
 github.com/go-cinch/common/lock v0.0.0-20220929075000-0dd3fa2ef2a5 h1:PRfcTC6aIuodOGMWCD7AVEiAf/5tM1gk/PQ0tV6BoUo=
 github.com/go-cinch/common/lock v0.0.0-20220929075000-0dd3fa2ef2a5/go.mod h1:FvTdnnUJB5d4M9HsNE8KxkKTJBOgZRIlsD1Hh5ZumnU=
-github.com/go-cinch/common/log v0.0.0-20220927061933-ccf4ca4bccbe h1:wEIQFIzOpIPvttYsZQ6NrjpwlHLS+CJR+LNVZE/ttgE=
-github.com/go-cinch/common/log v0.0.0-20220927061933-ccf4ca4bccbe/go.mod h1:sWaidTCXD+LtnuRbiQpmsIDAsX8LlYcbJSAIQZ5P23U=
+github.com/go-cinch/common/log v0.0.0-20221015075911-b53511ab155f h1:X0tqDScHt7JGvgEqZhjIwu4iOMX5c2uNyhOFkLhuBXM=
+github.com/go-cinch/common/log v0.0.0-20221015075911-b53511ab155f/go.mod h1:sWaidTCXD+LtnuRbiQpmsIDAsX8LlYcbJSAIQZ5P23U=
 github.com/go-cinch/common/middleware v0.0.0-20220921090518-54e9eef45fde h1:1ULpEpOpk82oH59quNTMtdyKypcInHu8p5cUhGSXGMs=
 github.com/go-cinch/common/middleware v0.0.0-20220921090518-54e9eef45fde/go.mod h1:bBjM9OkdX7o6aHf/auXSQ2hcshf5qImrxq3Lhlq9WYU=
 github.com/go-cinch/common/migrate v0.0.0-20220915041442-c48afde5a28c h1:iSMIZ1Ux6do0EzdwETsFlFLG/Anna6p0a8qBtLfvGR4=
@@ -146,8 +146,8 @@ github.com/go-cinch/common/page v0.0.0-20221014020948-7abc48d6fd68 h1:ELnw7M5JN+
 github.com/go-cinch/common/page v0.0.0-20221014020948-7abc48d6fd68/go.mod h1:sBrJsMpXOqJbZhNIz3jQxCUyslTec6N3yfe98a7+n5A=
 github.com/go-cinch/common/plugins/gorm/log v0.0.0-20220927074458-492682a7fa35 h1:c7XCb5H0nw8n/VplUC0abUylxe/lAznuox4EwGU2OSQ=
 github.com/go-cinch/common/plugins/gorm/log v0.0.0-20220927074458-492682a7fa35/go.mod h1:d6fop19eJEnrOUmAsosnwXjukVV+8XYSIrBm9f+jnVA=
-github.com/go-cinch/common/utils v0.0.0-20221014085102-eaa6e3b75fff h1:h+8DLQvqHIsjQ1UQVhUnUDnLbIYwYnI81jfCAT8t7ng=
-github.com/go-cinch/common/utils v0.0.0-20221014085102-eaa6e3b75fff/go.mod h1:w7wHTmpTkivKAh+fKBLkmGrZNhPZnFxLc1lgHyIUKvA=
+github.com/go-cinch/common/utils v0.0.0-20221015075911-b53511ab155f h1:sokAuZLvpng6gSPSQ0MK27AxwLm5ip/QUpzZck6iLzs=
+github.com/go-cinch/common/utils v0.0.0-20221015075911-b53511ab155f/go.mod h1:w7wHTmpTkivKAh+fKBLkmGrZNhPZnFxLc1lgHyIUKvA=
 github.com/go-cinch/common/worker v0.0.0-20220929075000-0dd3fa2ef2a5 h1:czO1siSmG0B8YKOmWE40BpfJM0Ja+9NlQSg5ZOBrWOw=
 github.com/go-cinch/common/worker v0.0.0-20220929075000-0dd3fa2ef2a5/go.mod h1:ZATOdip+iVCUCk4myTrbhJqVmwTCdp24IBQ0pkn/f5U=
 github.com/go-gl/glfw v0.0.0-20190409004039-e6da0acd62b1/go.mod h1:vR7hzQXu2zJy9AVAgeJqvqgH9Q5CA+iKCZ2gyEVpxRU=

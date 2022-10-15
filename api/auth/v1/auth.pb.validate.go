@@ -1668,6 +1668,14 @@ func (m *UpdateUserRequest) validate(all bool) error {
 		// no validation rules for Introduction
 	}
 
+	if m.Locked != nil {
+		// no validation rules for Locked
+	}
+
+	if m.LockExpireTime != nil {
+		// no validation rules for LockExpireTime
+	}
+
 	if len(errors) > 0 {
 		return UpdateUserRequestMultiError(errors)
 	}
