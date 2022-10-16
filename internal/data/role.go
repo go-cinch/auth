@@ -70,6 +70,11 @@ func (ro roleRepo) Find(ctx context.Context, condition *biz.FindRole) (rp []biz.
 		Query(db).
 		Find(&list)
 	copierx.Copy(&rp, list)
+	for i, item := range rp {
+		rp[i].Actions = make([]biz.Action, 0)
+		arr, _ := ro.action.FindByCode(ctx, item.Action)
+		copierx.Copy(&rp[i].Actions, arr)
+	}
 	return
 }
 
@@ -97,7 +102,7 @@ func (ro roleRepo) Update(ctx context.Context, item *biz.UpdateRole) (err error)
 			}
 		}
 	}
-	if item.Word != nil {
+	if item.Word != nil && *item.Word != m.Word {
 		err = ro.WordExists(ctx, *item.Word)
 		if err == nil {
 			err = biz.DuplicateRoleWord

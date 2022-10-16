@@ -100,6 +100,9 @@ func (ro userRepo) Find(ctx context.Context, condition *biz.FindUser) (rp []biz.
 	copierx.Copy(&rp, list)
 	timestamp := carbon.Now().Timestamp()
 	for i, item := range rp {
+		rp[i].Actions = make([]biz.Action, 0)
+		arr, _ := ro.action.FindByCode(ctx, item.Action)
+		copierx.Copy(&rp[i].Actions, arr)
 		if item.Locked == constant.UI0 || (item.LockExpire > constant.I0 && timestamp > item.LockExpire) {
 			rp[i].Locked = constant.UI0
 			continue

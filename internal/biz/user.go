@@ -22,6 +22,7 @@ type User struct {
 	RoleId       uint64          `json:"roleId,string"`
 	Role         Role            `json:"role"`
 	Action       string          `json:"action"`
+	Actions      []Action        `json:"actions"`
 	Username     string          `json:"username"`
 	Code         string          `json:"Code"`
 	Password     string          `json:"password"`
@@ -63,6 +64,7 @@ type FindUser struct {
 
 type UpdateUser struct {
 	Id           *uint64 `json:"id,string,omitempty"`
+	Action       *string `json:"action,omitempty"`
 	Username     *string `json:"username,omitempty"`
 	Password     *string `json:"password,omitempty"`
 	Mobile       *string `json:"mobile,omitempty"`

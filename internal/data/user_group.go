@@ -59,13 +59,13 @@ func (ro userGroupRepo) Create(ctx context.Context, item *biz.UserGroup) (err er
 	}
 	if len(item.Users) > 0 {
 		m.Users = make([]User, 0)
-		for _, id := range item.Users {
-			err = ro.user.IdExists(ctx, id)
+		for _, v := range item.Users {
+			err = ro.user.IdExists(ctx, v.Id)
 			if err != nil {
 				return
 			}
 			m.Users = append(m.Users, User{
-				Id: id,
+				Id: v.Id,
 			})
 		}
 	}
@@ -101,6 +101,7 @@ func (ro userGroupRepo) Find(ctx context.Context, condition *biz.FindUserGroup) 
 	db := ro.data.DB(ctx)
 	db = db.
 		Model(&UserGroup{}).
+		Preload("Users").
 		Order("id DESC")
 	rp = make([]biz.UserGroup, 0)
 	list := make([]UserGroup, 0)
@@ -122,6 +123,11 @@ func (ro userGroupRepo) Find(ctx context.Context, condition *biz.FindUserGroup) 
 		Query(db).
 		Find(&list)
 	copierx.Copy(&rp, list)
+	for i, item := range rp {
+		rp[i].Actions = make([]biz.Action, 0)
+		arr, _ := ro.action.FindByCode(ctx, item.Action)
+		copierx.Copy(&rp[i].Actions, arr)
+	}
 	return
 }
 
@@ -141,11 +147,30 @@ func (ro userGroupRepo) Update(ctx context.Context, item *biz.UpdateUserGroup) (
 		err = biz.DataNotChange
 		return
 	}
-	if item.Word != nil {
+	if item.Word != nil && *item.Word != m.Word {
 		err = ro.WordExists(ctx, *item.Word)
 		if err == nil {
 			err = biz.DuplicateUserGroupWord
 			return
+		}
+	}
+	if a, ok1 := change["users"]; ok1 {
+		if v, ok2 := a.(string); ok2 {
+			arr := utils.Str2Uint64Arr(v)
+			users := make([]User, 0)
+			for _, id := range arr {
+				users = append(users, User{
+					Id: id,
+				})
+			}
+			err = db.
+				Model(&m).
+				Association("Users").
+				Replace(users)
+			if err != nil {
+				return
+			}
+			delete(change, "users")
 		}
 	}
 	err = db.

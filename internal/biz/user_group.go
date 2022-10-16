@@ -7,11 +7,12 @@ import (
 )
 
 type UserGroup struct {
-	Id     uint64   `json:"id,string"`
-	Users  []uint64 `json:"users"`
-	Name   string   `json:"name"`
-	Word   string   `json:"word"`
-	Action string   `json:"action"`
+	Id      uint64   `json:"id,string"`
+	Users   []User   `json:"users"`
+	Name    string   `json:"name"`
+	Word    string   `json:"word"`
+	Action  string   `json:"action"`
+	Actions []Action `json:"actions"`
 }
 
 type FindUserGroup struct {
@@ -27,6 +28,7 @@ type UpdateUserGroup struct {
 	Name   *string `json:"name,omitempty"`
 	Word   *string `json:"word,omitempty"`
 	Action *string `json:"action,omitempty"`
+	Users  *string `json:"users,omitempty"`
 }
 
 type UserGroupRepo interface {

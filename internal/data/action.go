@@ -77,6 +77,19 @@ func (ro actionRepo) Find(ctx context.Context, condition *biz.FindAction) (rp []
 	return
 }
 
+func (ro actionRepo) FindByCode(ctx context.Context, code string) (rp []biz.Action, err error) {
+	rp = make([]biz.Action, 0)
+	list := make([]Action, 0)
+	db := ro.data.DB(ctx)
+	arr := strings.Split(code, ",")
+	db.
+		Model(&Action{}).
+		Where("code IN (?)", arr).
+		Find(&list)
+	copierx.Copy(&rp, list)
+	return
+}
+
 func (ro actionRepo) Update(ctx context.Context, item *biz.UpdateAction) (err error) {
 	var m Action
 	db := ro.data.DB(ctx)
@@ -93,7 +106,7 @@ func (ro actionRepo) Update(ctx context.Context, item *biz.UpdateAction) (err er
 		err = biz.DataNotChange
 		return
 	}
-	if item.Word != nil {
+	if item.Word != nil && *item.Word != m.Word {
 		err = ro.WordExists(ctx, *item.Word)
 		if err == nil {
 			err = biz.DuplicateActionWord
