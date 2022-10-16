@@ -3,6 +3,8 @@ package data
 import (
 	"auth/internal/biz"
 	"context"
+	"github.com/go-cinch/common/utils"
+	"strings"
 )
 
 type permissionRepo struct {
@@ -22,7 +24,7 @@ func NewPermissionRepo(data *Data, action biz.ActionRepo, user biz.UserRepo, use
 	}
 }
 
-func (ro permissionRepo) Check(ctx context.Context, item *biz.Permission) (pass bool) {
+func (ro permissionRepo) Check(ctx context.Context, item *biz.CheckPermission) (pass bool) {
 	user, err := ro.user.GetByCode(ctx, item.UserCode)
 	if err != nil {
 		return
@@ -48,5 +50,49 @@ func (ro permissionRepo) Check(ctx context.Context, item *biz.Permission) (pass 
 			return
 		}
 	}
+	return
+}
+
+func (ro permissionRepo) GetByUserCode(ctx context.Context, code string) (rp *biz.Permission, err error) {
+	rp = &biz.Permission{}
+	rp.Resources = make([]string, 0)
+	user, err := ro.user.GetByCode(ctx, code)
+	if err != nil {
+		return
+	}
+	// 1. user action
+	actions := make([]string, 0)
+	if user.Action != "" {
+		arr := strings.Split(user.Action, ",")
+		actions = append(actions, arr...)
+	}
+	// 2. role action
+	if user.Role.Action != "" {
+		arr := strings.Split(user.Action, ",")
+		actions = append(actions, arr...)
+	}
+	// 3. user group action
+	groups, err := ro.userGroup.FindGroupByUserCode(ctx, user.Code)
+	if err != nil {
+		return
+	}
+	for _, group := range groups {
+		if group.Action != "" {
+			arr := strings.Split(group.Action, ",")
+			actions = append(actions, arr...)
+		}
+	}
+	actions = utils.RemoveRepeat(actions)
+	if len(actions) > 0 {
+		list, _ := ro.action.FindByCode(ctx, strings.Join(actions, ","))
+		for _, item := range list {
+			rp.Resources = append(rp.Resources, item.Resource)
+			rp.Menus = append(rp.Menus, item.Menu)
+			rp.Btns = append(rp.Btns, item.Btn)
+		}
+	}
+	rp.Resources = utils.RemoveRepeat(rp.Resources)
+	rp.Menus = utils.RemoveRepeat(rp.Menus)
+	rp.Btns = utils.RemoveRepeat(rp.Btns)
 	return
 }

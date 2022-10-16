@@ -12,6 +12,8 @@ type Action struct {
 	Name     string `json:"name"`
 	Word     string `json:"word"`
 	Resource string `json:"resource"`
+	Menu     string `json:"menu"`
+	Btn      string `json:"btn"`
 }
 
 type FindAction struct {
@@ -27,6 +29,8 @@ type UpdateAction struct {
 	Name     *string `json:"name,omitempty"`
 	Word     *string `json:"word,omitempty"`
 	Resource *string `json:"resource,omitempty"`
+	Menu     *string `json:"menu,omitempty"`
+	Btn      *string `json:"btn,omitempty"`
 }
 
 type ActionRepo interface {

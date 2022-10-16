@@ -94,10 +94,10 @@ func (s *AuthService) Captcha(ctx context.Context, req *emptypb.Empty) (rp *v1.C
 
 func (s *AuthService) Permission(ctx context.Context, req *v1.PermissionRequest) (rp *v1.PermissionReply, err error) {
 	tr := otel.Tracer("api")
-	ctx, span := tr.Start(ctx, "Permission")
+	ctx, span := tr.Start(ctx, "CheckPermission")
 	defer span.End()
 	rp = &v1.PermissionReply{}
-	r := &biz.Permission{}
+	r := &biz.CheckPermission{}
 	copierx.Copy(&r, req)
 	rp.Pass = s.permission.Check(ctx, r)
 	return
@@ -108,11 +108,17 @@ func (s *AuthService) Info(ctx context.Context, req *emptypb.Empty) (rp *v1.Info
 	ctx, span := tr.Start(ctx, "Info")
 	defer span.End()
 	rp = &v1.InfoReply{}
+	rp.Permission = &v1.Permission{}
 	user := jwt.FromContext(ctx)
 	res, err := s.user.Info(ctx, user.Code)
 	if err != nil {
 		return
 	}
+	permission, err := s.permission.GetByUserCode(ctx, user.Code)
+	if err != nil {
+		return
+	}
+	copierx.Copy(&rp.Permission, permission)
 	copierx.Copy(&rp, res)
 	return
 }

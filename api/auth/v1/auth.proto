@@ -231,6 +231,13 @@ message InfoReply {
   string avatar = 5;
   string nickname = 6;
   string introduction = 7;
+  Permission permission = 8;
+}
+
+message Permission {
+  repeated string resources = 1;
+  repeated string menus = 2;
+  repeated string btns = 3;
 }
 
 message Action {
@@ -239,6 +246,8 @@ message Action {
   string name = 3;
   string word = 4;
   string resource = 5;
+  string menu = 6;
+  string btn = 7;
 }
 
 message User {
@@ -321,6 +330,8 @@ message CreateActionRequest {
   string name = 1 [(validate.rules).string = {max_len: 50}];
   string word = 2 [(validate.rules).string = {max_len: 50}];
   string resource = 3;
+  string menu = 4;
+  string btn = 5;
 }
 
 message FindActionRequest {
@@ -341,6 +352,8 @@ message UpdateActionRequest {
   optional string name = 2;
   optional string word = 3;
   optional string resource = 4;
+  optional string menu = 5;
+  optional string btn = 6;
 }
 
 message CreateRoleRequest {

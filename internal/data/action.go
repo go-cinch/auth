@@ -23,6 +23,8 @@ type Action struct {
 	Name     string `json:"name"`      // name
 	Word     string `json:"word"`      // keyword, must be unique, used as frontend display
 	Resource string `json:"resource"`  // resource array, split by break line str, example: GET,/user+\n+POST,/role+\n+GET,/action
+	Menu     string `json:"menu"`      // menu array, split by break line str
+	Btn      string `json:"btn"`       // btn array, split by break line str
 }
 
 func NewActionRepo(data *Data) biz.ActionRepo {
