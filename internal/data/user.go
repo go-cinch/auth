@@ -51,7 +51,7 @@ func (ro userRepo) GetByUsername(ctx context.Context, username string) (item *bi
 	var m User
 	ro.data.DB(ctx).
 		Clauses(clause.Locking{Strength: "UPDATE"}).
-		Where("username = ?", username).
+		Where("`username` = ?", username).
 		First(&m)
 	if m.Id == constant.UI0 {
 		err = biz.UserNotFound
@@ -138,7 +138,7 @@ func (ro userRepo) Create(ctx context.Context, item *biz.User) (err error) {
 	var m User
 	db := ro.data.DB(ctx)
 	db.
-		Where("username = ?", item.Username).
+		Where("`username` = ?", item.Username).
 		First(&m)
 	if m.Id > constant.UI0 {
 		err = biz.DuplicateUsername
@@ -161,7 +161,7 @@ func (ro userRepo) Update(ctx context.Context, item *biz.UpdateUser) (err error)
 	var m User
 	db := ro.data.DB(ctx)
 	db.
-		Where("id = ?", item.Id).
+		Where("`id` = ?", item.Id).
 		First(&m)
 	if m.Id == constant.UI0 {
 		err = biz.UserNotFound
@@ -198,7 +198,7 @@ func (ro userRepo) Update(ctx context.Context, item *biz.UpdateUser) (err error)
 func (ro userRepo) Delete(ctx context.Context, ids ...uint64) (err error) {
 	db := ro.data.DB(ctx)
 	err = db.
-		Where("id IN (?)", ids).
+		Where("`id` IN (?)", ids).
 		Delete(&User{}).Error
 	return
 }
@@ -211,7 +211,7 @@ func (ro userRepo) LastLogin(ctx context.Context, id uint64) (err error) {
 	fields["lock_expire"] = constant.I0
 	err = ro.data.DB(ctx).
 		Model(&User{}).
-		Where("id = ?", id).
+		Where("`id` = ?", id).
 		Updates(&fields).Error
 	return
 }
@@ -243,8 +243,8 @@ func (ro userRepo) WrongPwd(ctx context.Context, req biz.LoginTime) (err error) 
 	m["wrong"] = newWrong
 	err = ro.data.DB(ctx).
 		Model(&User{}).
-		Where("id = ?", oldItem.Id).
-		Where("wrong = ?", oldItem.Wrong).
+		Where("`id` = ?", oldItem.Id).
+		Where("`wrong` = ?", oldItem.Wrong).
 		Updates(&m).Error
 	return
 }
@@ -253,7 +253,7 @@ func (ro userRepo) UpdatePassword(ctx context.Context, item *biz.User) (err erro
 	var m User
 	db := ro.data.DB(ctx)
 	db.
-		Where("username = ?", item.Username).
+		Where("`username` = ?", item.Username).
 		First(&m)
 	if m.Id == constant.UI0 {
 		err = biz.UserNotFound
@@ -266,7 +266,7 @@ func (ro userRepo) UpdatePassword(ctx context.Context, item *biz.User) (err erro
 	fields["lock_expire"] = constant.I0
 	err = db.
 		Model(&User{}).
-		Where("id = ?", m.Id).
+		Where("`id` = ?", m.Id).
 		Updates(&fields).Error
 	return
 }
@@ -274,7 +274,7 @@ func (ro userRepo) UpdatePassword(ctx context.Context, item *biz.User) (err erro
 func (ro userRepo) IdExists(ctx context.Context, id uint64) (err error) {
 	var m User
 	ro.data.DB(ctx).
-		Where("id = ?", id).
+		Where("`id` = ?", id).
 		First(&m)
 	if m.Id == constant.UI0 {
 		err = biz.UserNotFound
@@ -287,7 +287,7 @@ func (ro userRepo) GetByCode(ctx context.Context, code string) (item *biz.User, 
 	item = &biz.User{}
 	var m User
 	ro.data.DB(ctx).
-		Where("code = ?", code).
+		Where("`code` = ?", code).
 		Preload("Role").
 		First(&m)
 	if m.Id == constant.UI0 {

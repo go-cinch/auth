@@ -86,7 +86,7 @@ func (ro actionRepo) FindByCode(ctx context.Context, code string) (rp []biz.Acti
 	arr := strings.Split(code, ",")
 	db.
 		Model(&Action{}).
-		Where("code IN (?)", arr).
+		Where("`code` IN (?)", arr).
 		Find(&list)
 	copierx.Copy(&rp, list)
 	return
@@ -96,7 +96,7 @@ func (ro actionRepo) Update(ctx context.Context, item *biz.UpdateAction) (err er
 	var m Action
 	db := ro.data.DB(ctx)
 	db.
-		Where("id = ?", item.Id).
+		Where("`id` = ?", item.Id).
 		First(&m)
 	if m.Id == constant.UI0 {
 		err = biz.ActionNotFound
@@ -124,7 +124,7 @@ func (ro actionRepo) Update(ctx context.Context, item *biz.UpdateAction) (err er
 func (ro actionRepo) Delete(ctx context.Context, ids ...uint64) (err error) {
 	db := ro.data.DB(ctx)
 	err = db.
-		Where("id IN (?)", ids).
+		Where("`id` IN (?)", ids).
 		Delete(&Action{}).Error
 	if err != nil {
 		return
@@ -145,7 +145,7 @@ func (ro actionRepo) CodeExists(ctx context.Context, code string) (err error) {
 	arr := strings.Split(code, ",")
 	for _, item := range arr {
 		db.
-			Where("code = ?", item).
+			Where("`code` = ?", item).
 			First(&m)
 		ok := m.Id > constant.UI1
 		if !ok {
@@ -162,7 +162,7 @@ func (ro actionRepo) WordExists(ctx context.Context, word string) (err error) {
 	arr := strings.Split(word, ",")
 	for _, item := range arr {
 		db.
-			Where("word = ?", item).
+			Where("`word` = ?", item).
 			First(&m)
 		ok := m.Id > constant.UI1
 		if !ok {
@@ -188,7 +188,7 @@ func (ro actionRepo) permission(ctx context.Context, code, resource string) (pas
 	var m Action
 	db := ro.data.DB(ctx)
 	db.
-		Where("code = ?", code).
+		Where("`code` = ?", code).
 		First(&m)
 	if m.Id == constant.UI0 {
 		return

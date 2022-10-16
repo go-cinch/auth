@@ -83,15 +83,15 @@ func (ro userGroupRepo) FindGroupByUserCode(ctx context.Context, code string) (l
 	groupIds := make([]uint64, 0)
 	db.
 		Model(&UserUserGroupRelation{}).
-		Where("user_id = ?", user.Id).
-		Pluck("user_group_id", &groupIds)
+		Where("`user_id` = ?", user.Id).
+		Pluck("`user_group_id`", &groupIds)
 	if len(groupIds) == 0 {
 		return
 	}
 	groups := make([]UserGroup, 0)
 	db.
 		Model(&UserGroup{}).
-		Where("id IN (?)", groupIds).
+		Where("`id` IN (?)", groupIds).
 		Find(&groups)
 	copierx.Copy(&list, groups)
 	return
@@ -135,7 +135,7 @@ func (ro userGroupRepo) Update(ctx context.Context, item *biz.UpdateUserGroup) (
 	var m UserGroup
 	db := ro.data.DB(ctx)
 	db.
-		Where("id = ?", item.Id).
+		Where("`id` = ?", item.Id).
 		First(&m)
 	if m.Id == constant.UI0 {
 		err = biz.UserGroupNotFound
@@ -182,7 +182,7 @@ func (ro userGroupRepo) Update(ctx context.Context, item *biz.UpdateUserGroup) (
 func (ro userGroupRepo) Delete(ctx context.Context, ids ...uint64) (err error) {
 	db := ro.data.DB(ctx)
 	err = db.
-		Where("id IN (?)", ids).
+		Where("`id` IN (?)", ids).
 		Delete(&UserGroup{}).Error
 	return
 }
@@ -193,7 +193,7 @@ func (ro userGroupRepo) WordExists(ctx context.Context, word string) (err error)
 	arr := strings.Split(word, ",")
 	for _, item := range arr {
 		db.
-			Where("word = ?", item).
+			Where("`word` = ?", item).
 			First(&m)
 		ok := m.Id > constant.UI1
 		if !ok {

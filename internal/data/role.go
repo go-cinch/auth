@@ -82,7 +82,7 @@ func (ro roleRepo) Update(ctx context.Context, item *biz.UpdateRole) (err error)
 	var m Role
 	db := ro.data.DB(ctx)
 	db.
-		Where("id = ?", item.Id).
+		Where("`id` = ?", item.Id).
 		First(&m)
 	if m.Id == constant.UI0 {
 		err = biz.RoleNotFound
@@ -118,7 +118,7 @@ func (ro roleRepo) Update(ctx context.Context, item *biz.UpdateRole) (err error)
 func (ro roleRepo) Delete(ctx context.Context, ids ...uint64) (err error) {
 	db := ro.data.DB(ctx)
 	err = db.
-		Where("id IN (?)", ids).
+		Where("`id` IN (?)", ids).
 		Delete(&Role{}).Error
 	return
 }
@@ -129,7 +129,7 @@ func (ro roleRepo) WordExists(ctx context.Context, word string) (err error) {
 	arr := strings.Split(word, ",")
 	for _, item := range arr {
 		db.
-			Where("word = ?", item).
+			Where("`word` = ?", item).
 			First(&m)
 		ok := m.Id > constant.UI1
 		if !ok {
