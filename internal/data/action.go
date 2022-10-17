@@ -51,7 +51,7 @@ func (ro actionRepo) Create(ctx context.Context, item *biz.Action) (err error) {
 	return
 }
 
-func (ro actionRepo) Find(ctx context.Context, condition *biz.FindAction) (rp []biz.Action, err error) {
+func (ro actionRepo) Find(ctx context.Context, condition *biz.FindAction) (rp []biz.Action) {
 	db := ro.data.DB(ctx)
 	db = db.
 		Model(&Action{}).
@@ -79,7 +79,7 @@ func (ro actionRepo) Find(ctx context.Context, condition *biz.FindAction) (rp []
 	return
 }
 
-func (ro actionRepo) FindByCode(ctx context.Context, code string) (rp []biz.Action, err error) {
+func (ro actionRepo) FindByCode(ctx context.Context, code string) (rp []biz.Action) {
 	rp = make([]biz.Action, 0)
 	list := make([]Action, 0)
 	db := ro.data.DB(ctx)

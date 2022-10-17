@@ -35,8 +35,8 @@ type UpdateAction struct {
 
 type ActionRepo interface {
 	Create(ctx context.Context, item *Action) error
-	Find(ctx context.Context, condition *FindAction) ([]Action, error)
-	FindByCode(ctx context.Context, code string) ([]Action, error)
+	Find(ctx context.Context, condition *FindAction) []Action
+	FindByCode(ctx context.Context, code string) []Action
 	Update(ctx context.Context, item *UpdateAction) error
 	Delete(ctx context.Context, ids ...uint64) error
 	CodeExists(ctx context.Context, code string) error
@@ -63,7 +63,7 @@ func (uc *ActionUseCase) Create(ctx context.Context, item *Action) error {
 	})
 }
 
-func (uc *ActionUseCase) Find(ctx context.Context, condition *FindAction) ([]Action, error) {
+func (uc *ActionUseCase) Find(ctx context.Context, condition *FindAction) []Action {
 	return uc.repo.Find(ctx, condition)
 }
 

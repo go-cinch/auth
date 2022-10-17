@@ -73,7 +73,7 @@ func (ro userGroupRepo) Create(ctx context.Context, item *biz.UserGroup) (err er
 	return
 }
 
-func (ro userGroupRepo) FindGroupByUserCode(ctx context.Context, code string) (list []biz.UserGroup, err error) {
+func (ro userGroupRepo) FindGroupByUserCode(ctx context.Context, code string) (list []biz.UserGroup) {
 	list = make([]biz.UserGroup, 0)
 	user, err := ro.user.GetByCode(ctx, code)
 	if err != nil {
@@ -97,7 +97,7 @@ func (ro userGroupRepo) FindGroupByUserCode(ctx context.Context, code string) (l
 	return
 }
 
-func (ro userGroupRepo) Find(ctx context.Context, condition *biz.FindUserGroup) (rp []biz.UserGroup, err error) {
+func (ro userGroupRepo) Find(ctx context.Context, condition *biz.FindUserGroup) (rp []biz.UserGroup) {
 	db := ro.data.DB(ctx)
 	db = db.
 		Model(&UserGroup{}).
@@ -125,7 +125,7 @@ func (ro userGroupRepo) Find(ctx context.Context, condition *biz.FindUserGroup) 
 	copierx.Copy(&rp, list)
 	for i, item := range rp {
 		rp[i].Actions = make([]biz.Action, 0)
-		arr, _ := ro.action.FindByCode(ctx, item.Action)
+		arr := ro.action.FindByCode(ctx, item.Action)
 		copierx.Copy(&rp[i].Actions, arr)
 	}
 	return

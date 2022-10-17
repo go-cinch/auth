@@ -40,7 +40,7 @@ func (ro permissionRepo) Check(ctx context.Context, item *biz.CheckPermission) (
 		return
 	}
 	// 3. check user group permission
-	groups, err := ro.userGroup.FindGroupByUserCode(ctx, user.Code)
+	groups := ro.userGroup.FindGroupByUserCode(ctx, user.Code)
 	if err != nil {
 		return
 	}
@@ -72,7 +72,7 @@ func (ro permissionRepo) GetByUserCode(ctx context.Context, code string) (rp *bi
 		actions = append(actions, arr...)
 	}
 	// 3. user group action
-	groups, err := ro.userGroup.FindGroupByUserCode(ctx, user.Code)
+	groups := ro.userGroup.FindGroupByUserCode(ctx, user.Code)
 	if err != nil {
 		return
 	}
@@ -84,7 +84,7 @@ func (ro permissionRepo) GetByUserCode(ctx context.Context, code string) (rp *bi
 	}
 	actions = utils.RemoveRepeat(actions)
 	if len(actions) > 0 {
-		list, _ := ro.action.FindByCode(ctx, strings.Join(actions, ","))
+		list := ro.action.FindByCode(ctx, strings.Join(actions, ","))
 		for _, item := range list {
 			rp.Resources = append(rp.Resources, item.Resource)
 			rp.Menus = append(rp.Menus, item.Menu)

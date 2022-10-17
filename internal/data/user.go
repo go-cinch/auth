@@ -61,7 +61,7 @@ func (ro userRepo) GetByUsername(ctx context.Context, username string) (item *bi
 	return
 }
 
-func (ro userRepo) Find(ctx context.Context, condition *biz.FindUser) (rp []biz.User, err error) {
+func (ro userRepo) Find(ctx context.Context, condition *biz.FindUser) (rp []biz.User) {
 	db := ro.data.DB(ctx)
 	db = db.
 		Model(&User{}).
@@ -101,7 +101,7 @@ func (ro userRepo) Find(ctx context.Context, condition *biz.FindUser) (rp []biz.
 	timestamp := carbon.Now().Timestamp()
 	for i, item := range rp {
 		rp[i].Actions = make([]biz.Action, 0)
-		arr, _ := ro.action.FindByCode(ctx, item.Action)
+		arr := ro.action.FindByCode(ctx, item.Action)
 		copierx.Copy(&rp[i].Actions, arr)
 		if item.Locked == constant.UI0 || (item.LockExpire > constant.I0 && timestamp > item.LockExpire) {
 			rp[i].Locked = constant.UI0

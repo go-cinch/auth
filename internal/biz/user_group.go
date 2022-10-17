@@ -33,10 +33,10 @@ type UpdateUserGroup struct {
 
 type UserGroupRepo interface {
 	Create(ctx context.Context, item *UserGroup) error
-	Find(ctx context.Context, condition *FindUserGroup) ([]UserGroup, error)
+	Find(ctx context.Context, condition *FindUserGroup) []UserGroup
 	Update(ctx context.Context, item *UpdateUserGroup) error
 	Delete(ctx context.Context, ids ...uint64) error
-	FindGroupByUserCode(ctx context.Context, code string) ([]UserGroup, error)
+	FindGroupByUserCode(ctx context.Context, code string) []UserGroup
 }
 
 type UserGroupUseCase struct {
@@ -59,7 +59,7 @@ func (uc *UserGroupUseCase) Create(ctx context.Context, item *UserGroup) error {
 	})
 }
 
-func (uc *UserGroupUseCase) Find(ctx context.Context, condition *FindUserGroup) ([]UserGroup, error) {
+func (uc *UserGroupUseCase) Find(ctx context.Context, condition *FindUserGroup) []UserGroup {
 	return uc.repo.Find(ctx, condition)
 }
 

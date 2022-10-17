@@ -30,7 +30,7 @@ type UpdateRole struct {
 
 type RoleRepo interface {
 	Create(ctx context.Context, item *Role) error
-	Find(ctx context.Context, condition *FindRole) ([]Role, error)
+	Find(ctx context.Context, condition *FindRole) []Role
 	Update(ctx context.Context, item *UpdateRole) error
 	Delete(ctx context.Context, ids ...uint64) error
 }
@@ -55,7 +55,7 @@ func (uc *RoleUseCase) Create(ctx context.Context, item *Role) error {
 	})
 }
 
-func (uc *RoleUseCase) Find(ctx context.Context, condition *FindRole) ([]Role, error) {
+func (uc *RoleUseCase) Find(ctx context.Context, condition *FindRole) []Role {
 	return uc.repo.Find(ctx, condition)
 }
 

@@ -32,7 +32,7 @@ func (s *AuthService) FindUserGroup(ctx context.Context, req *v1.FindUserGroupRe
 	r.Page = page.Page{}
 	copierx.Copy(&r, req)
 	copierx.Copy(&r.Page, req.Page)
-	res, err := s.userGroup.Find(ctx, r)
+	res := s.userGroup.Find(ctx, r)
 	copierx.Copy(&rp.Page, r.Page)
 	copierx.Copy(&rp.List, res)
 	return

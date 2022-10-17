@@ -51,7 +51,7 @@ func (ro roleRepo) Create(ctx context.Context, item *biz.Role) (err error) {
 	return
 }
 
-func (ro roleRepo) Find(ctx context.Context, condition *biz.FindRole) (rp []biz.Role, err error) {
+func (ro roleRepo) Find(ctx context.Context, condition *biz.FindRole) (rp []biz.Role) {
 	db := ro.data.DB(ctx)
 	db = db.
 		Model(&Role{}).
@@ -72,7 +72,7 @@ func (ro roleRepo) Find(ctx context.Context, condition *biz.FindRole) (rp []biz.
 	copierx.Copy(&rp, list)
 	for i, item := range rp {
 		rp[i].Actions = make([]biz.Action, 0)
-		arr, _ := ro.action.FindByCode(ctx, item.Action)
+		arr := ro.action.FindByCode(ctx, item.Action)
 		copierx.Copy(&rp[i].Actions, arr)
 	}
 	return

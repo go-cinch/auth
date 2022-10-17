@@ -32,7 +32,7 @@ func (s *AuthService) FindRole(ctx context.Context, req *v1.FindRoleRequest) (rp
 	r.Page = page.Page{}
 	copierx.Copy(&r, req)
 	copierx.Copy(&r.Page, req.Page)
-	res, err := s.role.Find(ctx, r)
+	res := s.role.Find(ctx, r)
 	copierx.Copy(&rp.Page, r.Page)
 	copierx.Copy(&rp.List, res)
 	return

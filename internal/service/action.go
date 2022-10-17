@@ -32,7 +32,7 @@ func (s *AuthService) FindAction(ctx context.Context, req *v1.FindActionRequest)
 	r.Page = page.Page{}
 	copierx.Copy(&r, req)
 	copierx.Copy(&r.Page, req.Page)
-	res, err := s.action.Find(ctx, r)
+	res := s.action.Find(ctx, r)
 	copierx.Copy(&rp.Page, r.Page)
 	copierx.Copy(&rp.List, res)
 	return

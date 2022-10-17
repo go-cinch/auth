@@ -110,7 +110,7 @@ type Captcha struct {
 
 type UserRepo interface {
 	GetByUsername(ctx context.Context, username string) (*User, error)
-	Find(ctx context.Context, condition *FindUser) ([]User, error)
+	Find(ctx context.Context, condition *FindUser) []User
 	Create(ctx context.Context, item *User) error
 	Update(ctx context.Context, item *UpdateUser) error
 	Delete(ctx context.Context, ids ...uint64) error
@@ -172,7 +172,7 @@ func (uc *UserUseCase) Delete(ctx context.Context, ids ...uint64) error {
 	})
 }
 
-func (uc *UserUseCase) Find(ctx context.Context, condition *FindUser) ([]User, error) {
+func (uc *UserUseCase) Find(ctx context.Context, condition *FindUser) []User {
 	return uc.repo.Find(ctx, condition)
 }
 
