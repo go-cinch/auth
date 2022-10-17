@@ -86,9 +86,15 @@ func (ro permissionRepo) GetByUserCode(ctx context.Context, code string) (rp *bi
 	if len(actions) > 0 {
 		list := ro.action.FindByCode(ctx, strings.Join(actions, ","))
 		for _, item := range list {
-			rp.Resources = append(rp.Resources, item.Resource)
-			rp.Menus = append(rp.Menus, item.Menu)
-			rp.Btns = append(rp.Btns, item.Btn)
+			if item.Resource != "" {
+				rp.Resources = append(rp.Resources, strings.Split(item.Resource, "\n")...)
+			}
+			if item.Menu != "" {
+				rp.Menus = append(rp.Menus, strings.Split(item.Menu, "\n")...)
+			}
+			if item.Btn != "" {
+				rp.Btns = append(rp.Btns, strings.Split(item.Btn, "\n")...)
+			}
 		}
 	}
 	rp.Resources = utils.RemoveRepeat(rp.Resources)
