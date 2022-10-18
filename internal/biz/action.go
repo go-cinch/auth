@@ -51,8 +51,7 @@ type ActionUseCase struct {
 }
 
 func NewActionUseCase(c *conf.Bootstrap, repo ActionRepo, tx Transaction, cache Cache) *ActionUseCase {
-	cache.Register("auth_action_cache")
-	return &ActionUseCase{c: c, repo: repo, tx: tx, cache: cache}
+	return &ActionUseCase{c: c, repo: repo, tx: tx, cache: cache.WithPrefix("auth_action")}
 }
 
 func (uc *ActionUseCase) Create(ctx context.Context, item *Action) error {

@@ -130,8 +130,7 @@ type UserUseCase struct {
 }
 
 func NewUserUseCase(c *conf.Bootstrap, repo UserRepo, tx Transaction, cache Cache) *UserUseCase {
-	cache.Register("auth_user_cache")
-	return &UserUseCase{c: c, repo: repo, tx: tx, cache: cache}
+	return &UserUseCase{c: c, repo: repo, tx: tx, cache: cache.WithPrefix("auth_user")}
 }
 
 func (uc *UserUseCase) Create(ctx context.Context, item *User) error {

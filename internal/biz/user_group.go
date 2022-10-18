@@ -47,8 +47,7 @@ type UserGroupUseCase struct {
 }
 
 func NewUserGroupUseCase(c *conf.Bootstrap, repo UserGroupRepo, tx Transaction, cache Cache) *UserGroupUseCase {
-	cache.Register("auth_user_group_cache")
-	return &UserGroupUseCase{c: c, repo: repo, tx: tx, cache: cache}
+	return &UserGroupUseCase{c: c, repo: repo, tx: tx, cache: cache.WithPrefix("auth_user_group")}
 }
 
 func (uc *UserGroupUseCase) Create(ctx context.Context, item *UserGroup) error {

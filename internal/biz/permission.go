@@ -28,8 +28,7 @@ type PermissionUseCase struct {
 }
 
 func NewPermissionUseCase(c *conf.Bootstrap, repo PermissionRepo, cache Cache) *PermissionUseCase {
-	cache.Register("auth_permission_cache")
-	return &PermissionUseCase{c: c, repo: repo, cache: cache}
+	return &PermissionUseCase{c: c, repo: repo, cache: cache.WithPrefix("auth_permission")}
 }
 
 func (uc *PermissionUseCase) Check(ctx context.Context, item *CheckPermission) bool {

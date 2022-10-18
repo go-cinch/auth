@@ -43,8 +43,7 @@ type RoleUseCase struct {
 }
 
 func NewRoleUseCase(c *conf.Bootstrap, repo RoleRepo, tx Transaction, cache Cache) *RoleUseCase {
-	cache.Register("auth_role_cache")
-	return &RoleUseCase{c: c, repo: repo, tx: tx, cache: cache}
+	return &RoleUseCase{c: c, repo: repo, tx: tx, cache: cache.WithPrefix("auth_role")}
 }
 
 func (uc *RoleUseCase) Create(ctx context.Context, item *Role) error {
