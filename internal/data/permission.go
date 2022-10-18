@@ -73,9 +73,6 @@ func (ro permissionRepo) GetByUserCode(ctx context.Context, code string) (rp *bi
 	}
 	// 3. user group action
 	groups := ro.userGroup.FindGroupByUserCode(ctx, user.Code)
-	if err != nil {
-		return
-	}
 	for _, group := range groups {
 		if group.Action != "" {
 			arr := strings.Split(group.Action, ",")

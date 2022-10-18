@@ -46,6 +46,9 @@ func (s *AuthService) UpdateUserGroup(ctx context.Context, req *v1.UpdateUserGro
 	r := &biz.UpdateUserGroup{}
 	copierx.Copy(&r, req)
 	err = s.userGroup.Update(ctx, r)
+	if err == nil {
+		s.permission.FlushCache(ctx)
+	}
 	return
 }
 
@@ -55,5 +58,8 @@ func (s *AuthService) DeleteUserGroup(ctx context.Context, req *v1.IdsRequest) (
 	defer span.End()
 	rp = &emptypb.Empty{}
 	err = s.userGroup.Delete(ctx, utils.Str2Uint64Arr(req.Ids)...)
+	if err == nil {
+		s.permission.FlushCache(ctx)
+	}
 	return
 }

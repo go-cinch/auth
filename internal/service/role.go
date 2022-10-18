@@ -46,6 +46,9 @@ func (s *AuthService) UpdateRole(ctx context.Context, req *v1.UpdateRoleRequest)
 	r := &biz.UpdateRole{}
 	copierx.Copy(&r, req)
 	err = s.role.Update(ctx, r)
+	if err == nil {
+		s.permission.FlushCache(ctx)
+	}
 	return
 }
 
@@ -55,5 +58,8 @@ func (s *AuthService) DeleteRole(ctx context.Context, req *v1.IdsRequest) (rp *e
 	defer span.End()
 	rp = &emptypb.Empty{}
 	err = s.role.Delete(ctx, utils.Str2Uint64Arr(req.Ids)...)
+	if err == nil {
+		s.permission.FlushCache(ctx)
+	}
 	return
 }

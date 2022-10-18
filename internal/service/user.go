@@ -40,6 +40,9 @@ func (s *AuthService) UpdateUser(ctx context.Context, req *v1.UpdateUserRequest)
 		r.LockExpire = &lockExpire
 	}
 	err = s.user.Update(ctx, r)
+	if err == nil {
+		s.permission.FlushCache(ctx)
+	}
 	return
 }
 
@@ -49,5 +52,8 @@ func (s *AuthService) DeleteUser(ctx context.Context, req *v1.IdsRequest) (rp *e
 	defer span.End()
 	rp = &emptypb.Empty{}
 	err = s.user.Delete(ctx, utils.Str2Uint64Arr(req.Ids)...)
+	if err == nil {
+		s.permission.FlushCache(ctx)
+	}
 	return
 }
