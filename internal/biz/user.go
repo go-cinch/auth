@@ -172,8 +172,27 @@ func (uc *UserUseCase) Delete(ctx context.Context, ids ...uint64) error {
 	})
 }
 
-func (uc *UserUseCase) Find(ctx context.Context, condition *FindUser) []User {
-	return uc.repo.Find(ctx, condition)
+func (uc *UserUseCase) Find(ctx context.Context, condition *FindUser) (rp []User) {
+	rp = make([]User, 0)
+	action := fmt.Sprintf("find_%s", utils.StructMd5(condition))
+	str, ok, _, _ := uc.cache.Get(ctx, action, func(ctx context.Context) (string, bool) {
+		return uc.find(ctx, action, condition)
+	})
+	if ok {
+		utils.Json2Struct(&rp, str)
+	}
+	return
+}
+
+func (uc *UserUseCase) find(ctx context.Context, action string, condition *FindUser) (res string, ok bool) {
+	// read data from db and write to cache
+	rp := make([]User, 0)
+	list := uc.repo.Find(ctx, condition)
+	copierx.Copy(&rp, list)
+	res = utils.Struct2Json(rp)
+	uc.cache.Set(ctx, action, res, len(list) == 0)
+	ok = true
+	return
 }
 
 func (uc *UserUseCase) InfoFromCtx(ctx context.Context) (rp *UserInfo, err error) {
@@ -188,7 +207,7 @@ func (uc *UserUseCase) Info(ctx context.Context, code string) (rp *UserInfo, err
 		return uc.info(ctx, action, code)
 	})
 	if ok {
-		utils.Json2Struct(rp, str)
+		utils.Json2Struct(&rp, str)
 	} else if !lock {
 		err = TooManyRequests
 		return
@@ -278,7 +297,7 @@ func (uc *UserUseCase) Status(ctx context.Context, username string, captcha bool
 		return uc.status(ctx, action, username)
 	})
 	if ok {
-		utils.Json2Struct(rp, str)
+		utils.Json2Struct(&rp, str)
 		// TODO u can get max wrong count from env or dict
 		if rp.Wrong >= constant.I3 {
 			// need captcha

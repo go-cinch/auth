@@ -63,7 +63,7 @@ func (uc *PermissionUseCase) GetByUserCode(ctx context.Context, code string) (rp
 		return uc.getByUserCode(ctx, action, code)
 	})
 	if ok {
-		utils.Json2Struct(rp, str)
+		utils.Json2Struct(&rp, str)
 	} else if !lock {
 		err = TooManyRequests
 		return
