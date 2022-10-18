@@ -1,7 +1,6 @@
 package data
 
 import (
-	v1 "auth/api/auth/v1"
 	"auth/internal/biz"
 	"context"
 	"fmt"
@@ -46,7 +45,7 @@ func (ro userGroupRepo) Create(ctx context.Context, item *biz.UserGroup) (err er
 		Where("`word` = ?", item.Word).
 		First(&m)
 	if m.Id > constant.UI0 {
-		err = biz.DuplicateUserGroupWord
+		err = biz.IllegalParameter("%s `word`: %s", biz.DuplicateField.Message, item.Word)
 		return
 	}
 	copierx.Copy(&m, item)
@@ -138,7 +137,7 @@ func (ro userGroupRepo) Update(ctx context.Context, item *biz.UpdateUserGroup) (
 		Where("`id` = ?", item.Id).
 		First(&m)
 	if m.Id == constant.UI0 {
-		err = biz.UserGroupNotFound
+		err = biz.IllegalParameter("%s UserGroup.id: %d", biz.NotFound.Message, item.Id)
 		return
 	}
 	change := make(map[string]interface{})
@@ -150,7 +149,7 @@ func (ro userGroupRepo) Update(ctx context.Context, item *biz.UpdateUserGroup) (
 	if item.Word != nil && *item.Word != m.Word {
 		err = ro.WordExists(ctx, *item.Word)
 		if err == nil {
-			err = biz.DuplicateUserGroupWord
+			err = biz.IllegalParameter("%s `word`: %s", biz.DuplicateField.Message, *item.Word)
 			return
 		}
 	}
@@ -195,9 +194,8 @@ func (ro userGroupRepo) WordExists(ctx context.Context, word string) (err error)
 		db.
 			Where("`word` = ?", item).
 			First(&m)
-		ok := m.Id > constant.UI1
-		if !ok {
-			err = v1.ErrorIllegalParameter("%s: %s", biz.UserGroupNotFound.Message, item)
+		if m.Id == constant.UI0 {
+			err = biz.IllegalParameter("%s UserGroup.code: %s", biz.NotFound.Message, item)
 			return
 		}
 	}

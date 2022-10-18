@@ -5,6 +5,7 @@ import (
 	"auth/internal/biz"
 	"auth/internal/pkg/jwt"
 	"context"
+	"errors"
 	"github.com/go-cinch/common/copierx"
 	"github.com/go-cinch/common/utils"
 	"github.com/go-cinch/common/worker"
@@ -58,7 +59,7 @@ func (s *AuthService) Login(ctx context.Context, req *v1.LoginRequest) (rp *v1.L
 					},
 				})),
 			)
-		} else if err == biz.UserNotFound {
+		} else if errors.Is(err, biz.NotFound) {
 			// avoid guess username
 			err = biz.LoginFailed
 		}

@@ -11,6 +11,7 @@ import (
 	"github.com/go-cinch/common/page"
 	"github.com/go-cinch/common/utils"
 	"github.com/golang-module/carbon/v2"
+	"github.com/pkg/errors"
 	"github.com/thoas/go-funk"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -205,7 +206,7 @@ func (uc *UserUseCase) Login(ctx context.Context, item *Login) (rp *LoginToken, 
 				return
 			}
 			if status.Id == constant.UI0 {
-				err = UserNotFound
+				err = errors.Errorf("%s User.username: %s", NotFound.Message, item.Username)
 				return
 			}
 			// verify captcha
@@ -318,12 +319,12 @@ func (uc *UserUseCase) status(ctx context.Context, action string, username strin
 	// read data from db and write to cache
 	rp := &UserStatus{}
 	user, err := uc.repo.GetByUsername(ctx, username)
-	if err != nil && err != UserNotFound {
+	if err != nil && !errors.Is(err, NotFound) {
 		return
 	}
 	copierx.Copy(&rp, user)
 	res = utils.Struct2Json(rp)
-	uc.cache.Set(ctx, action, res, err == UserNotFound)
+	uc.cache.Set(ctx, action, res, errors.Is(err, NotFound))
 	ok = true
 	return
 }
@@ -332,12 +333,12 @@ func (uc *UserUseCase) info(ctx context.Context, action string, code string) (re
 	// read data from db and write to cache
 	rp := &UserInfo{}
 	user, err := uc.repo.GetByCode(ctx, code)
-	if err != nil && err != UserNotFound {
+	if err != nil && !errors.Is(err, NotFound) {
 		return
 	}
 	copierx.Copy(&rp, user)
 	res = utils.Struct2Json(rp)
-	uc.cache.Set(ctx, action, res, err == UserNotFound)
+	uc.cache.Set(ctx, action, res, errors.Is(err, NotFound))
 	ok = true
 	return
 }

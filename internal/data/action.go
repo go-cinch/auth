@@ -1,7 +1,6 @@
 package data
 
 import (
-	v1 "auth/api/auth/v1"
 	"auth/internal/biz"
 	"context"
 	"fmt"
@@ -37,7 +36,7 @@ func (ro actionRepo) Create(ctx context.Context, item *biz.Action) (err error) {
 	var m Action
 	err = ro.WordExists(ctx, item.Word)
 	if err == nil {
-		err = biz.DuplicateActionWord
+		err = biz.IllegalParameter("%s `word`: %s", biz.DuplicateField.Message, item.Word)
 		return
 	}
 	copierx.Copy(&m, item)
@@ -99,7 +98,7 @@ func (ro actionRepo) Update(ctx context.Context, item *biz.UpdateAction) (err er
 		Where("`id` = ?", item.Id).
 		First(&m)
 	if m.Id == constant.UI0 {
-		err = biz.ActionNotFound
+		err = biz.IllegalParameter("%s Action.id: %d", biz.NotFound.Message, item.Id)
 		return
 	}
 	change := make(map[string]interface{})
@@ -111,7 +110,7 @@ func (ro actionRepo) Update(ctx context.Context, item *biz.UpdateAction) (err er
 	if item.Word != nil && *item.Word != m.Word {
 		err = ro.WordExists(ctx, *item.Word)
 		if err == nil {
-			err = biz.DuplicateActionWord
+			err = biz.IllegalParameter("%s `word`: %s", biz.DuplicateField.Message, *item.Word)
 			return
 		}
 	}
@@ -147,9 +146,8 @@ func (ro actionRepo) CodeExists(ctx context.Context, code string) (err error) {
 		db.
 			Where("`code` = ?", item).
 			First(&m)
-		ok := m.Id > constant.UI1
-		if !ok {
-			err = v1.ErrorIllegalParameter("%s: %s", biz.ActionNotFound.Message, item)
+		if m.Id == constant.UI0 {
+			err = biz.IllegalParameter("%s Action.code: %s", biz.NotFound.Message, item)
 			return
 		}
 	}
@@ -164,9 +162,8 @@ func (ro actionRepo) WordExists(ctx context.Context, word string) (err error) {
 		db.
 			Where("`word` = ?", item).
 			First(&m)
-		ok := m.Id > constant.UI1
-		if !ok {
-			err = v1.ErrorIllegalParameter("%s: %s", biz.ActionNotFound.Message, item)
+		if m.Id == constant.UI0 {
+			err = biz.IllegalParameter("%s Action.word: %s", biz.NotFound.Message, item)
 			return
 		}
 	}

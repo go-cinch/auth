@@ -1,7 +1,6 @@
 package data
 
 import (
-	v1 "auth/api/auth/v1"
 	"auth/internal/biz"
 	"context"
 	"fmt"
@@ -35,7 +34,7 @@ func (ro roleRepo) Create(ctx context.Context, item *biz.Role) (err error) {
 	var m Role
 	err = ro.WordExists(ctx, item.Word)
 	if err == nil {
-		err = biz.DuplicateRoleWord
+		err = biz.IllegalParameter("%s `word`: %s", biz.DuplicateField.Message, item.Word)
 		return
 	}
 	copierx.Copy(&m, item)
@@ -85,7 +84,7 @@ func (ro roleRepo) Update(ctx context.Context, item *biz.UpdateRole) (err error)
 		Where("`id` = ?", item.Id).
 		First(&m)
 	if m.Id == constant.UI0 {
-		err = biz.RoleNotFound
+		err = biz.IllegalParameter("%s Role.id: %d", biz.NotFound.Message, item.Id)
 		return
 	}
 	change := make(map[string]interface{})
@@ -105,7 +104,7 @@ func (ro roleRepo) Update(ctx context.Context, item *biz.UpdateRole) (err error)
 	if item.Word != nil && *item.Word != m.Word {
 		err = ro.WordExists(ctx, *item.Word)
 		if err == nil {
-			err = biz.DuplicateRoleWord
+			err = biz.IllegalParameter("%s `word`: %s", biz.DuplicateField.Message, *item.Word)
 			return
 		}
 	}
@@ -131,9 +130,8 @@ func (ro roleRepo) WordExists(ctx context.Context, word string) (err error) {
 		db.
 			Where("`word` = ?", item).
 			First(&m)
-		ok := m.Id > constant.UI1
-		if !ok {
-			err = v1.ErrorIllegalParameter("%s: %s", biz.RoleNotFound.Message, item)
+		if m.Id == constant.UI0 {
+			err = biz.IllegalParameter("%s Role.word: %s", biz.NotFound.Message, item)
 			return
 		}
 	}
