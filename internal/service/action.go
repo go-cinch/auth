@@ -1,7 +1,7 @@
 package service
 
 import (
-	v1 "auth/api/auth/v1"
+	"auth/api/auth"
 	"auth/internal/biz"
 	"context"
 	"github.com/go-cinch/common/copierx"
@@ -11,7 +11,7 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func (s *AuthService) CreateAction(ctx context.Context, req *v1.CreateActionRequest) (rp *emptypb.Empty, err error) {
+func (s *AuthService) CreateAction(ctx context.Context, req *auth.CreateActionRequest) (rp *emptypb.Empty, err error) {
 	tr := otel.Tracer("api")
 	ctx, span := tr.Start(ctx, "CreateAction")
 	defer span.End()
@@ -22,12 +22,12 @@ func (s *AuthService) CreateAction(ctx context.Context, req *v1.CreateActionRequ
 	return
 }
 
-func (s *AuthService) FindAction(ctx context.Context, req *v1.FindActionRequest) (rp *v1.FindActionReply, err error) {
+func (s *AuthService) FindAction(ctx context.Context, req *auth.FindActionRequest) (rp *auth.FindActionReply, err error) {
 	tr := otel.Tracer("api")
 	ctx, span := tr.Start(ctx, "FindAction")
 	defer span.End()
-	rp = &v1.FindActionReply{}
-	rp.Page = &v1.Page{}
+	rp = &auth.FindActionReply{}
+	rp.Page = &auth.Page{}
 	r := &biz.FindAction{}
 	r.Page = page.Page{}
 	copierx.Copy(&r, req)
@@ -38,7 +38,7 @@ func (s *AuthService) FindAction(ctx context.Context, req *v1.FindActionRequest)
 	return
 }
 
-func (s *AuthService) UpdateAction(ctx context.Context, req *v1.UpdateActionRequest) (rp *emptypb.Empty, err error) {
+func (s *AuthService) UpdateAction(ctx context.Context, req *auth.UpdateActionRequest) (rp *emptypb.Empty, err error) {
 	tr := otel.Tracer("api")
 	ctx, span := tr.Start(ctx, "UpdateAction")
 	defer span.End()
@@ -49,7 +49,7 @@ func (s *AuthService) UpdateAction(ctx context.Context, req *v1.UpdateActionRequ
 	return
 }
 
-func (s *AuthService) DeleteAction(ctx context.Context, req *v1.IdsRequest) (rp *emptypb.Empty, err error) {
+func (s *AuthService) DeleteAction(ctx context.Context, req *auth.IdsRequest) (rp *emptypb.Empty, err error) {
 	tr := otel.Tracer("api")
 	ctx, span := tr.Start(ctx, "DeleteAction")
 	defer span.End()

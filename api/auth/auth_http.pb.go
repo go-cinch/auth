@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-http v2.5.0
 // - protoc             v3.17.3
-// source: auth/v1/auth.proto
+// source: auth-proto/auth.proto
 
-package v1
+package auth
 
 import (
 	context "context"

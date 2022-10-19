@@ -1,7 +1,7 @@
 package service
 
 import (
-	v1 "auth/api/auth/v1"
+	"auth/api/auth"
 	"auth/internal/biz"
 	"context"
 	"github.com/go-cinch/common/copierx"
@@ -12,12 +12,12 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func (s *AuthService) FindUser(ctx context.Context, req *v1.FindUserRequest) (rp *v1.FindUserReply, err error) {
+func (s *AuthService) FindUser(ctx context.Context, req *auth.FindUserRequest) (rp *auth.FindUserReply, err error) {
 	tr := otel.Tracer("api")
 	ctx, span := tr.Start(ctx, "FindUser")
 	defer span.End()
-	rp = &v1.FindUserReply{}
-	rp.Page = &v1.Page{}
+	rp = &auth.FindUserReply{}
+	rp.Page = &auth.Page{}
 	r := &biz.FindUser{}
 	r.Page = page.Page{}
 	copierx.Copy(&r, req)
@@ -28,7 +28,7 @@ func (s *AuthService) FindUser(ctx context.Context, req *v1.FindUserRequest) (rp
 	return
 }
 
-func (s *AuthService) UpdateUser(ctx context.Context, req *v1.UpdateUserRequest) (rp *emptypb.Empty, err error) {
+func (s *AuthService) UpdateUser(ctx context.Context, req *auth.UpdateUserRequest) (rp *emptypb.Empty, err error) {
 	tr := otel.Tracer("api")
 	ctx, span := tr.Start(ctx, "UpdateUser")
 	defer span.End()
@@ -46,7 +46,7 @@ func (s *AuthService) UpdateUser(ctx context.Context, req *v1.UpdateUserRequest)
 	return
 }
 
-func (s *AuthService) DeleteUser(ctx context.Context, req *v1.IdsRequest) (rp *emptypb.Empty, err error) {
+func (s *AuthService) DeleteUser(ctx context.Context, req *auth.IdsRequest) (rp *emptypb.Empty, err error) {
 	tr := otel.Tracer("api")
 	ctx, span := tr.Start(ctx, "DeleteUser")
 	defer span.End()

@@ -1,7 +1,7 @@
 package server
 
 import (
-	v1 "auth/api/auth/v1"
+	"auth/api/auth"
 	"auth/internal/conf"
 	"auth/internal/idempotent"
 	localMiddleware "auth/internal/server/middleware"
@@ -53,6 +53,6 @@ func NewHTTPServer(c *conf.Bootstrap, idt *idempotent.Idempotent, svc *service.A
 		opts = append(opts, http.Timeout(c.Server.Http.Timeout.AsDuration()))
 	}
 	srv := http.NewServer(opts...)
-	v1.RegisterAuthHTTPServer(srv, svc)
+	auth.RegisterAuthHTTPServer(srv, svc)
 	return srv
 }

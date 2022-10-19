@@ -1,7 +1,7 @@
 package service
 
 import (
-	v1 "auth/api/auth/v1"
+	"auth/api/auth"
 	"auth/internal/biz"
 	"context"
 	"github.com/go-cinch/common/copierx"
@@ -11,7 +11,7 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func (s *AuthService) CreateRole(ctx context.Context, req *v1.CreateRoleRequest) (rp *emptypb.Empty, err error) {
+func (s *AuthService) CreateRole(ctx context.Context, req *auth.CreateRoleRequest) (rp *emptypb.Empty, err error) {
 	tr := otel.Tracer("api")
 	ctx, span := tr.Start(ctx, "CreateRole")
 	defer span.End()
@@ -22,12 +22,12 @@ func (s *AuthService) CreateRole(ctx context.Context, req *v1.CreateRoleRequest)
 	return
 }
 
-func (s *AuthService) FindRole(ctx context.Context, req *v1.FindRoleRequest) (rp *v1.FindRoleReply, err error) {
+func (s *AuthService) FindRole(ctx context.Context, req *auth.FindRoleRequest) (rp *auth.FindRoleReply, err error) {
 	tr := otel.Tracer("api")
 	ctx, span := tr.Start(ctx, "FindRole")
 	defer span.End()
-	rp = &v1.FindRoleReply{}
-	rp.Page = &v1.Page{}
+	rp = &auth.FindRoleReply{}
+	rp.Page = &auth.Page{}
 	r := &biz.FindRole{}
 	r.Page = page.Page{}
 	copierx.Copy(&r, req)
@@ -38,7 +38,7 @@ func (s *AuthService) FindRole(ctx context.Context, req *v1.FindRoleRequest) (rp
 	return
 }
 
-func (s *AuthService) UpdateRole(ctx context.Context, req *v1.UpdateRoleRequest) (rp *emptypb.Empty, err error) {
+func (s *AuthService) UpdateRole(ctx context.Context, req *auth.UpdateRoleRequest) (rp *emptypb.Empty, err error) {
 	tr := otel.Tracer("api")
 	ctx, span := tr.Start(ctx, "UpdateRole")
 	defer span.End()
@@ -52,7 +52,7 @@ func (s *AuthService) UpdateRole(ctx context.Context, req *v1.UpdateRoleRequest)
 	return
 }
 
-func (s *AuthService) DeleteRole(ctx context.Context, req *v1.IdsRequest) (rp *emptypb.Empty, err error) {
+func (s *AuthService) DeleteRole(ctx context.Context, req *auth.IdsRequest) (rp *emptypb.Empty, err error) {
 	tr := otel.Tracer("api")
 	ctx, span := tr.Start(ctx, "DeleteRole")
 	defer span.End()

@@ -1,7 +1,7 @@
 package service
 
 import (
-	v1 "auth/api/auth/v1"
+	"auth/api/auth"
 	"auth/internal/biz"
 	"context"
 	"github.com/go-cinch/common/copierx"
@@ -11,7 +11,7 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func (s *AuthService) CreateUserGroup(ctx context.Context, req *v1.CreateUserGroupRequest) (rp *emptypb.Empty, err error) {
+func (s *AuthService) CreateUserGroup(ctx context.Context, req *auth.CreateUserGroupRequest) (rp *emptypb.Empty, err error) {
 	tr := otel.Tracer("api")
 	ctx, span := tr.Start(ctx, "CreateUserGroup")
 	defer span.End()
@@ -22,12 +22,12 @@ func (s *AuthService) CreateUserGroup(ctx context.Context, req *v1.CreateUserGro
 	return
 }
 
-func (s *AuthService) FindUserGroup(ctx context.Context, req *v1.FindUserGroupRequest) (rp *v1.FindUserGroupReply, err error) {
+func (s *AuthService) FindUserGroup(ctx context.Context, req *auth.FindUserGroupRequest) (rp *auth.FindUserGroupReply, err error) {
 	tr := otel.Tracer("api")
 	ctx, span := tr.Start(ctx, "FindUserGroup")
 	defer span.End()
-	rp = &v1.FindUserGroupReply{}
-	rp.Page = &v1.Page{}
+	rp = &auth.FindUserGroupReply{}
+	rp.Page = &auth.Page{}
 	r := &biz.FindUserGroup{}
 	r.Page = page.Page{}
 	copierx.Copy(&r, req)
@@ -38,7 +38,7 @@ func (s *AuthService) FindUserGroup(ctx context.Context, req *v1.FindUserGroupRe
 	return
 }
 
-func (s *AuthService) UpdateUserGroup(ctx context.Context, req *v1.UpdateUserGroupRequest) (rp *emptypb.Empty, err error) {
+func (s *AuthService) UpdateUserGroup(ctx context.Context, req *auth.UpdateUserGroupRequest) (rp *emptypb.Empty, err error) {
 	tr := otel.Tracer("api")
 	ctx, span := tr.Start(ctx, "UpdateUserGroup")
 	defer span.End()
@@ -52,7 +52,7 @@ func (s *AuthService) UpdateUserGroup(ctx context.Context, req *v1.UpdateUserGro
 	return
 }
 
-func (s *AuthService) DeleteUserGroup(ctx context.Context, req *v1.IdsRequest) (rp *emptypb.Empty, err error) {
+func (s *AuthService) DeleteUserGroup(ctx context.Context, req *auth.IdsRequest) (rp *emptypb.Empty, err error) {
 	tr := otel.Tracer("api")
 	ctx, span := tr.Start(ctx, "DeleteUserGroup")
 	defer span.End()

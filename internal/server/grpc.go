@@ -1,7 +1,7 @@
 package server
 
 import (
-	v1 "auth/api/auth/v1"
+	"auth/api/auth"
 	"auth/internal/conf"
 	"auth/internal/idempotent"
 	localMiddleware "auth/internal/server/middleware"
@@ -44,6 +44,6 @@ func NewGRPCServer(c *conf.Bootstrap, idt *idempotent.Idempotent, svc *service.A
 		opts = append(opts, grpc.Timeout(c.Server.Grpc.Timeout.AsDuration()))
 	}
 	srv := grpc.NewServer(opts...)
-	v1.RegisterAuthServer(srv, svc)
+	auth.RegisterAuthServer(srv, svc)
 	return srv
 }

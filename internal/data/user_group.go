@@ -137,7 +137,7 @@ func (ro userGroupRepo) Update(ctx context.Context, item *biz.UpdateUserGroup) (
 		Where("`id` = ?", item.Id).
 		First(&m)
 	if m.Id == constant.UI0 {
-		err = biz.IllegalParameter("%s UserGroup.id: %d", biz.NotFound.Message, item.Id)
+		err = biz.NotFound("%s UserGroup.id: %d", biz.RecordNotFound.Message, item.Id)
 		return
 	}
 	change := make(map[string]interface{})
@@ -195,7 +195,7 @@ func (ro userGroupRepo) WordExists(ctx context.Context, word string) (err error)
 			Where("`word` = ?", item).
 			First(&m)
 		if m.Id == constant.UI0 {
-			err = biz.IllegalParameter("%s UserGroup.code: %s", biz.NotFound.Message, item)
+			err = biz.NotFound("%s UserGroup.code: %s", biz.RecordNotFound.Message, item)
 			return
 		}
 	}

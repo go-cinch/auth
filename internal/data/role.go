@@ -84,7 +84,7 @@ func (ro roleRepo) Update(ctx context.Context, item *biz.UpdateRole) (err error)
 		Where("`id` = ?", item.Id).
 		First(&m)
 	if m.Id == constant.UI0 {
-		err = biz.IllegalParameter("%s Role.id: %d", biz.NotFound.Message, item.Id)
+		err = biz.NotFound("%s Role.id: %d", biz.RecordNotFound.Message, item.Id)
 		return
 	}
 	change := make(map[string]interface{})
@@ -131,7 +131,7 @@ func (ro roleRepo) WordExists(ctx context.Context, word string) (err error) {
 			Where("`word` = ?", item).
 			First(&m)
 		if m.Id == constant.UI0 {
-			err = biz.IllegalParameter("%s Role.word: %s", biz.NotFound.Message, item)
+			err = biz.NotFound("%s Role.word: %s", biz.RecordNotFound.Message, item)
 			return
 		}
 	}

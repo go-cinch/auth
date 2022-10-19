@@ -1,7 +1,7 @@
 package service
 
 import (
-	v1 "auth/api/auth/v1"
+	"auth/api/auth"
 	"auth/internal/biz"
 	"auth/internal/idempotent"
 	"auth/internal/task"
@@ -13,7 +13,7 @@ var ProviderSet = wire.NewSet(NewAuthService)
 
 // AuthService is a greeter service.
 type AuthService struct {
-	v1.UnimplementedAuthServer
+	auth.UnimplementedAuthServer
 
 	task       *task.Task
 	idempotent *idempotent.Idempotent

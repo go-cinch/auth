@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	v1 "auth/api/auth/v1"
+	"auth/api/auth"
 	"auth/internal/biz"
 	"auth/internal/conf"
 	jwtLocal "auth/internal/pkg/jwt"
@@ -24,7 +24,7 @@ func Permission(c *conf.Bootstrap, svc *service.AuthService) middleware.Middlewa
 					resource = tr.Operation()
 				}
 				user := jwtLocal.FromContext(ctx)
-				res, err := svc.Permission(ctx, &v1.PermissionRequest{
+				res, err := svc.Permission(ctx, &auth.PermissionRequest{
 					UserCode: user.Code,
 					Resource: resource,
 				})

@@ -98,7 +98,7 @@ func (ro actionRepo) Update(ctx context.Context, item *biz.UpdateAction) (err er
 		Where("`id` = ?", item.Id).
 		First(&m)
 	if m.Id == constant.UI0 {
-		err = biz.IllegalParameter("%s Action.id: %d", biz.NotFound.Message, item.Id)
+		err = biz.NotFound("%s Action.id: %d", biz.RecordNotFound.Message, item.Id)
 		return
 	}
 	change := make(map[string]interface{})
@@ -147,7 +147,7 @@ func (ro actionRepo) CodeExists(ctx context.Context, code string) (err error) {
 			Where("`code` = ?", item).
 			First(&m)
 		if m.Id == constant.UI0 {
-			err = biz.IllegalParameter("%s Action.code: %s", biz.NotFound.Message, item)
+			err = biz.NotFound("%s Action.code: %s", biz.RecordNotFound.Message, item)
 			return
 		}
 	}
@@ -163,7 +163,7 @@ func (ro actionRepo) WordExists(ctx context.Context, word string) (err error) {
 			Where("`word` = ?", item).
 			First(&m)
 		if m.Id == constant.UI0 {
-			err = biz.IllegalParameter("%s Action.word: %s", biz.NotFound.Message, item)
+			err = biz.NotFound("%s Action.word: %s", biz.RecordNotFound.Message, item)
 			return
 		}
 	}

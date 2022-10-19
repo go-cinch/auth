@@ -75,12 +75,12 @@ func (uc *PermissionUseCase) getByUserCode(ctx context.Context, action string, c
 	// read data from db and write to cache
 	rp := &Permission{}
 	permission, err := uc.repo.GetByUserCode(ctx, code)
-	if err != nil && !errors.Is(err, NotFound) {
+	if err != nil && !errors.Is(err, RecordNotFound) {
 		return
 	}
 	copierx.Copy(&rp, permission)
 	res = utils.Struct2Json(rp)
-	uc.cache.Set(ctx, action, res, errors.Is(err, NotFound))
+	uc.cache.Set(ctx, action, res, errors.Is(err, RecordNotFound))
 	ok = true
 	return
 }

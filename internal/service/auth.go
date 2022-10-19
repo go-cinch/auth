@@ -1,7 +1,7 @@
 package service
 
 import (
-	v1 "auth/api/auth/v1"
+	"auth/api/auth"
 	"auth/internal/biz"
 	"auth/internal/pkg/jwt"
 	"context"
@@ -15,7 +15,7 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func (s *AuthService) Register(ctx context.Context, req *v1.RegisterRequest) (rp *emptypb.Empty, err error) {
+func (s *AuthService) Register(ctx context.Context, req *auth.RegisterRequest) (rp *emptypb.Empty, err error) {
 	tr := otel.Tracer("api")
 	ctx, span := tr.Start(ctx, "Register")
 	defer span.End()
@@ -26,7 +26,7 @@ func (s *AuthService) Register(ctx context.Context, req *v1.RegisterRequest) (rp
 	return
 }
 
-func (s *AuthService) Pwd(ctx context.Context, req *v1.PwdRequest) (rp *emptypb.Empty, err error) {
+func (s *AuthService) Pwd(ctx context.Context, req *auth.PwdRequest) (rp *emptypb.Empty, err error) {
 	tr := otel.Tracer("api")
 	ctx, span := tr.Start(ctx, "Pwd")
 	defer span.End()
@@ -37,11 +37,11 @@ func (s *AuthService) Pwd(ctx context.Context, req *v1.PwdRequest) (rp *emptypb.
 	return
 }
 
-func (s *AuthService) Login(ctx context.Context, req *v1.LoginRequest) (rp *v1.LoginReply, err error) {
+func (s *AuthService) Login(ctx context.Context, req *auth.LoginRequest) (rp *auth.LoginReply, err error) {
 	tr := otel.Tracer("api")
 	ctx, span := tr.Start(ctx, "Login")
 	defer span.End()
-	rp = &v1.LoginReply{}
+	rp = &auth.LoginReply{}
 	r := &biz.Login{}
 	copierx.Copy(&r, req)
 	res, err := s.user.Login(ctx, r)
@@ -59,7 +59,7 @@ func (s *AuthService) Login(ctx context.Context, req *v1.LoginRequest) (rp *v1.L
 					},
 				})),
 			)
-		} else if errors.Is(err, biz.NotFound) {
+		} else if errors.Is(err, biz.RecordNotFound) {
 			// avoid guess username
 			err = biz.LoginFailed
 		}
@@ -69,11 +69,11 @@ func (s *AuthService) Login(ctx context.Context, req *v1.LoginRequest) (rp *v1.L
 	return
 }
 
-func (s *AuthService) Status(ctx context.Context, req *v1.StatusRequest) (rp *v1.StatusReply, err error) {
+func (s *AuthService) Status(ctx context.Context, req *auth.StatusRequest) (rp *auth.StatusReply, err error) {
 	tr := otel.Tracer("api")
 	ctx, span := tr.Start(ctx, "Status")
 	defer span.End()
-	rp = &v1.StatusReply{}
+	rp = &auth.StatusReply{}
 	res, err := s.user.Status(ctx, req.Username, true)
 	if err != nil {
 		return
@@ -82,34 +82,34 @@ func (s *AuthService) Status(ctx context.Context, req *v1.StatusRequest) (rp *v1
 	return
 }
 
-func (s *AuthService) Captcha(ctx context.Context, req *emptypb.Empty) (rp *v1.CaptchaReply, err error) {
+func (s *AuthService) Captcha(ctx context.Context, req *emptypb.Empty) (rp *auth.CaptchaReply, err error) {
 	tr := otel.Tracer("api")
 	ctx, span := tr.Start(ctx, "Captcha")
 	defer span.End()
-	rp = &v1.CaptchaReply{}
-	rp.Captcha = &v1.Captcha{}
+	rp = &auth.CaptchaReply{}
+	rp.Captcha = &auth.Captcha{}
 	res := s.user.Captcha(ctx)
 	copierx.Copy(&rp.Captcha, res)
 	return
 }
 
-func (s *AuthService) Permission(ctx context.Context, req *v1.PermissionRequest) (rp *v1.PermissionReply, err error) {
+func (s *AuthService) Permission(ctx context.Context, req *auth.PermissionRequest) (rp *auth.PermissionReply, err error) {
 	tr := otel.Tracer("api")
 	ctx, span := tr.Start(ctx, "CheckPermission")
 	defer span.End()
-	rp = &v1.PermissionReply{}
+	rp = &auth.PermissionReply{}
 	r := &biz.CheckPermission{}
 	copierx.Copy(&r, req)
 	rp.Pass = s.permission.Check(ctx, r)
 	return
 }
 
-func (s *AuthService) Info(ctx context.Context, req *emptypb.Empty) (rp *v1.InfoReply, err error) {
+func (s *AuthService) Info(ctx context.Context, req *emptypb.Empty) (rp *auth.InfoReply, err error) {
 	tr := otel.Tracer("api")
 	ctx, span := tr.Start(ctx, "Info")
 	defer span.End()
-	rp = &v1.InfoReply{}
-	rp.Permission = &v1.Permission{}
+	rp = &auth.InfoReply{}
+	rp.Permission = &auth.Permission{}
 	user := jwt.FromContext(ctx)
 	res, err := s.user.Info(ctx, user.Code)
 	if err != nil {

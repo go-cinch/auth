@@ -54,7 +54,7 @@ func (ro userRepo) GetByUsername(ctx context.Context, username string) (item *bi
 		Where("`username` = ?", username).
 		First(&m)
 	if m.Id == constant.UI0 {
-		err = biz.IllegalParameter("%s User.username: %s", biz.NotFound.Message, username)
+		err = biz.NotFound("%s User.username: %s", biz.RecordNotFound.Message, username)
 		return
 	}
 	copierx.Copy(&item, m)
@@ -164,7 +164,7 @@ func (ro userRepo) Update(ctx context.Context, item *biz.UpdateUser) (err error)
 		Where("`id` = ?", item.Id).
 		First(&m)
 	if m.Id == constant.UI0 {
-		err = biz.IllegalParameter("%s User.id: %d", biz.NotFound.Message, item.Id)
+		err = biz.NotFound("%s User.id: %d", biz.RecordNotFound.Message, item.Id)
 		return
 	}
 	change := make(map[string]interface{})
@@ -265,7 +265,7 @@ func (ro userRepo) UpdatePassword(ctx context.Context, item *biz.User) (err erro
 		Where("`username` = ?", item.Username).
 		First(&m)
 	if m.Id == constant.UI0 {
-		err = biz.IllegalParameter("%s User.username: %s", biz.NotFound.Message, item.Username)
+		err = biz.NotFound("%s User.username: %s", biz.RecordNotFound.Message, item.Username)
 		return
 	}
 	fields := make(map[string]interface{})
@@ -286,7 +286,7 @@ func (ro userRepo) IdExists(ctx context.Context, id uint64) (err error) {
 		Where("`id` = ?", id).
 		First(&m)
 	if m.Id == constant.UI0 {
-		err = biz.IllegalParameter("%s User.id: %d", biz.NotFound.Message, id)
+		err = biz.NotFound("%s User.id: %d", biz.RecordNotFound.Message, id)
 		return
 	}
 	return
@@ -300,7 +300,7 @@ func (ro userRepo) GetByCode(ctx context.Context, code string) (item *biz.User, 
 		Preload("Role").
 		First(&m)
 	if m.Id == constant.UI0 {
-		err = biz.IllegalParameter("%s User.code: %s", biz.NotFound.Message, code)
+		err = biz.NotFound("%s User.code: %s", biz.RecordNotFound.Message, code)
 		return
 	}
 	copierx.Copy(&item, m)
