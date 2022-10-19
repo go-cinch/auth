@@ -134,10 +134,12 @@ github.com/go-cinch/common/copierx v0.0.0-20221014090947-8c8ed2810141 h1:Z5H4WQK
 github.com/go-cinch/common/copierx v0.0.0-20221014090947-8c8ed2810141/go.mod h1:pBmPP6aiPgwl+EYBAYPREsKVlREG1IS/sEZeiQ73gLQ=
 github.com/go-cinch/common/id v0.0.0-20221010030633-b6fcfb8a6767 h1:+lNca2xTpG9esPemNRWlJ/kzJl3Yist5BOT6LT2gvpo=
 github.com/go-cinch/common/id v0.0.0-20221010030633-b6fcfb8a6767/go.mod h1:y2bgFgbiqOgiMGyztMTJUZU7MyBvFSedzUH4BSZpZog=
+github.com/go-cinch/common/idempotent v0.0.0-20221019022337-83b9ba16a81c h1:RT1sXEydkeXDaCZZM/HrhnJ+0BDmc9V1xaKpbO8TlwE=
+github.com/go-cinch/common/idempotent v0.0.0-20221019022337-83b9ba16a81c/go.mod h1:v0TdlbPy6IDEwxbib9WriBevSna/1qAm3GGkGJA63hs=
 github.com/go-cinch/common/lock v0.0.0-20220929075000-0dd3fa2ef2a5 h1:PRfcTC6aIuodOGMWCD7AVEiAf/5tM1gk/PQ0tV6BoUo=
 github.com/go-cinch/common/lock v0.0.0-20220929075000-0dd3fa2ef2a5/go.mod h1:FvTdnnUJB5d4M9HsNE8KxkKTJBOgZRIlsD1Hh5ZumnU=
-github.com/go-cinch/common/log v0.0.0-20221018025257-d6491f7d825a h1:pEbNJsUKoCs+DmcRPAX8dkt5o0/biZepCZ+vZsfA558=
-github.com/go-cinch/common/log v0.0.0-20221018025257-d6491f7d825a/go.mod h1:sWaidTCXD+LtnuRbiQpmsIDAsX8LlYcbJSAIQZ5P23U=
+github.com/go-cinch/common/log v0.0.0-20221018073009-3f6e3167736e h1:GBGsUgNZjMCdGh6/OQIAOfJOLgI8EgN9z0AGWIxHIo0=
+github.com/go-cinch/common/log v0.0.0-20221018073009-3f6e3167736e/go.mod h1:sWaidTCXD+LtnuRbiQpmsIDAsX8LlYcbJSAIQZ5P23U=
 github.com/go-cinch/common/middleware v0.0.0-20220921090518-54e9eef45fde h1:1ULpEpOpk82oH59quNTMtdyKypcInHu8p5cUhGSXGMs=
 github.com/go-cinch/common/middleware v0.0.0-20220921090518-54e9eef45fde/go.mod h1:bBjM9OkdX7o6aHf/auXSQ2hcshf5qImrxq3Lhlq9WYU=
 github.com/go-cinch/common/migrate v0.0.0-20220915041442-c48afde5a28c h1:iSMIZ1Ux6do0EzdwETsFlFLG/Anna6p0a8qBtLfvGR4=

@@ -1,4 +1,4 @@
-package server
+package middleware
 
 import (
 	v1 "auth/api/auth/v1"
@@ -14,22 +14,7 @@ import (
 	"strings"
 )
 
-func whitelist() selector.MatchFunc {
-	whiteList := make(map[string]struct{})
-	whiteList[v1.OperationAuthLogin] = struct{}{}
-	whiteList[v1.OperationAuthStatus] = struct{}{}
-	whiteList[v1.OperationAuthLogout] = struct{}{}
-	whiteList[v1.OperationAuthCaptcha] = struct{}{}
-	whiteList[v1.OperationAuthRegister] = struct{}{}
-	return func(ctx context.Context, operation string) bool {
-		if _, ok := whiteList[operation]; ok {
-			return false
-		}
-		return true
-	}
-}
-
-func permission(c *conf.Bootstrap, svc *service.AuthService) middleware.Middleware {
+func Permission(c *conf.Bootstrap, svc *service.AuthService) middleware.Middleware {
 	return selector.Server(
 		jwt(c),
 		func(handler middleware.Handler) middleware.Handler {
@@ -54,7 +39,7 @@ func permission(c *conf.Bootstrap, svc *service.AuthService) middleware.Middlewa
 				return handler(ctx, req)
 			}
 		},
-	).Match(whitelist()).Build()
+	).Match(permissionWhitelist()).Build()
 }
 
 func jwt(c *conf.Bootstrap) func(handler middleware.Handler) middleware.Handler {

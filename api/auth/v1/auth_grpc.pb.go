@@ -31,6 +31,7 @@ type AuthClient interface {
 	Refresh(ctx context.Context, in *RefreshRequest, opts ...grpc.CallOption) (*LoginReply, error)
 	Logout(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	Info(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*InfoReply, error)
+	Idempotent(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*IdempotentReply, error)
 	FindUser(ctx context.Context, in *FindUserRequest, opts ...grpc.CallOption) (*FindUserReply, error)
 	UpdateUser(ctx context.Context, in *UpdateUserRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	DeleteUser(ctx context.Context, in *IdsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
@@ -123,6 +124,15 @@ func (c *authClient) Logout(ctx context.Context, in *emptypb.Empty, opts ...grpc
 func (c *authClient) Info(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*InfoReply, error) {
 	out := new(InfoReply)
 	err := c.cc.Invoke(ctx, "/auth.v1.Auth/Info", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authClient) Idempotent(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*IdempotentReply, error) {
+	out := new(IdempotentReply)
+	err := c.cc.Invoke(ctx, "/auth.v1.Auth/Idempotent", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -285,6 +295,7 @@ type AuthServer interface {
 	Refresh(context.Context, *RefreshRequest) (*LoginReply, error)
 	Logout(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 	Info(context.Context, *emptypb.Empty) (*InfoReply, error)
+	Idempotent(context.Context, *emptypb.Empty) (*IdempotentReply, error)
 	FindUser(context.Context, *FindUserRequest) (*FindUserReply, error)
 	UpdateUser(context.Context, *UpdateUserRequest) (*emptypb.Empty, error)
 	DeleteUser(context.Context, *IdsRequest) (*emptypb.Empty, error)
@@ -331,6 +342,9 @@ func (UnimplementedAuthServer) Logout(context.Context, *emptypb.Empty) (*emptypb
 }
 func (UnimplementedAuthServer) Info(context.Context, *emptypb.Empty) (*InfoReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Info not implemented")
+}
+func (UnimplementedAuthServer) Idempotent(context.Context, *emptypb.Empty) (*IdempotentReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Idempotent not implemented")
 }
 func (UnimplementedAuthServer) FindUser(context.Context, *FindUserRequest) (*FindUserReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FindUser not implemented")
@@ -533,6 +547,24 @@ func _Auth_Info_Handler(srv interface{}, ctx context.Context, dec func(interface
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AuthServer).Info(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Auth_Idempotent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServer).Idempotent(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/auth.v1.Auth/Idempotent",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServer).Idempotent(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -863,6 +895,10 @@ var Auth_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Info",
 			Handler:    _Auth_Info_Handler,
+		},
+		{
+			MethodName: "Idempotent",
+			Handler:    _Auth_Idempotent_Handler,
 		},
 		{
 			MethodName: "FindUser",

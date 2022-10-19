@@ -10,6 +10,7 @@ import (
 	"auth/internal/biz"
 	"auth/internal/conf"
 	"auth/internal/data"
+	"auth/internal/idempotent"
 	"auth/internal/server"
 	"auth/internal/service"
 	"auth/internal/task"
@@ -21,6 +22,10 @@ import (
 // wireApp init kratos application.
 func wireApp(c *conf.Bootstrap) (*kratos.App, func(), error) {
 	universalClient, err := data.NewRedis(c)
+	if err != nil {
+		return nil, nil, err
+	}
+	idempotentIdempotent, err := idempotent.NewIdempotent(universalClient)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -54,9 +59,9 @@ func wireApp(c *conf.Bootstrap) (*kratos.App, func(), error) {
 	userGroupUseCase := biz.NewUserGroupUseCase(c, userGroupRepo, transaction, cache)
 	permissionRepo := data.NewPermissionRepo(dataData, actionRepo, userRepo, userGroupRepo)
 	permissionUseCase := biz.NewPermissionUseCase(c, permissionRepo, cache)
-	authService := service.NewAuthService(taskTask, userUseCase, actionUseCase, roleUseCase, userGroupUseCase, permissionUseCase)
-	grpcServer := server.NewGRPCServer(c, authService)
-	httpServer := server.NewHTTPServer(c, authService)
+	authService := service.NewAuthService(taskTask, idempotentIdempotent, userUseCase, actionUseCase, roleUseCase, userGroupUseCase, permissionUseCase)
+	grpcServer := server.NewGRPCServer(c, idempotentIdempotent, authService)
+	httpServer := server.NewHTTPServer(c, idempotentIdempotent, authService)
 	app := newApp(grpcServer, httpServer)
 	return app, func() {
 		cleanup()

@@ -32,6 +32,7 @@ const OperationAuthFindAction = "/auth.v1.Auth/FindAction"
 const OperationAuthFindRole = "/auth.v1.Auth/FindRole"
 const OperationAuthFindUser = "/auth.v1.Auth/FindUser"
 const OperationAuthFindUserGroup = "/auth.v1.Auth/FindUserGroup"
+const OperationAuthIdempotent = "/auth.v1.Auth/Idempotent"
 const OperationAuthInfo = "/auth.v1.Auth/Info"
 const OperationAuthLogin = "/auth.v1.Auth/Login"
 const OperationAuthLogout = "/auth.v1.Auth/Logout"
@@ -58,6 +59,7 @@ type AuthHTTPServer interface {
 	FindRole(context.Context, *FindRoleRequest) (*FindRoleReply, error)
 	FindUser(context.Context, *FindUserRequest) (*FindUserReply, error)
 	FindUserGroup(context.Context, *FindUserGroupRequest) (*FindUserGroupReply, error)
+	Idempotent(context.Context, *emptypb.Empty) (*IdempotentReply, error)
 	Info(context.Context, *emptypb.Empty) (*InfoReply, error)
 	Login(context.Context, *LoginRequest) (*LoginReply, error)
 	Logout(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
@@ -82,6 +84,7 @@ func RegisterAuthHTTPServer(s *http.Server, srv AuthHTTPServer) {
 	r.POST("/refresh", _Auth_Refresh0_HTTP_Handler(srv))
 	r.POST("/logout", _Auth_Logout0_HTTP_Handler(srv))
 	r.GET("/info", _Auth_Info0_HTTP_Handler(srv))
+	r.GET("/idempotent", _Auth_Idempotent0_HTTP_Handler(srv))
 	r.GET("/user", _Auth_FindUser0_HTTP_Handler(srv))
 	r.PATCH("/user/{id}", _Auth_UpdateUser0_HTTP_Handler(srv))
 	r.PUT("/user/{id}", _Auth_UpdateUser1_HTTP_Handler(srv))
@@ -252,6 +255,25 @@ func _Auth_Info0_HTTP_Handler(srv AuthHTTPServer) func(ctx http.Context) error {
 			return err
 		}
 		reply := out.(*InfoReply)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _Auth_Idempotent0_HTTP_Handler(srv AuthHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in emptypb.Empty
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationAuthIdempotent)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.Idempotent(ctx, req.(*emptypb.Empty))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*IdempotentReply)
 		return ctx.Result(200, reply)
 	}
 }
@@ -685,6 +707,7 @@ type AuthHTTPClient interface {
 	FindRole(ctx context.Context, req *FindRoleRequest, opts ...http.CallOption) (rsp *FindRoleReply, err error)
 	FindUser(ctx context.Context, req *FindUserRequest, opts ...http.CallOption) (rsp *FindUserReply, err error)
 	FindUserGroup(ctx context.Context, req *FindUserGroupRequest, opts ...http.CallOption) (rsp *FindUserGroupReply, err error)
+	Idempotent(ctx context.Context, req *emptypb.Empty, opts ...http.CallOption) (rsp *IdempotentReply, err error)
 	Info(ctx context.Context, req *emptypb.Empty, opts ...http.CallOption) (rsp *InfoReply, err error)
 	Login(ctx context.Context, req *LoginRequest, opts ...http.CallOption) (rsp *LoginReply, err error)
 	Logout(ctx context.Context, req *emptypb.Empty, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
@@ -855,6 +878,19 @@ func (c *AuthHTTPClientImpl) FindUserGroup(ctx context.Context, in *FindUserGrou
 	pattern := "/user/group"
 	path := binding.EncodeURL(pattern, in, true)
 	opts = append(opts, http.Operation(OperationAuthFindUserGroup))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, err
+}
+
+func (c *AuthHTTPClientImpl) Idempotent(ctx context.Context, in *emptypb.Empty, opts ...http.CallOption) (*IdempotentReply, error) {
+	var out IdempotentReply
+	pattern := "/idempotent"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationAuthIdempotent))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
 	if err != nil {

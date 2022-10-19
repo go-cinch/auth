@@ -1,4 +1,4 @@
-package server
+package middleware
 
 import (
 	v1 "auth/api/auth/v1"
@@ -11,4 +11,6 @@ var (
 	TokenParseFail         = v1.ErrorUnauthorized("fail to parse token")
 	WrongContext           = v1.ErrorUnauthorized("wrong context for middleware")
 	UnSupportSigningMethod = v1.ErrorUnauthorized("wrong signing method")
+	MissingIdempotentToken = v1.ErrorIllegalParameter("idempotent token is missing")
+	IdempotentTokenExpired = v1.ErrorIllegalParameter("idempotent token has expired")
 )

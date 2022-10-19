@@ -3,6 +3,8 @@ package server
 import (
 	v1 "auth/api/auth/v1"
 	"auth/internal/conf"
+	"auth/internal/idempotent"
+	localMiddleware "auth/internal/server/middleware"
 	"auth/internal/service"
 	"github.com/go-cinch/common/log"
 	commonMiddleware "github.com/go-cinch/common/middleware"
@@ -16,7 +18,7 @@ import (
 )
 
 // NewGRPCServer new a gRPC server.
-func NewGRPCServer(c *conf.Bootstrap, svc *service.AuthService) *grpc.Server {
+func NewGRPCServer(c *conf.Bootstrap, idt *idempotent.Idempotent, svc *service.AuthService) *grpc.Server {
 	middlewares := []middleware.Middleware{
 		recovery.Recovery(),
 		ratelimit.Server(),
@@ -28,7 +30,8 @@ func NewGRPCServer(c *conf.Bootstrap, svc *service.AuthService) *grpc.Server {
 		middlewares,
 		logging.Server(log.DefaultWrapper.Options().Logger()),
 		validate.Validator(),
-		permission(c, svc),
+		localMiddleware.Permission(c, svc),
+		localMiddleware.Idempotent(idt),
 	)
 	var opts = []grpc.ServerOption{grpc.Middleware(middlewares...)}
 	if c.Server.Grpc.Network != "" {

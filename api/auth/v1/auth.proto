@@ -60,6 +60,11 @@ service Auth {
       get: "/info"
     };
   }
+  rpc Idempotent (google.protobuf.Empty) returns (IdempotentReply) {
+    option (google.api.http) = {
+      get: "/idempotent"
+    };
+  }
   rpc FindUser (FindUserRequest) returns (FindUserReply) {
     option (google.api.http) = {
       get: "/user"
@@ -232,6 +237,10 @@ message InfoReply {
   string nickname = 6;
   string introduction = 7;
   Permission permission = 8;
+}
+
+message IdempotentReply {
+  string token = 1;
 }
 
 message Permission {

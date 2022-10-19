@@ -8,7 +8,8 @@ require (
 	github.com/go-cinch/common/constant v0.0.0-20220928094747-1b24c1dd963f
 	github.com/go-cinch/common/copierx v0.0.0-20221014090947-8c8ed2810141
 	github.com/go-cinch/common/id v0.0.0-20221010030633-b6fcfb8a6767
-	github.com/go-cinch/common/log v0.0.0-20221018025257-d6491f7d825a
+	github.com/go-cinch/common/idempotent v0.0.0-20221019022337-83b9ba16a81c
+	github.com/go-cinch/common/log v0.0.0-20221018073009-3f6e3167736e
 	github.com/go-cinch/common/middleware v0.0.0-20220921090518-54e9eef45fde
 	github.com/go-cinch/common/migrate v0.0.0-20220915041442-c48afde5a28c
 	github.com/go-cinch/common/page v0.0.0-20221014020948-7abc48d6fd68

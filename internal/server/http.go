@@ -3,6 +3,8 @@ package server
 import (
 	v1 "auth/api/auth/v1"
 	"auth/internal/conf"
+	"auth/internal/idempotent"
+	localMiddleware "auth/internal/server/middleware"
 	"auth/internal/service"
 	"github.com/go-cinch/common/log"
 	commonMiddleware "github.com/go-cinch/common/middleware"
@@ -17,7 +19,7 @@ import (
 )
 
 // NewHTTPServer new a HTTP server.
-func NewHTTPServer(c *conf.Bootstrap, svc *service.AuthService) *http.Server {
+func NewHTTPServer(c *conf.Bootstrap, idt *idempotent.Idempotent, svc *service.AuthService) *http.Server {
 	middlewares := []middleware.Middleware{
 		recovery.Recovery(),
 		ratelimit.Server(),
@@ -29,7 +31,8 @@ func NewHTTPServer(c *conf.Bootstrap, svc *service.AuthService) *http.Server {
 		middlewares,
 		logging.Server(log.DefaultWrapper.Options().Logger()),
 		validate.Validator(),
-		permission(c, svc),
+		localMiddleware.Permission(c, svc),
+		localMiddleware.Idempotent(idt),
 	)
 	var opts = []http.ServerOption{
 		http.Filter(handlers.CORS(
