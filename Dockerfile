@@ -21,6 +21,6 @@ EXPOSE 8000
 EXPOSE 9000
 COPY configs /data/conf
 
-CMD ["sh", "-c", "./server -c /data/conf"]
+CMD ["sh", "-c", "./auth -c /data/conf"]
 # enable k8s config map
-#CMD ["sh", "-c", "./server -c /data/conf -n cinch -l layout"]
+#CMD ["sh", "-c", "./auth -c /data/conf -n cinch -l auth"]

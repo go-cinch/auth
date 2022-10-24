@@ -21,9 +21,9 @@ import (
 // go build -ldflags "-X main.Version=x.y.z"
 var (
 	// Name is the name of the compiled software.
-	Name = "cinch-layout"
+	Name = "auth"
 	// EnvPrefix is the prefix of the env params
-	EnvPrefix = "CINCH_"
+	EnvPrefix = "AUTH_"
 	// Version is the version of the compiled software.
 	Version string
 	// flagConf is the config flag.

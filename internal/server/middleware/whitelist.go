@@ -13,6 +13,8 @@ func permissionWhitelist() selector.MatchFunc {
 	whitelist[auth.OperationAuthLogout] = struct{}{}
 	whitelist[auth.OperationAuthCaptcha] = struct{}{}
 	whitelist[auth.OperationAuthRegister] = struct{}{}
+	whitelist["/grpc.health.v1.Health/Check"] = struct{}{}
+	whitelist["/grpc.health.v1.Health/Watch"] = struct{}{}
 	return func(ctx context.Context, operation string) bool {
 		if _, ok := whitelist[operation]; ok {
 			return false
