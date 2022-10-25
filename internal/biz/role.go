@@ -4,7 +4,6 @@ import (
 	"auth/internal/conf"
 	"context"
 	"fmt"
-	"github.com/go-cinch/common/copierx"
 	"github.com/go-cinch/common/page"
 	"github.com/go-cinch/common/utils"
 )
@@ -22,6 +21,11 @@ type FindRole struct {
 	Name   *string   `json:"name"`
 	Word   *string   `json:"word"`
 	Action *string   `json:"action"`
+}
+
+type FindRoleCache struct {
+	Page page.Page `json:"page"`
+	List []Role    `json:"list"`
 }
 
 type UpdateRole struct {
@@ -58,23 +62,26 @@ func (uc *RoleUseCase) Create(ctx context.Context, item *Role) error {
 }
 
 func (uc *RoleUseCase) Find(ctx context.Context, condition *FindRole) (rp []Role) {
-	rp = make([]Role, 0)
 	action := fmt.Sprintf("find_%s", utils.StructMd5(condition))
 	str, ok, _, _ := uc.cache.Get(ctx, action, func(ctx context.Context) (string, bool) {
 		return uc.find(ctx, action, condition)
 	})
 	if ok {
-		utils.Json2Struct(&rp, str)
+		var cache FindRoleCache
+		utils.Json2Struct(&cache, str)
+		condition.Page = cache.Page
+		rp = cache.List
 	}
 	return
 }
 
 func (uc *RoleUseCase) find(ctx context.Context, action string, condition *FindRole) (res string, ok bool) {
 	// read data from db and write to cache
-	rp := make([]Role, 0)
 	list := uc.repo.Find(ctx, condition)
-	copierx.Copy(&rp, list)
-	res = utils.Struct2Json(rp)
+	var cache FindRoleCache
+	cache.List = list
+	cache.Page = condition.Page
+	res = utils.Struct2Json(cache)
 	uc.cache.Set(ctx, action, res, len(list) == 0)
 	ok = true
 	return

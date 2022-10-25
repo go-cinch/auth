@@ -4,7 +4,6 @@ import (
 	"auth/internal/conf"
 	"context"
 	"fmt"
-	"github.com/go-cinch/common/copierx"
 	"github.com/go-cinch/common/page"
 	"github.com/go-cinch/common/utils"
 )
@@ -24,6 +23,11 @@ type FindUserGroup struct {
 	Name   *string   `json:"name"`
 	Word   *string   `json:"word"`
 	Action *string   `json:"action"`
+}
+
+type FindUserGroupCache struct {
+	Page page.Page   `json:"page"`
+	List []UserGroup `json:"list"`
 }
 
 type UpdateUserGroup struct {
@@ -62,23 +66,26 @@ func (uc *UserGroupUseCase) Create(ctx context.Context, item *UserGroup) error {
 }
 
 func (uc *UserGroupUseCase) Find(ctx context.Context, condition *FindUserGroup) (rp []UserGroup) {
-	rp = make([]UserGroup, 0)
 	action := fmt.Sprintf("find_%s", utils.StructMd5(condition))
 	str, ok, _, _ := uc.cache.Get(ctx, action, func(ctx context.Context) (string, bool) {
 		return uc.find(ctx, action, condition)
 	})
 	if ok {
-		utils.Json2Struct(&rp, str)
+		var cache FindUserGroupCache
+		utils.Json2Struct(&cache, str)
+		condition.Page = cache.Page
+		rp = cache.List
 	}
 	return
 }
 
 func (uc *UserGroupUseCase) find(ctx context.Context, action string, condition *FindUserGroup) (res string, ok bool) {
 	// read data from db and write to cache
-	rp := make([]UserGroup, 0)
 	list := uc.repo.Find(ctx, condition)
-	copierx.Copy(&rp, list)
-	res = utils.Struct2Json(rp)
+	var cache FindUserGroupCache
+	cache.List = list
+	cache.Page = condition.Page
+	res = utils.Struct2Json(cache)
 	uc.cache.Set(ctx, action, res, len(list) == 0)
 	ok = true
 	return

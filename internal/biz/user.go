@@ -63,6 +63,11 @@ type FindUser struct {
 	Locked         *uint64   `json:"locked"`
 }
 
+type FindUserCache struct {
+	Page page.Page `json:"page"`
+	List []User    `json:"list"`
+}
+
 type UpdateUser struct {
 	Id           *uint64 `json:"id,string,omitempty"`
 	Action       *string `json:"action,omitempty"`
@@ -173,23 +178,26 @@ func (uc *UserUseCase) Delete(ctx context.Context, ids ...uint64) error {
 }
 
 func (uc *UserUseCase) Find(ctx context.Context, condition *FindUser) (rp []User) {
-	rp = make([]User, 0)
 	action := fmt.Sprintf("find_%s", utils.StructMd5(condition))
 	str, ok, _, _ := uc.cache.Get(ctx, action, func(ctx context.Context) (string, bool) {
 		return uc.find(ctx, action, condition)
 	})
 	if ok {
-		utils.Json2Struct(&rp, str)
+		var cache FindUserCache
+		utils.Json2Struct(&cache, str)
+		condition.Page = cache.Page
+		rp = cache.List
 	}
 	return
 }
 
 func (uc *UserUseCase) find(ctx context.Context, action string, condition *FindUser) (res string, ok bool) {
 	// read data from db and write to cache
-	rp := make([]User, 0)
 	list := uc.repo.Find(ctx, condition)
-	copierx.Copy(&rp, list)
-	res = utils.Struct2Json(rp)
+	var cache FindUserCache
+	cache.List = list
+	cache.Page = condition.Page
+	res = utils.Struct2Json(cache)
 	uc.cache.Set(ctx, action, res, len(list) == 0)
 	ok = true
 	return

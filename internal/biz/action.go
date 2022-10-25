@@ -4,7 +4,6 @@ import (
 	"auth/internal/conf"
 	"context"
 	"fmt"
-	"github.com/go-cinch/common/copierx"
 	"github.com/go-cinch/common/page"
 	"github.com/go-cinch/common/utils"
 )
@@ -25,6 +24,11 @@ type FindAction struct {
 	Name     *string   `json:"name"`
 	Word     *string   `json:"word"`
 	Resource *string   `json:"resource"`
+}
+
+type FindActionCache struct {
+	Page page.Page `json:"page"`
+	List []Action  `json:"list"`
 }
 
 type UpdateAction struct {
@@ -66,23 +70,26 @@ func (uc *ActionUseCase) Create(ctx context.Context, item *Action) error {
 }
 
 func (uc *ActionUseCase) Find(ctx context.Context, condition *FindAction) (rp []Action) {
-	rp = make([]Action, 0)
 	action := fmt.Sprintf("find_%s", utils.StructMd5(condition))
 	str, ok, _, _ := uc.cache.Get(ctx, action, func(ctx context.Context) (string, bool) {
 		return uc.find(ctx, action, condition)
 	})
 	if ok {
-		utils.Json2Struct(&rp, str)
+		var cache FindActionCache
+		utils.Json2Struct(&cache, str)
+		condition.Page = cache.Page
+		rp = cache.List
 	}
 	return
 }
 
 func (uc *ActionUseCase) find(ctx context.Context, action string, condition *FindAction) (res string, ok bool) {
 	// read data from db and write to cache
-	rp := make([]Action, 0)
 	list := uc.repo.Find(ctx, condition)
-	copierx.Copy(&rp, list)
-	res = utils.Struct2Json(rp)
+	var cache FindActionCache
+	cache.List = list
+	cache.Page = condition.Page
+	res = utils.Struct2Json(cache)
 	uc.cache.Set(ctx, action, res, len(list) == 0)
 	ok = true
 	return
