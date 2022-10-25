@@ -3,10 +3,10 @@ package service
 import (
 	"auth/api/auth"
 	"auth/internal/biz"
-	"auth/internal/pkg/jwt"
 	"context"
 	"errors"
 	"github.com/go-cinch/common/copierx"
+	"github.com/go-cinch/common/jwt"
 	"github.com/go-cinch/common/utils"
 	"github.com/go-cinch/common/worker"
 	"github.com/golang-module/carbon/v2"
@@ -95,10 +95,14 @@ func (s *AuthService) Captcha(ctx context.Context, req *emptypb.Empty) (rp *auth
 
 func (s *AuthService) Permission(ctx context.Context, req *auth.PermissionRequest) (rp *auth.PermissionReply, err error) {
 	tr := otel.Tracer("api")
-	ctx, span := tr.Start(ctx, "CheckPermission")
+	ctx, span := tr.Start(ctx, "Permission")
 	defer span.End()
 	rp = &auth.PermissionReply{}
-	r := &biz.CheckPermission{}
+	user := jwt.FromServerContext(ctx)
+	r := &biz.CheckPermission{
+		UserCode: user.Code,
+		Resource: req.Resource,
+	}
 	copierx.Copy(&r, req)
 	rp.Pass = s.permission.Check(ctx, r)
 	return
@@ -110,7 +114,7 @@ func (s *AuthService) Info(ctx context.Context, req *emptypb.Empty) (rp *auth.In
 	defer span.End()
 	rp = &auth.InfoReply{}
 	rp.Permission = &auth.Permission{}
-	user := jwt.FromContext(ctx)
+	user := jwt.FromServerContext(ctx)
 	res, err := s.user.Info(ctx, user.Code)
 	if err != nil {
 		return

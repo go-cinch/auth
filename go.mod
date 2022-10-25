@@ -6,9 +6,10 @@ require (
 	github.com/envoyproxy/protoc-gen-validate v0.1.0
 	github.com/go-cinch/common/captcha v0.0.0-20220928085003-afd18d35661d
 	github.com/go-cinch/common/constant v0.0.0-20220928094747-1b24c1dd963f
-	github.com/go-cinch/common/copierx v0.0.0-20221014090947-8c8ed2810141
+	github.com/go-cinch/common/copierx v0.0.0-20221024083216-826e7d89b526
 	github.com/go-cinch/common/id v0.0.0-20221010030633-b6fcfb8a6767
 	github.com/go-cinch/common/idempotent v0.0.0-20221019022337-83b9ba16a81c
+	github.com/go-cinch/common/jwt v0.0.0-20221025042139-8f8726f7f347
 	github.com/go-cinch/common/log v0.0.0-20221018073009-3f6e3167736e
 	github.com/go-cinch/common/middleware v0.0.0-20220921090518-54e9eef45fde
 	github.com/go-cinch/common/migrate v0.0.0-20220915041442-c48afde5a28c
@@ -17,10 +18,10 @@ require (
 	github.com/go-cinch/common/utils v0.0.0-20221018025257-d6491f7d825a
 	github.com/go-cinch/common/worker v0.0.0-20220929075000-0dd3fa2ef2a5
 	github.com/go-kratos/kratos/contrib/config/kubernetes/v2 v2.0.0-20220817101725-ba7223047727
-	github.com/go-kratos/kratos/v2 v2.5.1
+	github.com/go-kratos/kratos/v2 v2.5.2
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-sql-driver/mysql v1.6.0
-	github.com/golang-jwt/jwt/v4 v4.4.1
+	github.com/golang-jwt/jwt/v4 v4.4.2
 	github.com/golang-module/carbon/v2 v2.1.9
 	github.com/google/uuid v1.3.0
 	github.com/google/wire v0.5.0

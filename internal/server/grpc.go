@@ -10,6 +10,7 @@ import (
 	commonMiddleware "github.com/go-cinch/common/middleware"
 	"github.com/go-kratos/kratos/v2/middleware"
 	"github.com/go-kratos/kratos/v2/middleware/logging"
+	"github.com/go-kratos/kratos/v2/middleware/metadata"
 	"github.com/go-kratos/kratos/v2/middleware/ratelimit"
 	"github.com/go-kratos/kratos/v2/middleware/recovery"
 	"github.com/go-kratos/kratos/v2/middleware/tracing"
@@ -29,8 +30,9 @@ func NewGRPCServer(c *conf.Bootstrap, idt *idempotent.Idempotent, svc *service.A
 	middlewares = append(
 		middlewares,
 		logging.Server(log.DefaultWrapper.Options().Logger()),
-		validate.Validator(),
+		metadata.Server(),
 		localMiddleware.Permission(c, svc),
+		validate.Validator(),
 		localMiddleware.Idempotent(idt),
 	)
 	var opts = []grpc.ServerOption{grpc.Middleware(middlewares...)}

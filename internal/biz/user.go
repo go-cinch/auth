@@ -2,12 +2,12 @@ package biz
 
 import (
 	"auth/internal/conf"
-	"auth/internal/pkg/jwt"
 	"context"
 	"fmt"
 	"github.com/go-cinch/common/captcha"
 	"github.com/go-cinch/common/constant"
 	"github.com/go-cinch/common/copierx"
+	"github.com/go-cinch/common/jwt"
 	"github.com/go-cinch/common/page"
 	"github.com/go-cinch/common/utils"
 	"github.com/golang-module/carbon/v2"
@@ -196,7 +196,7 @@ func (uc *UserUseCase) find(ctx context.Context, action string, condition *FindU
 }
 
 func (uc *UserUseCase) InfoFromCtx(ctx context.Context) (rp *UserInfo, err error) {
-	user := jwt.FromContext(ctx)
+	user := jwt.FromServerContext(ctx)
 	return uc.Info(ctx, user.Code)
 }
 
