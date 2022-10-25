@@ -46,7 +46,7 @@ func Permission(c *conf.Bootstrap, svc *service.AuthService) middleware.Middlewa
 func jwt(c *conf.Bootstrap) func(handler middleware.Handler) middleware.Handler {
 	return func(handler middleware.Handler) middleware.Handler {
 		return func(ctx context.Context, req interface{}) (rp interface{}, err error) {
-			user := jwtLocal.FromClientContext(ctx)
+			user := jwtLocal.FromServerContext(ctx)
 			if user.Token == "" && user.Code == "" {
 				err = MissingToken
 				return

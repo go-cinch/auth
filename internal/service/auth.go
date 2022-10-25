@@ -105,6 +105,13 @@ func (s *AuthService) Permission(ctx context.Context, req *auth.PermissionReques
 	}
 	copierx.Copy(&r, req)
 	rp.Pass = s.permission.Check(ctx, r)
+	info, err := s.user.Info(ctx, user.Code)
+	if err != nil {
+		return
+	}
+	var u jwt.User
+	copierx.Copy(&u, info)
+	jwt.AppendToReplayHeader(ctx, u)
 	return
 }
 
