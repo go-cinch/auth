@@ -19,23 +19,20 @@ type userRepo struct {
 
 // User is database fields map
 type User struct {
-	Id           uint64          `json:"id,string"`                     // auto increment id
-	CreatedAt    carbon.DateTime `json:"createdAt"`                     // create time
-	UpdatedAt    carbon.DateTime `json:"updatedAt"`                     // update time
-	RoleId       uint64          `json:"roleId,string"`                 // role id
-	Role         Role            `json:"role" gorm:"foreignKey:RoleId"` // role
-	Action       string          `json:"action"`                        // user action code array
-	Username     string          `json:"username"`                      // user login name
-	Code         string          `json:"code"`                          // user code
-	Password     string          `json:"password"`                      // password
-	Mobile       string          `json:"mobile"`                        // mobile number
-	Avatar       string          `json:"avatar"`                        // avatar url
-	Nickname     string          `json:"nickname"`                      // nickname
-	Introduction string          `json:"introduction"`                  // introduction
-	LastLogin    carbon.DateTime `json:"lastLogin"`                     // last login time
-	Locked       uint64          `json:"locked"`                        // locked(0: unlock, 1: locked)
-	LockExpire   int64           `json:"lockExpire"`                    // lock expiration time
-	Wrong        int64           `json:"wrong"`                         // wrong password count
+	Id         uint64          `json:"id,string"`                     // auto increment id
+	CreatedAt  carbon.DateTime `json:"createdAt"`                     // create time
+	UpdatedAt  carbon.DateTime `json:"updatedAt"`                     // update time
+	RoleId     uint64          `json:"roleId,string"`                 // role id
+	Role       Role            `json:"role" gorm:"foreignKey:RoleId"` // role
+	Action     string          `json:"action"`                        // user action code array
+	Username   string          `json:"username"`                      // user login name
+	Code       string          `json:"code"`                          // user code
+	Password   string          `json:"password"`                      // password
+	Platform   string          `json:"platform"`                      // device platform: pc/android/ios/mini...
+	LastLogin  carbon.DateTime `json:"lastLogin"`                     // last login time
+	Locked     uint64          `json:"locked"`                        // locked(0: unlock, 1: locked)
+	LockExpire int64           `json:"lockExpire"`                    // lock expiration time
+	Wrong      int64           `json:"wrong"`                         // wrong password count
 }
 
 // NewUserRepo .
@@ -86,8 +83,8 @@ func (ro userRepo) Find(ctx context.Context, condition *biz.FindUser) (rp []biz.
 	if condition.Code != nil {
 		db.Where("`code` LIKE ?", fmt.Sprintf("%%%s%%", *condition.Code))
 	}
-	if condition.Mobile != nil {
-		db.Where("`mobile` LIKE ?", fmt.Sprintf("%%%s%%", *condition.Mobile))
+	if condition.Platform != nil {
+		db.Where("`platform` LIKE ?", fmt.Sprintf("%%%s%%", *condition.Platform))
 	}
 	if condition.Locked != nil {
 		db.Where("`locked` = ?", *condition.Locked)

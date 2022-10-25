@@ -487,15 +487,9 @@ func (m *User) validate(all bool) error {
 
 	// no validation rules for Code
 
-	// no validation rules for Mobile
+	// no validation rules for Platform
 
 	// no validation rules for Locked
-
-	// no validation rules for Avatar
-
-	// no validation rules for Nickname
-
-	// no validation rules for Introduction
 
 	// no validation rules for LastLogin
 
@@ -971,13 +965,16 @@ func (m *RegisterRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	// no validation rules for Mobile
-
-	// no validation rules for Avatar
-
-	// no validation rules for Nickname
-
-	// no validation rules for Introduction
+	if utf8.RuneCountInString(m.GetPlatform()) < 1 {
+		err := RegisterRequestValidationError{
+			field:  "Platform",
+			reason: "value length must be at least 1 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
 	if len(errors) > 0 {
 		return RegisterRequestMultiError(errors)
@@ -1205,6 +1202,10 @@ func (m *LoginRequest) validate(all bool) error {
 	}
 
 	// no validation rules for Password
+
+	if m.Platform != nil {
+		// no validation rules for Platform
+	}
 
 	if m.CaptchaId != nil {
 		// no validation rules for CaptchaId
@@ -1895,13 +1896,7 @@ func (m *InfoReply) validate(all bool) error {
 
 	// no validation rules for Code
 
-	// no validation rules for Mobile
-
-	// no validation rules for Avatar
-
-	// no validation rules for Nickname
-
-	// no validation rules for Introduction
+	// no validation rules for Platform
 
 	if all {
 		switch v := interface{}(m.GetPermission()).(type) {
@@ -2285,8 +2280,8 @@ func (m *FindUserRequest) validate(all bool) error {
 		// no validation rules for Code
 	}
 
-	if m.Mobile != nil {
-		// no validation rules for Mobile
+	if m.Platform != nil {
+		// no validation rules for Platform
 	}
 
 	if m.Locked != nil {
@@ -2566,20 +2561,8 @@ func (m *UpdateUserRequest) validate(all bool) error {
 		// no validation rules for Password
 	}
 
-	if m.Mobile != nil {
-		// no validation rules for Mobile
-	}
-
-	if m.Avatar != nil {
-		// no validation rules for Avatar
-	}
-
-	if m.Nickname != nil {
-		// no validation rules for Nickname
-	}
-
-	if m.Introduction != nil {
-		// no validation rules for Introduction
+	if m.Platform != nil {
+		// no validation rules for Platform
 	}
 
 	if m.Locked != nil {

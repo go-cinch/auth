@@ -17,38 +17,32 @@ import (
 )
 
 type User struct {
-	Id           uint64          `json:"id,string"`
-	CreatedAt    carbon.DateTime `json:"createdAt,string"`
-	UpdatedAt    carbon.DateTime `json:"updatedAt,string"`
-	RoleId       uint64          `json:"roleId,string"`
-	Role         Role            `json:"role"`
-	Action       string          `json:"action"`
-	Actions      []Action        `json:"actions"`
-	Username     string          `json:"username"`
-	Code         string          `json:"Code"`
-	Password     string          `json:"password"`
-	OldPassword  string          `json:"-"`
-	NewPassword  string          `json:"-"`
-	Mobile       string          `json:"mobile"`
-	Avatar       string          `json:"avatar"`
-	Nickname     string          `json:"nickname"`
-	Introduction string          `json:"introduction"`
-	LastLogin    carbon.DateTime `json:"lastLogin,string,omitempty"`
-	Locked       uint64          `json:"locked"`
-	LockExpire   int64           `json:"lockExpire"`
-	LockMsg      string          `json:"lockMsg"`
-	Wrong        int64           `json:"wrong"`
-	Captcha      Captcha         `json:"-"`
+	Id          uint64          `json:"id,string"`
+	CreatedAt   carbon.DateTime `json:"createdAt,string"`
+	UpdatedAt   carbon.DateTime `json:"updatedAt,string"`
+	RoleId      uint64          `json:"roleId,string"`
+	Role        Role            `json:"role"`
+	Action      string          `json:"action"`
+	Actions     []Action        `json:"actions"`
+	Username    string          `json:"username"`
+	Code        string          `json:"Code"`
+	Password    string          `json:"password"`
+	OldPassword string          `json:"-"`
+	NewPassword string          `json:"-"`
+	Platform    string          `json:"platform"`
+	LastLogin   carbon.DateTime `json:"lastLogin,string,omitempty"`
+	Locked      uint64          `json:"locked"`
+	LockExpire  int64           `json:"lockExpire"`
+	LockMsg     string          `json:"lockMsg"`
+	Wrong       int64           `json:"wrong"`
+	Captcha     Captcha         `json:"-"`
 }
 
 type UserInfo struct {
-	Id           uint64 `json:"id,string"`
-	Username     string `json:"username"`
-	Code         string `json:"code"`
-	Mobile       string `json:"mobile"`
-	Avatar       string `json:"avatar"`
-	Nickname     string `json:"nickname"`
-	Introduction string `json:"introduction"`
+	Id       uint64 `json:"id,string"`
+	Username string `json:"username"`
+	Code     string `json:"code"`
+	Platform string `json:"platform"`
 }
 
 type FindUser struct {
@@ -59,7 +53,7 @@ type FindUser struct {
 	EndUpdatedAt   *string   `json:"endUpdatedAt"`
 	Username       *string   `json:"username"`
 	Code           *string   `json:"code"`
-	Mobile         *string   `json:"mobile"`
+	Platform       *string   `json:"platform"`
 	Locked         *uint64   `json:"locked"`
 }
 
@@ -69,21 +63,19 @@ type FindUserCache struct {
 }
 
 type UpdateUser struct {
-	Id           *uint64 `json:"id,string,omitempty"`
-	Action       *string `json:"action,omitempty"`
-	Username     *string `json:"username,omitempty"`
-	Password     *string `json:"password,omitempty"`
-	Mobile       *string `json:"mobile,omitempty"`
-	Avatar       *string `json:"avatar,omitempty"`
-	Nickname     *string `json:"nickname,omitempty"`
-	Introduction *string `json:"introduction,omitempty"`
-	Locked       *uint64 `json:"locked,omitempty"`
-	LockExpire   *int64  `json:"lockExpire,omitempty"`
+	Id         *uint64 `json:"id,string,omitempty"`
+	Action     *string `json:"action,omitempty"`
+	Username   *string `json:"username,omitempty"`
+	Password   *string `json:"password,omitempty"`
+	Platform   *string `json:"platform,omitempty"`
+	Locked     *uint64 `json:"locked,omitempty"`
+	LockExpire *int64  `json:"lockExpire,omitempty"`
 }
 
 type Login struct {
 	Username      string `json:"username"`
 	Password      string `json:"password"`
+	Platform      string `json:"platform"`
 	CaptchaId     string `json:"captchaId"`
 	CaptchaAnswer string `json:"captchaAnswer"`
 }
@@ -102,6 +94,7 @@ type UserStatus struct {
 	Id          uint64  `json:"id,string"`
 	Code        string  `json:"code"`
 	Password    string  `json:"password"`
+	Platform    string  `json:"platform"`
 	Wrong       int64   `json:"wrong"`
 	Locked      uint64  `json:"locked"`
 	LockExpire  int64   `json:"lockExpire"`
@@ -250,12 +243,18 @@ func (uc *UserUseCase) Login(ctx context.Context, item *Login) (rp *LoginToken, 
 				err = LoginFailed
 				return
 			}
+			// check platform
+			if item.Platform != "" && item.Platform != status.Platform {
+				err = LoginFailed
+				return
+			}
 			err = uc.repo.LastLogin(ctx, status.Id)
 			if err != nil {
 				return
 			}
 			authUser := jwt.User{
-				Code: status.Code,
+				Code:     status.Code,
+				Platform: status.Platform,
 			}
 			token, expireTime := authUser.CreateToken(uc.c.Auth.Jwt.Key, uc.c.Auth.Jwt.Expires)
 			rp.Token = token
