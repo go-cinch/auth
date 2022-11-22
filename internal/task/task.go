@@ -69,11 +69,15 @@ type task struct {
 }
 
 func process(t task) (err error) {
-	switch t.payload.Category {
+	switch t.payload.Group {
 	case "login.failed":
 		var req biz.LoginTime
 		utils.Json2Struct(&req, t.payload.Payload)
 		err = t.user.WrongPwd(t.ctx, req)
+	case "login.last":
+		var req biz.LoginTime
+		utils.Json2Struct(&req, t.payload.Payload)
+		err = t.user.LastLogin(t.ctx, req.Username)
 	}
 	return
 }

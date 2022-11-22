@@ -45,18 +45,22 @@ func (s *AuthService) Login(ctx context.Context, req *auth.LoginRequest) (rp *au
 	r := &biz.Login{}
 	copierx.Copy(&r, req)
 	res, err := s.user.Login(ctx, r)
+	ctx, _ = context.WithTimeout(ctx, time.Second)
 	if err != nil {
 		if err == biz.LoginFailed {
 			s.task.Once(
-				worker.WithRunUuid(uuid.NewString()),
-				worker.WithRunCategory("login.failed"),
+				worker.WithRunCtx(ctx),
+				worker.WithRunUuid(fmt.Sprintf("login.failed.%s", req.Username)),
+				worker.WithRunGroup("login.failed"),
 				worker.WithRunNow(true),
 				worker.WithRunTimeout(10),
+				worker.WithRunReplace(true),
 				worker.WithRunPayload(utils.Struct2Json(biz.LoginTime{
 					Username: req.Username,
 					LastLogin: carbon.DateTime{
 						Carbon: carbon.Now(),
 					},
+					Wrong: res.Wrong,
 				})),
 			)
 		} else if errors.Is(err, biz.RecordNotFound) {
@@ -66,6 +70,17 @@ func (s *AuthService) Login(ctx context.Context, req *auth.LoginRequest) (rp *au
 		return
 	}
 	copierx.Copy(&rp, res)
+	s.task.Once(
+		worker.WithRunCtx(ctx),
+		worker.WithRunUuid(fmt.Sprintf("login.last.%s", req.Username)),
+		worker.WithRunGroup("login.last"),
+		worker.WithRunIn(time.Duration(10)*time.Second),
+		worker.WithRunTimeout(10),
+		worker.WithRunReplace(true),
+		worker.WithRunPayload(utils.Struct2Json(biz.LoginTime{
+			Username: req.Username,
+		})),
+	)
 	return
 }
 

@@ -83,11 +83,18 @@ type Login struct {
 type LoginTime struct {
 	Username  string          `json:"username"`
 	LastLogin carbon.DateTime `json:"lastLogin"`
+	Wrong     int64           `json:"wrong"`
 }
 
 type LoginToken struct {
 	Token   string `json:"token"`
 	Expires string `json:"expires"`
+	Wrong   int64  `json:"wrong"`
+}
+
+type ComparePwd struct {
+	Str string `json:"str"`
+	Pwd string `json:"pwd"`
 }
 
 type UserStatus struct {
@@ -218,51 +225,71 @@ func (uc *UserUseCase) Info(ctx context.Context, code string) (rp *UserInfo, err
 
 func (uc *UserUseCase) Login(ctx context.Context, item *Login) (rp *LoginToken, err error) {
 	rp = &LoginToken{}
-	err = uc.tx.Tx(ctx, func(ctx context.Context) error {
-		return uc.cache.Flush(ctx, func(ctx context.Context) (err error) {
-			status, err := uc.Status(ctx, item.Username, false)
-			if err != nil {
-				return
-			}
-			if status.Id == constant.UI0 {
-				err = NotFound("%s User.username: %s", RecordNotFound.Message, item.Username)
-				return
-			}
-			// verify captcha
-			if status.NeedCaptcha && !uc.VerifyCaptcha(ctx, item.CaptchaId, item.CaptchaAnswer) {
-				err = InvalidCaptcha
-				return
-			}
-			// user is locked
-			if status.Locked == constant.UI1 {
-				err = UserLocked
-				return
-			}
-			// check password
-			if ok := comparePwd(item.Password, status.Password); !ok {
-				err = LoginFailed
-				return
-			}
-			// check platform
-			if item.Platform != "" && item.Platform != status.Platform {
-				err = LoginFailed
-				return
-			}
-			err = uc.repo.LastLogin(ctx, status.Id)
-			if err != nil {
-				return
-			}
-			authUser := jwt.User{
-				Code:     status.Code,
-				Platform: status.Platform,
-			}
-			token, expireTime := authUser.CreateToken(uc.c.Auth.Jwt.Key, uc.c.Auth.Jwt.Expires)
-			rp.Token = token
-			rp.Expires = expireTime.ToDateTimeString()
-			return
-		})
-	})
+	status, err := uc.Status(ctx, item.Username, false)
+	if err != nil {
+		return
+	}
+	if status.Id == constant.UI0 {
+		err = NotFound("%s User.username: %s", RecordNotFound.Message, item.Username)
+		return
+	}
+	// verify captcha
+	if status.NeedCaptcha && !uc.VerifyCaptcha(ctx, item.CaptchaId, item.CaptchaAnswer) {
+		err = InvalidCaptcha
+		return
+	}
+	// user is locked
+	if status.Locked == constant.UI1 {
+		err = UserLocked
+		return
+	}
+	// check password
+	var pass bool
+	pass, err = uc.ComparePwd(ctx, ComparePwd{Str: item.Password, Pwd: status.Password})
+	if err != nil {
+		return
+	}
+	if !pass {
+		err = LoginFailed
+		rp.Wrong = status.Wrong + constant.I1
+		return
+	}
+	// check platform
+	if item.Platform != "" && item.Platform != status.Platform {
+		err = LoginFailed
+		rp.Wrong = status.Wrong + constant.I1
+		return
+	}
+	authUser := jwt.User{
+		Code:     status.Code,
+		Platform: status.Platform,
+	}
+	token, expireTime := authUser.CreateToken(uc.c.Auth.Jwt.Key, uc.c.Auth.Jwt.Expires)
+	rp.Token = token
+	rp.Expires = expireTime.ToDateTimeString()
 	return
+}
+
+func (uc *UserUseCase) LastLogin(ctx context.Context, username string) error {
+	return uc.tx.Tx(ctx, func(ctx context.Context) (err error) {
+		err = uc.repo.LastLogin(ctx, username)
+		if err != nil {
+			return
+		}
+		uc.refresh(ctx, username)
+		return
+	})
+}
+
+func (uc *UserUseCase) WrongPwd(ctx context.Context, req LoginTime) error {
+	return uc.tx.Tx(ctx, func(ctx context.Context) (err error) {
+		err = uc.repo.WrongPwd(ctx, req)
+		if err != nil {
+			return
+		}
+		uc.refresh(ctx, req.Username)
+		return
+	})
 }
 
 func (uc *UserUseCase) WrongPwd(ctx context.Context, req LoginTime) (err error) {
@@ -281,13 +308,11 @@ func (uc *UserUseCase) Pwd(ctx context.Context, item *User) error {
 			if err != nil {
 				return
 			}
-			ok := comparePwd(item.OldPassword, oldItem.Password)
-			if !ok {
+			if ok := comparePwd(item.OldPassword, oldItem.Password); !ok {
 				err = IncorrectPassword
 				return
 			}
-			ok = comparePwd(item.NewPassword, oldItem.Password)
-			if ok {
+			if ok := comparePwd(item.NewPassword, oldItem.Password); ok {
 				err = SamePassword
 				return
 			}
@@ -372,6 +397,29 @@ func (uc *UserUseCase) info(ctx context.Context, action string, code string) (re
 func genPwd(str string) string {
 	hash, _ := bcrypt.GenerateFromPassword([]byte(str), bcrypt.DefaultCost)
 	return string(hash)
+}
+
+func (uc *UserUseCase) ComparePwd(ctx context.Context, condition ComparePwd) (rp bool, err error) {
+	action := fmt.Sprintf("compare_pwd_%s", utils.StructMd5(condition))
+	str, ok, lock, _ := uc.cache.Get(ctx, action, func(ctx context.Context) (string, bool) {
+		return uc.comparePwd(ctx, action, condition)
+	})
+	if ok && str == "true" {
+		rp = true
+	} else if !lock {
+		err = TooManyRequests
+		return
+	}
+	return
+}
+
+func (uc *UserUseCase) comparePwd(ctx context.Context, action string, condition ComparePwd) (res string, ok bool) {
+	if comparePwd(condition.Str, condition.Pwd) {
+		res = "true"
+	}
+	uc.cache.Set(ctx, action, res, true)
+	ok = true
+	return
 }
 
 // by comparing two string hashes, judge whether they are from the same plaintext
