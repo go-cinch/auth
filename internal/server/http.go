@@ -15,6 +15,7 @@ import (
 	"github.com/go-kratos/kratos/v2/middleware/tracing"
 	"github.com/go-kratos/kratos/v2/middleware/validate"
 	"github.com/go-kratos/kratos/v2/transport/http"
+	"github.com/go-kratos/kratos/v2/transport/http/pprof"
 	"github.com/gorilla/handlers"
 )
 
@@ -55,5 +56,6 @@ func NewHTTPServer(c *conf.Bootstrap, idt *idempotent.Idempotent, svc *service.A
 	}
 	srv := http.NewServer(opts...)
 	auth.RegisterAuthHTTPServer(srv, svc)
+	srv.HandlePrefix("/", pprof.NewHandler())
 	return srv
 }
