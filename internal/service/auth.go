@@ -5,14 +5,15 @@ import (
 	"auth/internal/biz"
 	"context"
 	"errors"
+	"fmt"
 	"github.com/go-cinch/common/copierx"
 	"github.com/go-cinch/common/jwt"
 	"github.com/go-cinch/common/utils"
 	"github.com/go-cinch/common/worker"
 	"github.com/golang-module/carbon/v2"
-	"github.com/google/uuid"
 	"go.opentelemetry.io/otel"
 	"google.golang.org/protobuf/types/known/emptypb"
+	"time"
 )
 
 func (s *AuthService) Register(ctx context.Context, req *auth.RegisterRequest) (rp *emptypb.Empty, err error) {
@@ -126,7 +127,7 @@ func (s *AuthService) Permission(ctx context.Context, req *auth.PermissionReques
 	}
 	var u jwt.User
 	copierx.Copy(&u, info)
-	jwt.AppendToReplayHeader(ctx, u)
+	jwt.AppendToReplyHeader(ctx, u)
 	return
 }
 
