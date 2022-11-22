@@ -120,7 +120,7 @@ type UserRepo interface {
 	Create(ctx context.Context, item *User) error
 	Update(ctx context.Context, item *UpdateUser) error
 	Delete(ctx context.Context, ids ...uint64) error
-	LastLogin(ctx context.Context, id uint64) error
+	LastLogin(ctx context.Context, username string) error
 	WrongPwd(ctx context.Context, req LoginTime) error
 	UpdatePassword(ctx context.Context, item *User) error
 	IdExists(ctx context.Context, id uint64) error
@@ -292,12 +292,8 @@ func (uc *UserUseCase) WrongPwd(ctx context.Context, req LoginTime) error {
 	})
 }
 
-func (uc *UserUseCase) WrongPwd(ctx context.Context, req LoginTime) (err error) {
-	return uc.tx.Tx(ctx, func(ctx context.Context) error {
-		return uc.cache.Flush(ctx, func(ctx context.Context) error {
-			return uc.repo.WrongPwd(ctx, req)
-		})
-	})
+func (uc *UserUseCase) refresh(ctx context.Context, username string) {
+	uc.cache.Del(ctx, fmt.Sprintf("status_%s", username))
 }
 
 func (uc *UserUseCase) Pwd(ctx context.Context, item *User) error {

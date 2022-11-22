@@ -209,7 +209,7 @@ func (ro userRepo) Delete(ctx context.Context, ids ...uint64) (err error) {
 	return
 }
 
-func (ro userRepo) LastLogin(ctx context.Context, id uint64) (err error) {
+func (ro userRepo) LastLogin(ctx context.Context, username string) (err error) {
 	fields := make(map[string]interface{})
 	fields["wrong"] = constant.I0
 	fields["last_login"] = carbon.Now()
@@ -217,7 +217,7 @@ func (ro userRepo) LastLogin(ctx context.Context, id uint64) (err error) {
 	fields["lock_expire"] = constant.I0
 	err = ro.data.DB(ctx).
 		Model(&User{}).
-		Where("`id` = ?", id).
+		Where("`username` = ?", username).
 		Updates(&fields).Error
 	return
 }
@@ -233,6 +233,9 @@ func (ro userRepo) WrongPwd(ctx context.Context, req biz.LoginTime) (err error) 
 	}
 	m := make(map[string]interface{})
 	newWrong := oldItem.Wrong + 1
+	if req.Wrong > 0 {
+		newWrong = req.Wrong
+	}
 	if newWrong >= 5 {
 		m["locked"] = constant.UI1
 		if newWrong == 5 {

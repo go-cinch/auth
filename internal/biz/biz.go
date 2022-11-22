@@ -30,6 +30,8 @@ type Cache interface {
 	Set(ctx context.Context, action, data string, short bool)
 	// SetWithExpiration is set data to redis with custom expiration
 	SetWithExpiration(ctx context.Context, action, data string, seconds int64)
+	// Del delete key
+	Del(ctx context.Context, action string)
 	// Flush is clean association cache if handler err=nil
 	Flush(ctx context.Context, handler func(context.Context) error) error
 }

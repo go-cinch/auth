@@ -34,7 +34,7 @@ func (c *Cache) WithPrefix(prefix string) biz.Cache {
 func (c *Cache) Get(ctx context.Context, action string, write func(context.Context) (string, bool)) (res string, ok bool, lock bool, db bool) {
 	var err error
 	// 1. first get cache
-	res, err = c.redis.Get(context.Background(), fmt.Sprintf("%s_%s", c.val, action)).Result()
+	res, err = c.redis.Get(ctx, fmt.Sprintf("%s_%s", c.val, action)).Result()
 	if err == nil {
 		// cache exists
 		ok = true
@@ -47,7 +47,7 @@ func (c *Cache) Get(ctx context.Context, action string, write func(context.Conte
 	}
 	defer c.Unlock(ctx, action)
 	// 3. double check cache exists(avoid concurrency step 1 ok=false)
-	res, err = c.redis.Get(context.Background(), fmt.Sprintf("%s_%s", c.val, action)).Result()
+	res, err = c.redis.Get(ctx, fmt.Sprintf("%s_%s", c.val, action)).Result()
 	if err == nil {
 		// cache exists
 		ok = true
@@ -72,7 +72,7 @@ func (c *Cache) Set(ctx context.Context, action, data string, short bool) {
 
 func (c *Cache) SetWithExpiration(ctx context.Context, action, data string, seconds int64) {
 	// set random expiration avoid a large number of keys expire at the same time
-	err := c.redis.Set(context.Background(), fmt.Sprintf("%s_%s", c.val, action), data, time.Duration(seconds)*time.Second).Err()
+	err := c.redis.Set(ctx, fmt.Sprintf("%s_%s", c.val, action), data, time.Duration(seconds)*time.Second).Err()
 	if err != nil {
 		log.
 			WithContext(ctx).
@@ -85,21 +85,34 @@ func (c *Cache) SetWithExpiration(ctx context.Context, action, data string, seco
 	}
 }
 
+func (c *Cache) Del(ctx context.Context, action string) {
+	err := c.redis.Del(ctx, fmt.Sprintf("%s_%s", c.val, action)).Err()
+	if err != nil {
+		log.
+			WithContext(ctx).
+			WithError(err).
+			WithFields(log.Fields{
+				"action": action,
+			}).
+			Warn("del cache failed")
+	}
+}
+
 func (c *Cache) Flush(ctx context.Context, handler func(ctx context.Context) error) (err error) {
 	err = handler(ctx)
 	if err != nil {
 		return
 	}
 	action := c.prefix + "*"
-	arr := c.redis.Keys(context.Background(), action).Val()
+	arr := c.redis.Keys(ctx, action).Val()
 	p := c.redis.Pipeline()
 	for _, item := range arr {
 		if item == c.lock {
 			continue
 		}
-		p.Del(context.Background(), item)
+		p.Del(ctx, item)
 	}
-	_, pErr := p.Exec(context.Background())
+	_, pErr := p.Exec(ctx)
 	if pErr != nil {
 		log.
 			WithContext(ctx).
@@ -113,18 +126,18 @@ func (c *Cache) Flush(ctx context.Context, handler func(ctx context.Context) err
 }
 
 func (c *Cache) Lock(ctx context.Context, action string) (ok bool) {
-	ok, _ = c.redis.SetNX(context.Background(), fmt.Sprintf("%s_%s", c.lock, action), 1, time.Minute).Result()
+	ok, _ = c.redis.SetNX(ctx, fmt.Sprintf("%s_%s", c.lock, action), 1, time.Minute).Result()
 	retry := 0
-	for retry < 100 && !ok {
-		time.Sleep(10 * time.Millisecond)
-		ok, _ = c.redis.SetNX(context.Background(), fmt.Sprintf("%s_%s", c.lock, action), 1, time.Minute).Result()
+	for retry < 20 && !ok {
+		time.Sleep(25 * time.Millisecond)
+		ok, _ = c.redis.SetNX(ctx, fmt.Sprintf("%s_%s", c.lock, action), 1, time.Minute).Result()
 		retry++
 	}
 	return
 }
 
 func (c *Cache) Unlock(ctx context.Context, action string) {
-	err := c.redis.Del(context.Background(), fmt.Sprintf("%s_%s", c.lock, action)).Err()
+	err := c.redis.Del(ctx, fmt.Sprintf("%s_%s", c.lock, action)).Err()
 	if err != nil {
 		log.
 			WithContext(ctx).
