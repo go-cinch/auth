@@ -38,7 +38,7 @@ func NewPermissionUseCase(c *conf.Bootstrap, repo PermissionRepo, cache Cache) *
 
 func (uc *PermissionUseCase) Check(ctx context.Context, item *CheckPermission) (rp bool) {
 	action := fmt.Sprintf("check_%s_%s", item.Resource, item.UserCode)
-	str, ok, _, _ := uc.cache.Get(ctx, action, func(ctx context.Context) (string, bool) {
+	str, ok := uc.cache.Get(ctx, action, func(ctx context.Context) (string, bool) {
 		return uc.check(ctx, action, item)
 	})
 	if ok {
@@ -59,15 +59,14 @@ func (uc *PermissionUseCase) check(ctx context.Context, action string, item *Che
 func (uc *PermissionUseCase) GetByUserCode(ctx context.Context, code string) (rp *Permission, err error) {
 	rp = &Permission{}
 	action := fmt.Sprintf("get_by_user_code_%s", code)
-	str, ok, lock, _ := uc.cache.Get(ctx, action, func(ctx context.Context) (string, bool) {
+	str, ok := uc.cache.Get(ctx, action, func(ctx context.Context) (string, bool) {
 		return uc.getByUserCode(ctx, action, code)
 	})
 	if ok {
 		utils.Json2Struct(&rp, str)
-	} else if !lock {
-		err = TooManyRequests
 		return
 	}
+	err = TooManyRequests
 	return
 }
 

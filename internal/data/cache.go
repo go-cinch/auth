@@ -3,6 +3,7 @@ package data
 import (
 	"auth/internal/biz"
 	"context"
+	"errors"
 	"fmt"
 	"github.com/go-cinch/common/log"
 	"github.com/go-redis/redis/v8"
@@ -31,7 +32,18 @@ func (c *Cache) WithPrefix(prefix string) biz.Cache {
 	}
 }
 
-func (c *Cache) Get(ctx context.Context, action string, write func(context.Context) (string, bool)) (res string, ok bool, lock bool, db bool) {
+// NewCache .
+func NewCache(client redis.UniversalClient) biz.Cache {
+	return &Cache{
+		redis:  client,
+		prefix: "",
+		lock:   "lock",
+		val:    "val",
+	}
+}
+
+func (c *Cache) Get(ctx context.Context, action string, write func(context.Context) (string, bool)) (res string, ok bool) {
+	ctx = getDefaultTimeoutCtx(ctx)
 	var err error
 	// 1. first get cache
 	res, err = c.redis.Get(ctx, fmt.Sprintf("%s_%s", c.val, action)).Result()
@@ -41,8 +53,8 @@ func (c *Cache) Get(ctx context.Context, action string, write func(context.Conte
 		return
 	}
 	// 2. get lock before read db
-	lock = c.Lock(ctx, action)
-	if !lock {
+	ok = c.Lock(ctx, action)
+	if !ok {
 		return
 	}
 	defer c.Unlock(ctx, action)
@@ -55,12 +67,12 @@ func (c *Cache) Get(ctx context.Context, action string, write func(context.Conte
 	}
 	if write != nil {
 		res, ok = write(ctx)
-		db = true
 	}
 	return
 }
 
 func (c *Cache) Set(ctx context.Context, action, data string, short bool) {
+	ctx = getDefaultTimeoutCtx(ctx)
 	// set random expiration avoid a large number of keys expire at the same time
 	seconds := rand.New(rand.NewSource(time.Now().Unix())).Int63n(300) + 300
 	if short {
@@ -71,6 +83,7 @@ func (c *Cache) Set(ctx context.Context, action, data string, short bool) {
 }
 
 func (c *Cache) SetWithExpiration(ctx context.Context, action, data string, seconds int64) {
+	ctx = getDefaultTimeoutCtx(ctx)
 	// set random expiration avoid a large number of keys expire at the same time
 	err := c.redis.Set(ctx, fmt.Sprintf("%s_%s", c.val, action), data, time.Duration(seconds)*time.Second).Err()
 	if err != nil {
@@ -86,13 +99,16 @@ func (c *Cache) SetWithExpiration(ctx context.Context, action, data string, seco
 }
 
 func (c *Cache) Del(ctx context.Context, action string) {
-	err := c.redis.Del(ctx, fmt.Sprintf("%s_%s", c.val, action)).Err()
+	ctx = getDefaultTimeoutCtx(ctx)
+	key := fmt.Sprintf("%s_%s", c.val, action)
+	err := c.redis.Del(ctx, key).Err()
 	if err != nil {
 		log.
 			WithContext(ctx).
 			WithError(err).
 			WithFields(log.Fields{
 				"action": action,
+				"key":    key,
 			}).
 			Warn("del cache failed")
 	}
@@ -103,6 +119,7 @@ func (c *Cache) Flush(ctx context.Context, handler func(ctx context.Context) err
 	if err != nil {
 		return
 	}
+	ctx = getDefaultTimeoutCtx(ctx)
 	action := c.prefix + "*"
 	arr := c.redis.Keys(ctx, action).Val()
 	p := c.redis.Pipeline()
@@ -126,17 +143,29 @@ func (c *Cache) Flush(ctx context.Context, handler func(ctx context.Context) err
 }
 
 func (c *Cache) Lock(ctx context.Context, action string) (ok bool) {
-	ok, _ = c.redis.SetNX(ctx, fmt.Sprintf("%s_%s", c.lock, action), 1, time.Minute).Result()
 	retry := 0
+	var e error
 	for retry < 20 && !ok {
+		ctx = getDefaultTimeoutCtx(ctx)
+		ok, e = c.redis.SetNX(ctx, fmt.Sprintf("%s_%s", c.lock, action), 1, time.Minute).Result()
+		if errors.Is(e, context.DeadlineExceeded) || errors.Is(e, context.Canceled) || (e != nil && e.Error() == "redis: connection pool timeout") {
+			log.
+				WithContext(ctx).
+				WithError(e).
+				WithFields(log.Fields{
+					"action": action,
+				}).
+				Warn("lock failed")
+			return
+		}
 		time.Sleep(25 * time.Millisecond)
-		ok, _ = c.redis.SetNX(ctx, fmt.Sprintf("%s_%s", c.lock, action), 1, time.Minute).Result()
 		retry++
 	}
 	return
 }
 
 func (c *Cache) Unlock(ctx context.Context, action string) {
+	ctx = getDefaultTimeoutCtx(ctx)
 	err := c.redis.Del(ctx, fmt.Sprintf("%s_%s", c.lock, action)).Err()
 	if err != nil {
 		log.
@@ -146,15 +175,5 @@ func (c *Cache) Unlock(ctx context.Context, action string) {
 				"action": action,
 			}).
 			Warn("unlock cache failed")
-	}
-}
-
-// NewCache .
-func NewCache(client redis.UniversalClient) biz.Cache {
-	return &Cache{
-		redis:  client,
-		prefix: "",
-		lock:   "lock",
-		val:    "val",
 	}
 }

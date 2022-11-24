@@ -67,7 +67,7 @@ func (uc *UserGroupUseCase) Create(ctx context.Context, item *UserGroup) error {
 
 func (uc *UserGroupUseCase) Find(ctx context.Context, condition *FindUserGroup) (rp []UserGroup) {
 	action := fmt.Sprintf("find_%s", utils.StructMd5(condition))
-	str, ok, _, _ := uc.cache.Get(ctx, action, func(ctx context.Context) (string, bool) {
+	str, ok := uc.cache.Get(ctx, action, func(ctx context.Context) (string, bool) {
 		return uc.find(ctx, action, condition)
 	})
 	if ok {

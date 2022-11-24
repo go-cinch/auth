@@ -9,6 +9,7 @@ import (
 	"github.com/go-cinch/common/worker"
 	"github.com/google/wire"
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel"
 )
 
 // ProviderSet is task providers.
@@ -69,15 +70,18 @@ type task struct {
 }
 
 func process(t task) (err error) {
+	tr := otel.Tracer("task")
+	ctx, span := tr.Start(t.ctx, "Task")
+	defer span.End()
 	switch t.payload.Group {
 	case "login.failed":
 		var req biz.LoginTime
 		utils.Json2Struct(&req, t.payload.Payload)
-		err = t.user.WrongPwd(t.ctx, req)
+		err = t.user.WrongPwd(ctx, req)
 	case "login.last":
 		var req biz.LoginTime
 		utils.Json2Struct(&req, t.payload.Payload)
-		err = t.user.LastLogin(t.ctx, req.Username)
+		err = t.user.LastLogin(ctx, req.Username)
 	}
 	return
 }

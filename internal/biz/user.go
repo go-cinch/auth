@@ -93,8 +93,9 @@ type LoginToken struct {
 }
 
 type ComparePwd struct {
-	Str string `json:"str"`
-	Pwd string `json:"pwd"`
+	Username string `json:"username"`
+	Str      string `json:"str"`
+	Pwd      string `json:"pwd"`
 }
 
 type UserStatus struct {
@@ -179,7 +180,7 @@ func (uc *UserUseCase) Delete(ctx context.Context, ids ...uint64) error {
 
 func (uc *UserUseCase) Find(ctx context.Context, condition *FindUser) (rp []User) {
 	action := fmt.Sprintf("find_%s", utils.StructMd5(condition))
-	str, ok, _, _ := uc.cache.Get(ctx, action, func(ctx context.Context) (string, bool) {
+	str, ok := uc.cache.Get(ctx, action, func(ctx context.Context) (string, bool) {
 		return uc.find(ctx, action, condition)
 	})
 	if ok {
@@ -211,15 +212,14 @@ func (uc *UserUseCase) InfoFromCtx(ctx context.Context) (rp *UserInfo, err error
 func (uc *UserUseCase) Info(ctx context.Context, code string) (rp *UserInfo, err error) {
 	rp = &UserInfo{}
 	action := fmt.Sprintf("info_%s", code)
-	str, ok, lock, _ := uc.cache.Get(ctx, action, func(ctx context.Context) (string, bool) {
+	str, ok := uc.cache.Get(ctx, action, func(ctx context.Context) (string, bool) {
 		return uc.info(ctx, action, code)
 	})
 	if ok {
 		utils.Json2Struct(&rp, str)
-	} else if !lock {
-		err = TooManyRequests
 		return
 	}
+	err = TooManyRequests
 	return
 }
 
@@ -245,7 +245,7 @@ func (uc *UserUseCase) Login(ctx context.Context, item *Login) (rp *LoginToken, 
 	}
 	// check password
 	var pass bool
-	pass, err = uc.ComparePwd(ctx, ComparePwd{Str: item.Password, Pwd: status.Password})
+	pass, err = uc.ComparePwd(ctx, ComparePwd{Username: item.Username, Str: item.Password, Pwd: status.Password})
 	if err != nil {
 		return
 	}
@@ -321,7 +321,7 @@ func (uc *UserUseCase) Pwd(ctx context.Context, item *User) error {
 func (uc *UserUseCase) Status(ctx context.Context, username string, captcha bool) (rp *UserStatus, err error) {
 	rp = &UserStatus{}
 	action := fmt.Sprintf("status_%s", username)
-	str, ok, lock, _ := uc.cache.Get(ctx, action, func(ctx context.Context) (string, bool) {
+	str, ok := uc.cache.Get(ctx, action, func(ctx context.Context) (string, bool) {
 		return uc.status(ctx, action, username)
 	})
 	if ok {
@@ -339,10 +339,9 @@ func (uc *UserUseCase) Status(ctx context.Context, username string, captcha bool
 			// unlock when lock time expiration
 			rp.Locked = constant.UI0
 		}
-	} else if !lock {
-		err = TooManyRequests
 		return
 	}
+	err = TooManyRequests
 	return
 }
 
@@ -397,15 +396,16 @@ func genPwd(str string) string {
 
 func (uc *UserUseCase) ComparePwd(ctx context.Context, condition ComparePwd) (rp bool, err error) {
 	action := fmt.Sprintf("compare_pwd_%s", utils.StructMd5(condition))
-	str, ok, lock, _ := uc.cache.Get(ctx, action, func(ctx context.Context) (string, bool) {
+	str, ok := uc.cache.Get(ctx, action, func(ctx context.Context) (string, bool) {
 		return uc.comparePwd(ctx, action, condition)
 	})
-	if ok && str == "true" {
-		rp = true
-	} else if !lock {
-		err = TooManyRequests
+	if ok {
+		if str == "true" {
+			rp = true
+		}
 		return
 	}
+	err = TooManyRequests
 	return
 }
 
