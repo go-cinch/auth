@@ -3,8 +3,8 @@ package service
 import (
 	"auth/api/auth"
 	"auth/internal/biz"
-	"auth/internal/idempotent"
-	"auth/internal/task"
+	"auth/internal/pkg/idempotent"
+	"auth/internal/pkg/task"
 	"github.com/google/wire"
 )
 

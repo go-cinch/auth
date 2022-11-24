@@ -3,7 +3,7 @@ package server
 import (
 	"auth/api/auth"
 	"auth/internal/conf"
-	"auth/internal/idempotent"
+	"auth/internal/pkg/idempotent"
 	localMiddleware "auth/internal/server/middleware"
 	"auth/internal/service"
 	"github.com/go-cinch/common/log"

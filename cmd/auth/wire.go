@@ -9,10 +9,10 @@ import (
 	"auth/internal/biz"
 	"auth/internal/conf"
 	"auth/internal/data"
-	"auth/internal/idempotent"
+	"auth/internal/pkg/idempotent"
+	"auth/internal/pkg/task"
 	"auth/internal/server"
 	"auth/internal/service"
-	"auth/internal/task"
 	"github.com/go-kratos/kratos/v2"
 	"github.com/google/wire"
 )
