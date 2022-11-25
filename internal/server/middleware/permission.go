@@ -7,15 +7,18 @@ import (
 	"auth/internal/service"
 	"context"
 	jwtLocal "github.com/go-cinch/common/jwt"
+	"github.com/go-cinch/common/utils"
 	"github.com/go-kratos/kratos/v2/middleware"
 	"github.com/go-kratos/kratos/v2/middleware/selector"
 	"github.com/go-kratos/kratos/v2/transport"
+	"github.com/go-redis/redis/v8"
 	jwtV4 "github.com/golang-jwt/jwt/v4"
+	"time"
 )
 
-func Permission(c *conf.Bootstrap, svc *service.AuthService) middleware.Middleware {
+func Permission(c *conf.Bootstrap, client redis.UniversalClient, svc *service.AuthService) middleware.Middleware {
 	return selector.Server(
-		jwt(c),
+		jwt(c, client),
 		func(handler middleware.Handler) middleware.Handler {
 			return func(ctx context.Context, req interface{}) (rp interface{}, err error) {
 				// ok: call permission, no need check permission
@@ -43,7 +46,9 @@ func Permission(c *conf.Bootstrap, svc *service.AuthService) middleware.Middlewa
 	).Match(permissionWhitelist()).Build()
 }
 
-func jwt(c *conf.Bootstrap) func(handler middleware.Handler) middleware.Handler {
+const jwtTokenUserKey = "jwt_token_"
+
+func jwt(c *conf.Bootstrap, client redis.UniversalClient) func(handler middleware.Handler) middleware.Handler {
 	return func(handler middleware.Handler) middleware.Handler {
 		return func(ctx context.Context, req interface{}) (rp interface{}, err error) {
 			user := jwtLocal.FromServerContext(ctx)
@@ -51,17 +56,26 @@ func jwt(c *conf.Bootstrap) func(handler middleware.Handler) middleware.Handler 
 				err = MissingToken
 				return
 			}
-			if user.Token != "" {
-				// parse Authorization jwt token to get user info
-				var info *jwtV4.Token
-				info, err = parseToken(c.Auth.Jwt.Key, user.Token)
-				if err != nil {
-					return
+			token := user.Token
+			if token != "" {
+				key := jwtTokenUserKey + utils.StructMd5(token)
+				// read user info from cache
+				res, e := client.Get(ctx, key).Result()
+				if e == nil {
+					utils.Json2Struct(user, res)
+				} else {
+					// parse Authorization jwt token to get user info
+					var info *jwtV4.Token
+					info, err = parseToken(c.Auth.Jwt.Key, token)
+					if err != nil {
+						return
+					}
+					ctx = jwtLocal.NewServerContext(ctx, info.Claims)
+					user = jwtLocal.FromServerContext(ctx)
+					client.Set(ctx, key, utils.Struct2Json(user), time.Hour)
 				}
-				ctx = jwtLocal.NewServerContext(ctx, info.Claims)
-			} else {
-				ctx = jwtLocal.NewServerContextByUser(ctx, *user)
 			}
+			ctx = jwtLocal.NewServerContextByUser(ctx, *user)
 			return handler(ctx, req)
 		}
 	}

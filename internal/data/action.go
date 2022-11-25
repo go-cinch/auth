@@ -80,6 +80,9 @@ func (ro actionRepo) Find(ctx context.Context, condition *biz.FindAction) (rp []
 
 func (ro actionRepo) FindByCode(ctx context.Context, code string) (rp []biz.Action) {
 	rp = make([]biz.Action, 0)
+	if code == "" {
+		return
+	}
 	list := make([]Action, 0)
 	db := ro.data.DB(ctx)
 	arr := strings.Split(code, ",")
@@ -182,6 +185,9 @@ func (ro actionRepo) Permission(ctx context.Context, code, resource string) (pas
 }
 
 func (ro actionRepo) permission(ctx context.Context, code, resource string) (pass bool) {
+	if code == "" {
+		return
+	}
 	var m Action
 	db := ro.data.DB(ctx)
 	db.

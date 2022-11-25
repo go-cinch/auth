@@ -16,10 +16,11 @@ import (
 	"github.com/go-kratos/kratos/v2/middleware/tracing"
 	"github.com/go-kratos/kratos/v2/middleware/validate"
 	"github.com/go-kratos/kratos/v2/transport/grpc"
+	"github.com/go-redis/redis/v8"
 )
 
 // NewGRPCServer new a gRPC server.
-func NewGRPCServer(c *conf.Bootstrap, idt *idempotent.Idempotent, svc *service.AuthService) *grpc.Server {
+func NewGRPCServer(c *conf.Bootstrap, client redis.UniversalClient, idt *idempotent.Idempotent, svc *service.AuthService) *grpc.Server {
 	middlewares := []middleware.Middleware{
 		recovery.Recovery(),
 		ratelimit.Server(),
@@ -31,7 +32,7 @@ func NewGRPCServer(c *conf.Bootstrap, idt *idempotent.Idempotent, svc *service.A
 		middlewares,
 		logging.Server(log.DefaultWrapper.Options().Logger()),
 		metadata.Server(),
-		localMiddleware.Permission(c, svc),
+		localMiddleware.Permission(c, client, svc),
 		validate.Validator(),
 		localMiddleware.Idempotent(idt),
 	)

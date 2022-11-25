@@ -16,11 +16,12 @@ import (
 	"github.com/go-kratos/kratos/v2/middleware/validate"
 	"github.com/go-kratos/kratos/v2/transport/http"
 	"github.com/go-kratos/kratos/v2/transport/http/pprof"
+	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/handlers"
 )
 
 // NewHTTPServer new a HTTP server.
-func NewHTTPServer(c *conf.Bootstrap, idt *idempotent.Idempotent, svc *service.AuthService) *http.Server {
+func NewHTTPServer(c *conf.Bootstrap, client redis.UniversalClient, idt *idempotent.Idempotent, svc *service.AuthService) *http.Server {
 	middlewares := []middleware.Middleware{
 		recovery.Recovery(),
 		ratelimit.Server(),
@@ -33,7 +34,7 @@ func NewHTTPServer(c *conf.Bootstrap, idt *idempotent.Idempotent, svc *service.A
 		middlewares,
 		logging.Server(log.DefaultWrapper.Options().Logger()),
 		validate.Validator(),
-		localMiddleware.Permission(c, svc),
+		localMiddleware.Permission(c, client, svc),
 		localMiddleware.Idempotent(idt),
 	)
 	var opts = []http.ServerOption{
