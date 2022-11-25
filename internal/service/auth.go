@@ -23,6 +23,10 @@ func (s *AuthService) Register(ctx context.Context, req *auth.RegisterRequest) (
 	rp = &emptypb.Empty{}
 	r := &biz.User{}
 	copierx.Copy(&r, req)
+	if !s.user.VerifyCaptcha(ctx, req.CaptchaId, req.CaptchaAnswer) {
+		err = biz.InvalidCaptcha
+		return
+	}
 	err = s.user.Create(ctx, r)
 	return
 }
