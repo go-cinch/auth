@@ -8,8 +8,8 @@ import (
 	"auth/internal/service"
 	"github.com/go-cinch/common/i18n"
 	"github.com/go-cinch/common/log"
-	commonMiddleware "github.com/go-cinch/common/middleware"
 	i18nMiddleware "github.com/go-cinch/common/middleware/i18n"
+	traceMiddleware "github.com/go-cinch/common/middleware/trace"
 	"github.com/go-kratos/kratos/v2/middleware"
 	"github.com/go-kratos/kratos/v2/middleware/logging"
 	"github.com/go-kratos/kratos/v2/middleware/ratelimit"
@@ -31,7 +31,7 @@ func NewHTTPServer(c *conf.Bootstrap, client redis.UniversalClient, idt *idempot
 		localMiddleware.Header(),
 	}
 	if c.Tracer.Enable {
-		middlewares = append(middlewares, tracing.Server(), commonMiddleware.TraceId())
+		middlewares = append(middlewares, tracing.Server(), traceMiddleware.Id())
 	}
 	middlewares = append(
 		middlewares,

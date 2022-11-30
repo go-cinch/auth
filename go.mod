@@ -14,6 +14,7 @@ require (
 	github.com/go-cinch/common/log v1.0.1-0.20221125035848-68ffff8201e8
 	github.com/go-cinch/common/middleware v1.0.0
 	github.com/go-cinch/common/middleware/i18n v0.0.0-20221130102859-dd322d356d51
+	github.com/go-cinch/common/middleware/trace v0.0.0-20221130081511-deda3317dded
 	github.com/go-cinch/common/migrate v1.0.0
 	github.com/go-cinch/common/page v1.0.0
 	github.com/go-cinch/common/plugins/gorm/log v1.0.0

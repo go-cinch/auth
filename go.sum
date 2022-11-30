@@ -151,6 +151,8 @@ github.com/go-cinch/common/middleware v1.0.0 h1:HZ4YGOyQCuESff7KXNBSv6NzIzsLtSkN
 github.com/go-cinch/common/middleware v1.0.0/go.mod h1:4Nr6a+sSLF9qYVVQw0NPzyQt5e+n3sC26UHIK096kyY=
 github.com/go-cinch/common/middleware/i18n v0.0.0-20221130102859-dd322d356d51 h1:CEy5LZON7YQ9JEekQmM0+lVlufg5N1RhMNiW3cMRD0M=
 github.com/go-cinch/common/middleware/i18n v0.0.0-20221130102859-dd322d356d51/go.mod h1:xoQHXV2Id31KqTXuUYUA4Wy9RizYiAEoMxJ8DcwFMBU=
+github.com/go-cinch/common/middleware/trace v0.0.0-20221130081511-deda3317dded h1:hfa0iVAddTAWyIpPcIYclIJuZ60rmdBZPdW+SZL3/Qc=
+github.com/go-cinch/common/middleware/trace v0.0.0-20221130081511-deda3317dded/go.mod h1:8D5x18zBKc2pca4cxABoY3F+W7dSIK/WWyjVma2o7mA=
 github.com/go-cinch/common/migrate v1.0.0 h1:DsEnymNJ10rjmKPHTiZ2rGMwUWrqE/4xx1ZUVm0Z2vM=
 github.com/go-cinch/common/migrate v1.0.0/go.mod h1:hQbRdGOJJQRkkKFxpxkD+799wOfDnF73XJhgNP29Bnk=
 github.com/go-cinch/common/page v1.0.0 h1:MIOZIXWcd44MW4mxTwScKQTqq9CpBdbKqGsldqW4MdI=
