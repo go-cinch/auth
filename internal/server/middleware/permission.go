@@ -2,11 +2,13 @@ package middleware
 
 import (
 	"auth/api/auth"
+	"auth/api/reason"
 	"auth/internal/biz"
 	"auth/internal/conf"
 	"auth/internal/service"
 	"context"
 	jwtLocal "github.com/go-cinch/common/jwt"
+	"github.com/go-cinch/common/middleware/i18n"
 	"github.com/go-cinch/common/utils"
 	"github.com/go-kratos/kratos/v2/middleware"
 	"github.com/go-kratos/kratos/v2/middleware/selector"
@@ -36,7 +38,7 @@ func Permission(c *conf.Bootstrap, client redis.UniversalClient, svc *service.Au
 						return
 					}
 					if !res.Pass {
-						err = biz.NoPermission
+						err = reason.ErrorForbidden(i18n.FromContext(ctx).T(biz.NoPermission))
 						return
 					}
 				}
@@ -53,7 +55,7 @@ func jwt(c *conf.Bootstrap, client redis.UniversalClient) func(handler middlewar
 		return func(ctx context.Context, req interface{}) (rp interface{}, err error) {
 			user := jwtLocal.FromServerContext(ctx)
 			if user.Token == "" && user.Code == "" {
-				err = MissingToken
+				err = reason.ErrorUnauthorized(i18n.FromContext(ctx).T(biz.JwtMissingToken))
 				return
 			}
 			token := user.Token
@@ -66,7 +68,7 @@ func jwt(c *conf.Bootstrap, client redis.UniversalClient) func(handler middlewar
 				} else {
 					// parse Authorization jwt token to get user info
 					var info *jwtV4.Token
-					info, err = parseToken(c.Auth.Jwt.Key, token)
+					info, err = parseToken(ctx, c.Auth.Jwt.Key, token)
 					if err != nil {
 						return
 					}
@@ -81,7 +83,7 @@ func jwt(c *conf.Bootstrap, client redis.UniversalClient) func(handler middlewar
 	}
 }
 
-func parseToken(key, jwtToken string) (info *jwtV4.Token, err error) {
+func parseToken(ctx context.Context, key, jwtToken string) (info *jwtV4.Token, err error) {
 	info, err = jwtV4.Parse(jwtToken, func(token *jwtV4.Token) (rp interface{}, err error) {
 		rp = []byte(key)
 		return
@@ -92,22 +94,22 @@ func parseToken(key, jwtToken string) (info *jwtV4.Token, err error) {
 			return
 		}
 		if ve.Errors&jwtV4.ValidationErrorMalformed != 0 {
-			err = TokenInvalid
+			err = reason.ErrorUnauthorized(i18n.FromContext(ctx).T(biz.JwtTokenInvalid))
 			return
 		}
 		if ve.Errors&(jwtV4.ValidationErrorExpired|jwtV4.ValidationErrorNotValidYet) != 0 {
-			err = TokenExpired
+			err = reason.ErrorUnauthorized(i18n.FromContext(ctx).T(biz.JwtTokenExpired))
 			return
 		}
-		err = TokenParseFail
+		err = reason.ErrorUnauthorized(i18n.FromContext(ctx).T(biz.JwtTokenParseFail))
 		return
 	}
 	if !info.Valid {
-		err = TokenParseFail
+		err = reason.ErrorUnauthorized(i18n.FromContext(ctx).T(biz.JwtTokenParseFail))
 		return
 	}
 	if info.Method != jwtV4.SigningMethodHS512 {
-		err = UnSupportSigningMethod
+		err = reason.ErrorUnauthorized(i18n.FromContext(ctx).T(biz.JwtUnSupportSigningMethod))
 		return
 	}
 	return

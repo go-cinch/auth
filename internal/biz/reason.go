@@ -1,20 +1,24 @@
 package biz
 
-import "auth/api/reason"
+const (
+	JwtMissingToken           = "jwt.token.missing"
+	JwtTokenInvalid           = "jwt.token.invalid"
+	JwtTokenExpired           = "jwt.token.expired"
+	JwtTokenParseFail         = "jwt.token.parse.failed"
+	JwtUnSupportSigningMethod = "jwt.wrong.signing.method"
+	IdempotentMissingToken    = "idempotent.token.missing"
+	IdempotentTokenExpired    = "idempotent.token.invalid"
 
-var (
-	IllegalParameter   = reason.ErrorIllegalParameter
-	NotFound           = reason.ErrorNotFound
-	TooManyRequests    = reason.ErrorTooManyRequests("too many requests, please try again later")
-	DataNotChange      = reason.ErrorIllegalParameter("data has not changed")
-	DuplicateField     = reason.ErrorIllegalParameter("duplicate field")
-	RecordNotFound     = reason.ErrorNotFound("not found")
-	IncorrectPassword  = reason.ErrorIllegalParameter("incorrect password")
-	SamePassword       = reason.ErrorIllegalParameter("same password")
-	InvalidCaptcha     = reason.ErrorIllegalParameter("invalid captcha")
-	LoginFailed        = reason.ErrorIllegalParameter("incorrect username or password")
-	KeepLeastOntAction = reason.ErrorIllegalParameter("keep at least one action")
-	DeleteYourself     = reason.ErrorIllegalParameter("you cannot delete yourself")
-	UserLocked         = reason.ErrorForbidden("user is locked")
-	NoPermission       = reason.ErrorForbidden("no permission to access this resource")
+	TooManyRequests    = "too.many.requests"
+	DataNotChange      = "data.not.change"
+	DuplicateField     = "duplicate.field"
+	RecordNotFound     = "record.not.found"
+	NoPermission       = "no.permission"
+	IncorrectPassword  = "login.incorrect.password"
+	SamePassword       = "login.same.password"
+	InvalidCaptcha     = "login.invalid.captcha"
+	LoginFailed        = "login.failed"
+	UserLocked         = "login.user.locked"
+	KeepLeastOntAction = "action.keep.least.one.action"
+	DeleteYourself     = "user.delete.yourself"
 )

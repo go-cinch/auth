@@ -1,8 +1,11 @@
 package middleware
 
 import (
+	"auth/api/reason"
+	"auth/internal/biz"
 	"auth/internal/pkg/idempotent"
 	"context"
+	"github.com/go-cinch/common/middleware/i18n"
 	"github.com/go-kratos/kratos/v2/middleware"
 	"github.com/go-kratos/kratos/v2/middleware/selector"
 	"github.com/go-kratos/kratos/v2/transport"
@@ -18,11 +21,11 @@ func Idempotent(idt *idempotent.Idempotent) middleware.Middleware {
 						if idt.Check(ctx, token) {
 							return handler(ctx, req)
 						}
-						err = IdempotentTokenExpired
+						err = reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(biz.IdempotentTokenExpired))
 						return
 					}
 				}
-				err = MissingIdempotentToken
+				err = reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(biz.IdempotentMissingToken))
 				return
 			}
 		},

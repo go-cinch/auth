@@ -1,12 +1,14 @@
 package data
 
 import (
+	"auth/api/reason"
 	"auth/internal/biz"
 	"context"
 	"fmt"
 	"github.com/go-cinch/common/constant"
 	"github.com/go-cinch/common/copierx"
 	"github.com/go-cinch/common/id"
+	"github.com/go-cinch/common/middleware/i18n"
 	"github.com/go-cinch/common/utils"
 	"strings"
 )
@@ -36,7 +38,7 @@ func (ro actionRepo) Create(ctx context.Context, item *biz.Action) (err error) {
 	var m Action
 	err = ro.WordExists(ctx, item.Word)
 	if err == nil {
-		err = biz.IllegalParameter("%s `word`: %s", biz.DuplicateField.Message, item.Word)
+		err = reason.ErrorIllegalParameter("%s `word`: %s", i18n.FromContext(ctx).T(biz.DuplicateField), item.Word)
 		return
 	}
 	copierx.Copy(&m, item)
@@ -101,19 +103,19 @@ func (ro actionRepo) Update(ctx context.Context, item *biz.UpdateAction) (err er
 		Where("`id` = ?", item.Id).
 		First(&m)
 	if m.Id == constant.UI0 {
-		err = biz.NotFound("%s Action.id: %d", biz.RecordNotFound.Message, item.Id)
+		err = reason.ErrorNotFound("%s Action.id: %d", i18n.FromContext(ctx).T(biz.RecordNotFound), item.Id)
 		return
 	}
 	change := make(map[string]interface{})
 	utils.CompareDiff(m, item, &change)
 	if len(change) == 0 {
-		err = biz.DataNotChange
+		err = reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(biz.DataNotChange))
 		return
 	}
 	if item.Word != nil && *item.Word != m.Word {
 		err = ro.WordExists(ctx, *item.Word)
 		if err == nil {
-			err = biz.IllegalParameter("%s `word`: %s", biz.DuplicateField.Message, *item.Word)
+			err = reason.ErrorIllegalParameter("%s `word`: %s", i18n.FromContext(ctx).T(biz.DuplicateField), *item.Word)
 			return
 		}
 	}
@@ -136,7 +138,7 @@ func (ro actionRepo) Delete(ctx context.Context, ids ...uint64) (err error) {
 		Model(&Action{}).
 		Count(&count)
 	if count == 0 {
-		err = biz.KeepLeastOntAction
+		err = reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(biz.KeepLeastOntAction))
 	}
 	return
 }
@@ -150,7 +152,7 @@ func (ro actionRepo) CodeExists(ctx context.Context, code string) (err error) {
 			Where("`code` = ?", item).
 			First(&m)
 		if m.Id == constant.UI0 {
-			err = biz.NotFound("%s Action.code: %s", biz.RecordNotFound.Message, item)
+			err = reason.ErrorNotFound("%s Action.code: %s", i18n.FromContext(ctx).T(biz.RecordNotFound), item)
 			return
 		}
 	}
@@ -166,7 +168,7 @@ func (ro actionRepo) WordExists(ctx context.Context, word string) (err error) {
 			Where("`word` = ?", item).
 			First(&m)
 		if m.Id == constant.UI0 {
-			err = biz.NotFound("%s Action.word: %s", biz.RecordNotFound.Message, item)
+			err = reason.ErrorNotFound("%s Action.word: %s", i18n.FromContext(ctx).T(biz.RecordNotFound), item)
 			return
 		}
 	}

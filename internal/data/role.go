@@ -1,11 +1,13 @@
 package data
 
 import (
+	"auth/api/reason"
 	"auth/internal/biz"
 	"context"
 	"fmt"
 	"github.com/go-cinch/common/constant"
 	"github.com/go-cinch/common/copierx"
+	"github.com/go-cinch/common/middleware/i18n"
 	"github.com/go-cinch/common/utils"
 	"strings"
 )
@@ -34,7 +36,7 @@ func (ro roleRepo) Create(ctx context.Context, item *biz.Role) (err error) {
 	var m Role
 	err = ro.WordExists(ctx, item.Word)
 	if err == nil {
-		err = biz.IllegalParameter("%s `word`: %s", biz.DuplicateField.Message, item.Word)
+		err = reason.ErrorIllegalParameter("%s `word`: %s", i18n.FromContext(ctx).T(biz.DuplicateField), item.Word)
 		return
 	}
 	copierx.Copy(&m, item)
@@ -84,13 +86,13 @@ func (ro roleRepo) Update(ctx context.Context, item *biz.UpdateRole) (err error)
 		Where("`id` = ?", item.Id).
 		First(&m)
 	if m.Id == constant.UI0 {
-		err = biz.NotFound("%s Role.id: %d", biz.RecordNotFound.Message, item.Id)
+		err = reason.ErrorNotFound("%s Role.id: %d", i18n.FromContext(ctx).T(biz.RecordNotFound), item.Id)
 		return
 	}
 	change := make(map[string]interface{})
 	utils.CompareDiff(m, item, &change)
 	if len(change) == 0 {
-		err = biz.DataNotChange
+		err = reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(biz.DataNotChange))
 		return
 	}
 	if a, ok1 := change["action"]; ok1 {
@@ -104,7 +106,7 @@ func (ro roleRepo) Update(ctx context.Context, item *biz.UpdateRole) (err error)
 	if item.Word != nil && *item.Word != m.Word {
 		err = ro.WordExists(ctx, *item.Word)
 		if err == nil {
-			err = biz.IllegalParameter("%s `word`: %s", biz.DuplicateField.Message, *item.Word)
+			err = reason.ErrorIllegalParameter("%s `word`: %s", i18n.FromContext(ctx).T(biz.DuplicateField), *item.Word)
 			return
 		}
 	}
@@ -131,7 +133,7 @@ func (ro roleRepo) WordExists(ctx context.Context, word string) (err error) {
 			Where("`word` = ?", item).
 			First(&m)
 		if m.Id == constant.UI0 {
-			err = biz.NotFound("%s Role.word: %s", biz.RecordNotFound.Message, item)
+			err = reason.ErrorNotFound("%s Role.word: %s", i18n.FromContext(ctx).T(biz.RecordNotFound), item)
 			return
 		}
 	}

@@ -1,12 +1,14 @@
 package data
 
 import (
+	"auth/api/reason"
 	"auth/internal/biz"
 	"context"
 	"fmt"
 	"github.com/go-cinch/common/constant"
 	"github.com/go-cinch/common/copierx"
 	"github.com/go-cinch/common/id"
+	"github.com/go-cinch/common/middleware/i18n"
 	"github.com/go-cinch/common/utils"
 	"github.com/golang-module/carbon/v2"
 	"gorm.io/gorm/clause"
@@ -51,7 +53,7 @@ func (ro userRepo) GetByUsername(ctx context.Context, username string) (item *bi
 		Where("`username` = ?", username).
 		First(&m)
 	if m.Id == constant.UI0 {
-		err = biz.NotFound("%s User.username: %s", biz.RecordNotFound.Message, username)
+		err = reason.ErrorNotFound("%s User.username: %s", i18n.FromContext(ctx).T(biz.RecordNotFound), username)
 		return
 	}
 	copierx.Copy(&item, m)
@@ -138,7 +140,7 @@ func (ro userRepo) Create(ctx context.Context, item *biz.User) (err error) {
 		Where("`username` = ?", item.Username).
 		First(&m)
 	if m.Id > constant.UI0 {
-		err = biz.IllegalParameter("%s `username`: %s", biz.DuplicateField.Message, item.Username)
+		err = reason.ErrorIllegalParameter("%s `username`: %s", i18n.FromContext(ctx).T(biz.DuplicateField), item.Username)
 		return
 	}
 	copierx.Copy(&m, item)
@@ -161,13 +163,13 @@ func (ro userRepo) Update(ctx context.Context, item *biz.UpdateUser) (err error)
 		Where("`id` = ?", item.Id).
 		First(&m)
 	if m.Id == constant.UI0 {
-		err = biz.NotFound("%s User.id: %d", biz.RecordNotFound.Message, item.Id)
+		err = reason.ErrorNotFound("%s User.id: %d", i18n.FromContext(ctx).T(biz.RecordNotFound), item.Id)
 		return
 	}
 	change := make(map[string]interface{})
 	utils.CompareDiff(m, item, &change)
 	if len(change) == 0 {
-		err = biz.DataNotChange
+		err = reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(biz.DataNotChange))
 		return
 	}
 	// check lock or unlock
@@ -190,7 +192,7 @@ func (ro userRepo) Update(ctx context.Context, item *biz.UpdateUser) (err error)
 		if v, ok2 := username.(string); ok2 {
 			_, err = ro.GetByUsername(ctx, v)
 			if err == nil {
-				err = biz.IllegalParameter("%s `username`: %s", biz.DuplicateField.Message, v)
+				err = reason.ErrorIllegalParameter("%s `username`: %s", i18n.FromContext(ctx).T(biz.DuplicateField), v)
 				return
 			}
 		}
@@ -265,7 +267,7 @@ func (ro userRepo) UpdatePassword(ctx context.Context, item *biz.User) (err erro
 		Where("`username` = ?", item.Username).
 		First(&m)
 	if m.Id == constant.UI0 {
-		err = biz.NotFound("%s User.username: %s", biz.RecordNotFound.Message, item.Username)
+		err = reason.ErrorNotFound("%s User.username: %s", i18n.FromContext(ctx).T(biz.RecordNotFound), item.Username)
 		return
 	}
 	fields := make(map[string]interface{})
@@ -286,7 +288,7 @@ func (ro userRepo) IdExists(ctx context.Context, id uint64) (err error) {
 		Where("`id` = ?", id).
 		First(&m)
 	if m.Id == constant.UI0 {
-		err = biz.NotFound("%s User.id: %d", biz.RecordNotFound.Message, id)
+		err = reason.ErrorNotFound("%s User.id: %d", i18n.FromContext(ctx).T(biz.RecordNotFound), id)
 		return
 	}
 	return
@@ -300,7 +302,7 @@ func (ro userRepo) GetByCode(ctx context.Context, code string) (item *biz.User, 
 		Preload("Role").
 		First(&m)
 	if m.Id == constant.UI0 {
-		err = biz.NotFound("%s User.code: %s", biz.RecordNotFound.Message, code)
+		err = reason.ErrorNotFound("%s User.code: %s", i18n.FromContext(ctx).T(biz.RecordNotFound), code)
 		return
 	}
 	copierx.Copy(&item, m)

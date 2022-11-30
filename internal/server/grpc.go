@@ -6,8 +6,10 @@ import (
 	"auth/internal/pkg/idempotent"
 	localMiddleware "auth/internal/server/middleware"
 	"auth/internal/service"
+	"github.com/go-cinch/common/i18n"
 	"github.com/go-cinch/common/log"
 	commonMiddleware "github.com/go-cinch/common/middleware"
+	i18nMiddleware "github.com/go-cinch/common/middleware/i18n"
 	"github.com/go-kratos/kratos/v2/middleware"
 	"github.com/go-kratos/kratos/v2/middleware/logging"
 	"github.com/go-kratos/kratos/v2/middleware/metadata"
@@ -17,6 +19,7 @@ import (
 	"github.com/go-kratos/kratos/v2/middleware/validate"
 	"github.com/go-kratos/kratos/v2/transport/grpc"
 	"github.com/go-redis/redis/v8"
+	"golang.org/x/text/language"
 )
 
 // NewGRPCServer new a gRPC server.
@@ -31,6 +34,7 @@ func NewGRPCServer(c *conf.Bootstrap, client redis.UniversalClient, idt *idempot
 	middlewares = append(
 		middlewares,
 		logging.Server(log.DefaultWrapper.Options().Logger()),
+		i18nMiddleware.Translator(i18n.WithLanguage(language.Make(c.Server.Language)), i18n.WithFs(locales)),
 		metadata.Server(),
 		localMiddleware.Permission(c, client, svc),
 		validate.Validator(),

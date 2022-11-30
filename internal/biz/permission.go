@@ -1,11 +1,13 @@
 package biz
 
 import (
+	"auth/api/reason"
 	"auth/internal/conf"
 	"context"
 	"errors"
 	"fmt"
 	"github.com/go-cinch/common/copierx"
+	"github.com/go-cinch/common/middleware/i18n"
 	"github.com/go-cinch/common/utils"
 	"strconv"
 )
@@ -66,7 +68,7 @@ func (uc *PermissionUseCase) GetByUserCode(ctx context.Context, code string) (rp
 		utils.Json2Struct(&rp, str)
 		return
 	}
-	err = TooManyRequests
+	err = reason.ErrorTooManyRequests(i18n.FromContext(ctx).T(TooManyRequests))
 	return
 }
 
@@ -74,12 +76,13 @@ func (uc *PermissionUseCase) getByUserCode(ctx context.Context, action string, c
 	// read data from db and write to cache
 	rp := &Permission{}
 	permission, err := uc.repo.GetByUserCode(ctx, code)
-	if err != nil && !errors.Is(err, RecordNotFound) {
+	notFound := errors.Is(err, reason.ErrorNotFound(i18n.FromContext(ctx).T(RecordNotFound)))
+	if err != nil && !notFound {
 		return
 	}
 	copierx.Copy(&rp, permission)
 	res = utils.Struct2Json(rp)
-	uc.cache.Set(ctx, action, res, errors.Is(err, RecordNotFound))
+	uc.cache.Set(ctx, action, res, notFound)
 	ok = true
 	return
 }

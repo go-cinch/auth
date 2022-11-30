@@ -6,8 +6,10 @@ import (
 	"auth/internal/pkg/idempotent"
 	localMiddleware "auth/internal/server/middleware"
 	"auth/internal/service"
+	"github.com/go-cinch/common/i18n"
 	"github.com/go-cinch/common/log"
 	commonMiddleware "github.com/go-cinch/common/middleware"
+	i18nMiddleware "github.com/go-cinch/common/middleware/i18n"
 	"github.com/go-kratos/kratos/v2/middleware"
 	"github.com/go-kratos/kratos/v2/middleware/logging"
 	"github.com/go-kratos/kratos/v2/middleware/ratelimit"
@@ -18,6 +20,7 @@ import (
 	"github.com/go-kratos/kratos/v2/transport/http/pprof"
 	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/handlers"
+	"golang.org/x/text/language"
 )
 
 // NewHTTPServer new a HTTP server.
@@ -33,6 +36,7 @@ func NewHTTPServer(c *conf.Bootstrap, client redis.UniversalClient, idt *idempot
 	middlewares = append(
 		middlewares,
 		logging.Server(log.DefaultWrapper.Options().Logger()),
+		i18nMiddleware.Translator(i18n.WithLanguage(language.Make(c.Server.Language)), i18n.WithFs(locales)),
 		validate.Validator(),
 		localMiddleware.Permission(c, client, svc),
 		localMiddleware.Idempotent(idt),

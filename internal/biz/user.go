@@ -1,6 +1,7 @@
 package biz
 
 import (
+	"auth/api/reason"
 	"auth/internal/conf"
 	"context"
 	"fmt"
@@ -8,6 +9,7 @@ import (
 	"github.com/go-cinch/common/constant"
 	"github.com/go-cinch/common/copierx"
 	"github.com/go-cinch/common/jwt"
+	"github.com/go-cinch/common/middleware/i18n"
 	"github.com/go-cinch/common/page"
 	"github.com/go-cinch/common/utils"
 	"github.com/golang-module/carbon/v2"
@@ -169,7 +171,7 @@ func (uc *UserUseCase) Delete(ctx context.Context, ids ...uint64) error {
 				return
 			}
 			if funk.ContainsUInt64(ids, info.Id) {
-				err = DeleteYourself
+				err = reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(DeleteYourself))
 				return
 			}
 			err = uc.repo.Delete(ctx, ids...)
@@ -219,7 +221,7 @@ func (uc *UserUseCase) Info(ctx context.Context, code string) (rp *UserInfo, err
 		utils.Json2Struct(&rp, str)
 		return
 	}
-	err = TooManyRequests
+	err = reason.ErrorTooManyRequests(i18n.FromContext(ctx).T(TooManyRequests))
 	return
 }
 
@@ -230,17 +232,17 @@ func (uc *UserUseCase) Login(ctx context.Context, item *Login) (rp *LoginToken, 
 		return
 	}
 	if status.Id == constant.UI0 {
-		err = NotFound("%s User.username: %s", RecordNotFound.Message, item.Username)
+		err = reason.ErrorNotFound("%s User.username: %s", i18n.FromContext(ctx).T(RecordNotFound), item.Username)
 		return
 	}
 	// verify captcha
 	if status.NeedCaptcha && !uc.VerifyCaptcha(ctx, item.CaptchaId, item.CaptchaAnswer) {
-		err = InvalidCaptcha
+		err = reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(InvalidCaptcha))
 		return
 	}
 	// user is locked
 	if status.Locked == constant.UI1 {
-		err = UserLocked
+		err = reason.ErrorForbidden(i18n.FromContext(ctx).T(UserLocked))
 		return
 	}
 	// check password
@@ -250,13 +252,13 @@ func (uc *UserUseCase) Login(ctx context.Context, item *Login) (rp *LoginToken, 
 		return
 	}
 	if !pass {
-		err = LoginFailed
+		err = reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(LoginFailed))
 		rp.Wrong = status.Wrong + constant.I1
 		return
 	}
 	// check platform
 	if item.Platform != "" && item.Platform != status.Platform {
-		err = LoginFailed
+		err = reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(LoginFailed))
 		rp.Wrong = status.Wrong + constant.I1
 		return
 	}
@@ -305,11 +307,11 @@ func (uc *UserUseCase) Pwd(ctx context.Context, item *User) error {
 				return
 			}
 			if ok := comparePwd(item.OldPassword, oldItem.Password); !ok {
-				err = IncorrectPassword
+				err = reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(IncorrectPassword))
 				return
 			}
 			if ok := comparePwd(item.NewPassword, oldItem.Password); ok {
-				err = SamePassword
+				err = reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(SamePassword))
 				return
 			}
 			item.Password = genPwd(item.NewPassword)
@@ -341,7 +343,7 @@ func (uc *UserUseCase) Status(ctx context.Context, username string, captcha bool
 		}
 		return
 	}
-	err = TooManyRequests
+	err = reason.ErrorTooManyRequests(i18n.FromContext(ctx).T(TooManyRequests))
 	return
 }
 
@@ -364,12 +366,13 @@ func (uc *UserUseCase) status(ctx context.Context, action string, username strin
 	// read data from db and write to cache
 	rp := &UserStatus{}
 	user, err := uc.repo.GetByUsername(ctx, username)
-	if err != nil && !errors.Is(err, RecordNotFound) {
+	notFound := errors.Is(err, reason.ErrorNotFound(i18n.FromContext(ctx).T(RecordNotFound)))
+	if err != nil && !notFound {
 		return
 	}
 	copierx.Copy(&rp, user)
 	res = utils.Struct2Json(rp)
-	uc.cache.Set(ctx, action, res, errors.Is(err, RecordNotFound))
+	uc.cache.Set(ctx, action, res, notFound)
 	ok = true
 	return
 }
@@ -378,12 +381,13 @@ func (uc *UserUseCase) info(ctx context.Context, action string, code string) (re
 	// read data from db and write to cache
 	rp := &UserInfo{}
 	user, err := uc.repo.GetByCode(ctx, code)
-	if err != nil && !errors.Is(err, RecordNotFound) {
+	notFound := errors.Is(err, reason.ErrorNotFound(i18n.FromContext(ctx).T(RecordNotFound)))
+	if err != nil && !notFound {
 		return
 	}
 	copierx.Copy(&rp, user)
 	res = utils.Struct2Json(rp)
-	uc.cache.Set(ctx, action, res, errors.Is(err, RecordNotFound))
+	uc.cache.Set(ctx, action, res, notFound)
 	ok = true
 	return
 }
@@ -405,7 +409,7 @@ func (uc *UserUseCase) ComparePwd(ctx context.Context, condition ComparePwd) (rp
 		}
 		return
 	}
-	err = TooManyRequests
+	err = reason.ErrorTooManyRequests(i18n.FromContext(ctx).T(TooManyRequests))
 	return
 }
 

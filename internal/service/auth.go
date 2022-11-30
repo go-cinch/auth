@@ -2,12 +2,14 @@ package service
 
 import (
 	"auth/api/auth"
+	"auth/api/reason"
 	"auth/internal/biz"
 	"context"
 	"errors"
 	"fmt"
 	"github.com/go-cinch/common/copierx"
 	"github.com/go-cinch/common/jwt"
+	"github.com/go-cinch/common/middleware/i18n"
 	"github.com/go-cinch/common/utils"
 	"github.com/go-cinch/common/worker"
 	"github.com/golang-module/carbon/v2"
@@ -24,7 +26,7 @@ func (s *AuthService) Register(ctx context.Context, req *auth.RegisterRequest) (
 	r := &biz.User{}
 	copierx.Copy(&r, req)
 	if !s.user.VerifyCaptcha(ctx, req.CaptchaId, req.CaptchaAnswer) {
-		err = biz.InvalidCaptcha
+		err = reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(biz.InvalidCaptcha))
 		return
 	}
 	err = s.user.Create(ctx, r)
@@ -50,9 +52,12 @@ func (s *AuthService) Login(ctx context.Context, req *auth.LoginRequest) (rp *au
 	r := &biz.Login{}
 	copierx.Copy(&r, req)
 	res, err := s.user.Login(ctx, r)
+	loginFailedErr := reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(biz.LoginFailed))
+	loginFailed := errors.Is(err, loginFailedErr)
+	notFound := errors.Is(err, reason.ErrorNotFound(i18n.FromContext(ctx).T(biz.RecordNotFound)))
 	ctx, _ = context.WithTimeout(ctx, time.Second)
 	if err != nil {
-		if err == biz.LoginFailed {
+		if loginFailed {
 			s.task.Once(
 				worker.WithRunCtx(ctx),
 				worker.WithRunUuid(fmt.Sprintf("login.failed.%s", req.Username)),
@@ -68,9 +73,9 @@ func (s *AuthService) Login(ctx context.Context, req *auth.LoginRequest) (rp *au
 					Wrong: res.Wrong,
 				})),
 			)
-		} else if errors.Is(err, biz.RecordNotFound) {
+		} else if notFound {
 			// avoid guess username
-			err = biz.LoginFailed
+			err = loginFailedErr
 		}
 		return
 	}
