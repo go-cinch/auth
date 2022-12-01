@@ -7,13 +7,12 @@ require (
 	github.com/go-cinch/common/captcha v1.0.1-0.20221125035908-dbabd92bf0e1
 	github.com/go-cinch/common/constant v1.0.0
 	github.com/go-cinch/common/copierx v1.0.0
-	github.com/go-cinch/common/i18n v0.0.0-20221130102700-b712a225b780
+	github.com/go-cinch/common/i18n v0.0.0-20221201034053-85ab9d8f0182
 	github.com/go-cinch/common/id v1.0.0
 	github.com/go-cinch/common/idempotent v1.0.0
 	github.com/go-cinch/common/jwt v1.0.1-0.20221125081117-faadf75238b3
 	github.com/go-cinch/common/log v1.0.1-0.20221125035848-68ffff8201e8
-	github.com/go-cinch/common/middleware v1.0.0
-	github.com/go-cinch/common/middleware/i18n v0.0.0-20221130102859-dd322d356d51
+	github.com/go-cinch/common/middleware/i18n v0.0.0-20221201034231-b0a43cc7f7be
 	github.com/go-cinch/common/middleware/trace v0.0.0-20221130081511-deda3317dded
 	github.com/go-cinch/common/migrate v1.0.0
 	github.com/go-cinch/common/page v1.0.0
