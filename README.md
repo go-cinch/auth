@@ -27,8 +27,6 @@ Cinch是一套轻量级微服务脚手架, 基于[Kratos], 节省基础服务搭
 
 # 特性
 
-项目基于[layout](https://github.com/go-cinch/layout), 特性与其一致
-
 - `Proto` - proto协议同时开启gRPC & HTTP支持, 只需开发一次接口, 不用写两套
 - `Jwt` - 认证, 用户登入登出一键搞定
 - `Action` - 权限, 基于行为的权限校验
@@ -45,12 +43,21 @@ Cinch是一套轻量级微服务脚手架, 基于[Kratos], 节省基础服务搭
 - `Swagger` - Api文档一键生成, 无需在代码里写注解
 - `I18n` - 国际化支持, 简单切换多语言
 
+# Auth服务
+
+
+[Auth](https://github.com/go-cinch/auth)是基于[layout](https://github.com/go-cinch/layout)生成的一个通用权限验证微服务, 节省鉴权服务搭建时间, 快速投入业务开发.
+
+
 # 行为管理
+
 
 ## 为什么不用casbin
 
+
 Golang主流的权限管理基本上用的是[Casbin](https://casbin.org), 曾经的项目中也用到过, 如[gin-web](https://github.com/piupuer/gin-web), 设计模式很好,
 但实际使用过程中遇到一些问题
+
 
 以RBAC为例以及结合常见的web管理系统, 你大概需要这么设计
 
@@ -64,31 +71,37 @@ Golang主流的权限管理基本上用的是[Casbin](https://casbin.org), 曾�
 - 若还需要用户组权限, 那用户组与上面的表要建立关联
 
 那么问题来了
-
-1. 新增或删除接口, 你怎么维护上述各个表之间的关联关系? 或许这并不是casbin的问题, 这是业务层的问题. 你有更好的方案欢迎讨论
+1. 新增或删除接口, 你怎么维护上述各个表之间的关联关系?
 2. app没有菜单, 怎么来设计
 
-## 简介
+> 或许这并不是casbin的问题, 这是业务层的问题. 你有更好的方案欢迎讨论
 
-### 表结构
 
-#### action
+## 表结构
+
+
+### Action
+
 
 - `name` - 名称, 可以重复, 定义行为名, 描述当前action用途
 - `code` - 唯一标识, 主要用于其他表关联
 - `word` - 英文关键字, 唯一, 方便前端展示
-- `resource` - 资源列表(逗号隔开), 可以是http接口地址, 也可以是grpc接口地址, 由于使用了layout, http和grpc通过operation表示: /auth.v1.Auth/CreateAction,
-  服务 + 方法名
-- `menu` - 菜单列表(逗号隔开), 和前端路由有关
-- `btn` - 按钮列表(逗号隔开), 和前端有关
+- `resource` - 资源列表(\n隔开), 可以是http接口地址, 也可以是grpc接口地址
+- `menu` - 菜单列表(\n隔开), 和前端路由有关
+- `btn` - 按钮列表(\n隔开), 和前端有关
 
-> 除了resource严格按照operation规则, menu/btn是给前端看的, 前端来决定是否需要显示, 后端不单独入库
+> Tips: 建议resource规则使用kratos自动生成的[Operation](https://github.com/go-cinch/auth/blob/dev/api/auth/auth_http.pb.go#L23) `/auth.v1.Auth/CreateAction`(即`服务名`+`方法名`)  
+menu/btn是给前端看的, 前端来决定是否需要显示, 后端不单独存储menu表/btn表
 
-#### user/role/user group
+
+### User/Role/UserGroup
+
 
 - `action` - 行为code列表(逗号隔开), 包含用户/角色/用户组具有的所有行为
 
-### 优缺点
+
+## 优缺点
+
 
 优点
 1. 权限变更高效
@@ -101,7 +114,9 @@ Golang主流的权限管理基本上用的是[Casbin](https://casbin.org), 曾�
 1. 增加冗余性(这个和减少关联表是相悖的)
 2. 菜单等更新由前端管理, 若需更新, 必须重新发布前端代码
 
-### 验证权限
+
+## 验证权限
+
 
 各个微服务通过权限中间件调用`/auth.v1.Auth/Permission`接口进行权限校验, 步骤如下
 
@@ -111,6 +126,102 @@ Golang主流的权限管理基本上用的是[Casbin](https://casbin.org), 曾�
 4. 校验当前用户所在用户组是否有参数resource的权限
 
 参见[Permission](https://github.com/go-cinch/auth/blob/dev/internal/service/auth.go#L121)
+
+
+# 常用接口
+
+
+- `/auth.v1.Auth/Register` - 用户注册
+- `/auth.v1.Auth/Pwd` - 修改密码
+- `/auth.v1.Auth/Status` - 获取用户状态, 是否锁定/需要输入验证码等
+- `/auth.v1.Auth/Captcha` - 获取验证码base64图片, 默认4位数字
+- `/auth.v1.Auth/Login` - 登入, 获取jwt token
+- `/auth.v1.Auth/Logout` - 登出
+- `/auth.v1.Auth/Refresh` - 刷新jwt token
+- `/auth.v1.Auth/Idempotent` - 获取幂等性token(登陆后)
+- `/auth.v1.Auth/Info` - 获取用户信息(登陆后)
+
+其他接口是Action/User/Role/UserGroup的CRUD, 完整接口参见[auth.proto](https://github.com/go-cinch/auth-proto/blob/master/auth.proto)
+
+
+# 调用Auth
+
+
+## 调用链路
+
+
+[layout](https://github.com/go-cinch/layout)内置auth中间件, 以game服务为例, 调用链路如下
+
+1. `req` - 接收请求, 前端发起请求到game服务
+2. `permissionWhitelist` - 白名单过滤, 判断该服务是否需要鉴权
+3. `authClient.Permission` - 调用Auth鉴权, ctx包含用户jwt, 传入resource, Auth服务校验当前用户是否有权限访问resource
+4. `handler` - 业务逻辑
+
+```go
+func Permission(authClient auth.AuthClient) middleware.Middleware {
+	...
+	return func(ctx context.Context, req interface{}) (rp interface{}, err error) {
+		...
+        res, err := authClient.Permission(ctx,
+            &auth.PermissionRequest{
+                Resource: resource,
+            },
+            grpc.Header(&reply),
+        )
+		...
+        if !res.Pass {
+            err = reason.ErrorForbidden(i18n.FromContext(ctx).T(biz.NoPermission))
+            return
+        }
+        return handler(ctx, req)
+	}
+}
+```
+
+> 完整代码参见[internal/server/middleware/permission](https://github.com/go-cinch/auth/blob/dev/internal/server/middleware/permission.go#L21)
+
+
+## 权限白名单
+
+
+暂时关闭鉴权
+
+为了测试方便, 暂时关闭鉴权
+```bash
+vim auth/internal/server/middleware/whitelist.go
+```
+
+增加以下内容
+```go
+	whitelist[auth.OperationAuthIdempotent] = struct{}{}
+```
+
+最终代码
+
+```go
+func permissionWhitelist() selector.MatchFunc {
+	whitelist := make(map[string]struct{})
+	whitelist["/grpc.health.v1.Health/Check"] = struct{}{}
+	whitelist["/grpc.health.v1.Health/Watch"] = struct{}{}
+	whitelist[auth.OperationAuthIdempotent] = struct{}{}
+	return func(ctx context.Context, operation string) bool {
+		if _, ok := whitelist[operation]; ok {
+			return false
+		}
+		return true
+	}
+}
+```
+
+> 完整代码参见[internal/server/middleware/whitelist](https://github.com/go-cinch/auth/blob/dev/internal/server/middleware/whitelist.go#L9)
+
+> 除了健康检查, 其他接口默认都需要鉴权
+
+
+# 演示
+
+
+正在规划腾讯UI组件库[tdesign](https://tdesign.tencent.com)作为演示, Vue3+, 敬请期待~
 
 
 [Kratos]: (https://go-kratos.dev/docs/)
