@@ -43,7 +43,7 @@ func NewHTTPServer(c *conf.Bootstrap, client redis.UniversalClient, idt *idempot
 	)
 	var opts = []http.ServerOption{
 		http.Filter(handlers.CORS(
-			handlers.AllowedHeaders([]string{"Content-Type", "Authorization"}),
+			handlers.AllowedHeaders([]string{"Content-Type", "Authorization", "X-Idempotent"}),
 			handlers.AllowedMethods([]string{"OPTIONS", "GET", "POST", "PUT", "PATCH", "DELETE"}),
 			handlers.AllowedOrigins([]string{"*"}),
 			handlers.AllowCredentials(),
