@@ -38,7 +38,8 @@ func NewHTTPServer(c *conf.Bootstrap, client redis.UniversalClient, idt *idempot
 		logging.Server(log.DefaultWrapper.Options().Logger()),
 		i18nMiddleware.Translator(i18n.WithLanguage(language.Make(c.Server.Language)), i18n.WithFs(locales)),
 		validate.Validator(),
-		localMiddleware.Permission(c, client, svc),
+		localMiddleware.Jwt(c, client),
+		localMiddleware.Permission(svc),
 		localMiddleware.Idempotent(idt),
 	)
 	var opts = []http.ServerOption{

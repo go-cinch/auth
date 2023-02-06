@@ -531,6 +531,37 @@ func (m *User) validate(all bool) error {
 
 	}
 
+	// no validation rules for RoleId
+
+	if all {
+		switch v := interface{}(m.GetRole()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, UserValidationError{
+					field:  "Role",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, UserValidationError{
+					field:  "Role",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetRole()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UserValidationError{
+				field:  "Role",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	if len(errors) > 0 {
 		return UserMultiError(errors)
 	}
@@ -2579,6 +2610,10 @@ func (m *UpdateUserRequest) validate(all bool) error {
 
 	if m.Action != nil {
 		// no validation rules for Action
+	}
+
+	if m.RoleId != nil {
+		// no validation rules for RoleId
 	}
 
 	if len(errors) > 0 {

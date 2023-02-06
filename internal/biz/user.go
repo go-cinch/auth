@@ -72,6 +72,7 @@ type UpdateUser struct {
 	Platform   *string `json:"platform,omitempty"`
 	Locked     *uint64 `json:"locked,omitempty"`
 	LockExpire *int64  `json:"lockExpire,omitempty"`
+	RoleId     *uint64 `json:"roleId,string,omitempty"`
 }
 
 type Login struct {
@@ -420,6 +421,12 @@ func (uc *UserUseCase) comparePwd(ctx context.Context, action string, condition 
 	uc.cache.Set(ctx, action, res, true)
 	ok = true
 	return
+}
+
+func (uc *UserUseCase) FlushCache(ctx context.Context) {
+	uc.cache.Flush(ctx, func(ctx context.Context) (err error) {
+		return
+	})
 }
 
 // by comparing two string hashes, judge whether they are from the same plaintext

@@ -112,3 +112,9 @@ func (uc *ActionUseCase) Delete(ctx context.Context, ids ...uint64) error {
 		})
 	})
 }
+
+func (uc *ActionUseCase) FlushCache(ctx context.Context) {
+	uc.cache.Flush(ctx, func(ctx context.Context) (err error) {
+		return
+	})
+}

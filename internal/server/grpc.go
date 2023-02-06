@@ -36,7 +36,8 @@ func NewGRPCServer(c *conf.Bootstrap, client redis.UniversalClient, idt *idempot
 		logging.Server(log.DefaultWrapper.Options().Logger()),
 		i18nMiddleware.Translator(i18n.WithLanguage(language.Make(c.Server.Language)), i18n.WithFs(locales)),
 		metadata.Server(),
-		localMiddleware.Permission(c, client, svc),
+		localMiddleware.Jwt(c, client),
+		localMiddleware.Permission(svc),
 		validate.Validator(),
 		localMiddleware.Idempotent(idt),
 	)

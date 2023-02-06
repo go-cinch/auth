@@ -64,6 +64,7 @@ func (ro userRepo) Find(ctx context.Context, condition *biz.FindUser) (rp []biz.
 	db := ro.data.DB(ctx)
 	db = db.
 		Model(&User{}).
+		Preload("Role").
 		Order("created_at DESC")
 	rp = make([]biz.User, 0)
 	list := make([]User, 0)
@@ -193,6 +194,18 @@ func (ro userRepo) Update(ctx context.Context, item *biz.UpdateUser) (err error)
 			_, err = ro.GetByUsername(ctx, v)
 			if err == nil {
 				err = reason.ErrorIllegalParameter("%s `username`: %s", i18n.FromContext(ctx).T(biz.DuplicateField), v)
+				return
+			}
+		}
+	}
+	if roleId, ok1 := change["role_id"]; ok1 {
+		if v, ok2 := roleId.(string); ok2 && v != "0" {
+			var role Role
+			db.
+				Where("`id` = ?", v).
+				First(&role)
+			if role.Id == constant.UI0 {
+				err = reason.ErrorNotFound("%s Role.id: %s", i18n.FromContext(ctx).T(biz.RecordNotFound), v)
 				return
 			}
 		}

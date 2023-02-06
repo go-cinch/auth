@@ -68,7 +68,7 @@ func (ro permissionRepo) GetByUserCode(ctx context.Context, code string) (rp *bi
 	}
 	// 2. role action
 	if user.Role.Action != "" {
-		arr := strings.Split(user.Action, ",")
+		arr := strings.Split(user.Role.Action, ",")
 		actions = append(actions, arr...)
 	}
 	// 3. user group action
