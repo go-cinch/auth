@@ -1,0 +1,37 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "dev" ]
+  pull_request:
+    branches: [ "dev" ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Build image
+        id: build
+        run: |
+          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }} ${{ secrets.DOCKER_REGISTRY }}
+          export BUILD_TAG=${{ secrets.DOCKER_REGISTRY }}/cinch/auth:$(date +%s)
+          echo "tag=$BUILD_TAG" >> $GITHUB_OUTPUT
+          docker build . -f Dockerfile --tag $BUILD_TAG
+          docker push $BUILD_TAG
+
+      - name: Run container
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.SEVER_HOST }}
+          username: ${{ secrets.SEVER_USERNAME }}
+          password: ${{ secrets.SEVER_PASSWORD }}
+          port: ${{ secrets.SEVER_PORT }}
+          script: |
+            export AUTH_TAG=${{ steps.build.outputs.tag }}
+            ${{ secrets.RUN_SCRIPT }}
