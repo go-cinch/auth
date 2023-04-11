@@ -4,7 +4,6 @@ import (
 	"auth/api/reason"
 	"auth/internal/biz"
 	"context"
-	"fmt"
 	"github.com/go-cinch/common/constant"
 	"github.com/go-cinch/common/copierx"
 	"github.com/go-cinch/common/middleware/i18n"
@@ -60,10 +59,10 @@ func (ro roleRepo) Find(ctx context.Context, condition *biz.FindRole) (rp []biz.
 	rp = make([]biz.Role, 0)
 	list := make([]Role, 0)
 	if condition.Name != nil {
-		db.Where("`name` LIKE ?", fmt.Sprintf("%%%s%%", *condition.Name))
+		db.Where("`name` LIKE ?", strings.Join([]string{"%", *condition.Name, "%"}, ""))
 	}
 	if condition.Word != nil {
-		db.Where("`word` LIKE ?", fmt.Sprintf("%%%s%%", *condition.Word))
+		db.Where("`word` LIKE ?", strings.Join([]string{"%", *condition.Word, "%"}, ""))
 	}
 	condition.Page.Primary = "id"
 	condition.Page.

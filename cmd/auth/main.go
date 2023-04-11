@@ -3,7 +3,6 @@ package main
 import (
 	"auth/internal/conf"
 	"flag"
-	"fmt"
 	"github.com/go-cinch/common/log"
 	"github.com/go-cinch/common/utils"
 	k8sConfig "github.com/go-kratos/kratos/contrib/config/kubernetes/v2"
@@ -16,12 +15,13 @@ import (
 	"github.com/go-kratos/kratos/v2/transport/grpc"
 	"github.com/go-kratos/kratos/v2/transport/http"
 	"os"
+	"strings"
 )
 
 // go build -ldflags "-X main.Version=x.y.z"
 var (
 	// Name is the name of the compiled software.
-	Name = "auth"
+	Name = "cinch-auth"
 	// EnvPrefix is the prefix of the env params
 	EnvPrefix = "AUTH_"
 	// Version is the version of the compiled software.
@@ -39,7 +39,7 @@ var (
 func init() {
 	flag.StringVar(&flagConf, "c", "../../configs", "config path, eg: -c config.yml")
 	flag.StringVar(&flagK8sNamespace, "n", "", "k8s namespace, eg: -n cinch")
-	flag.StringVar(&flagK8sLabel, "l", "", "k8s configmap label, eg: -l layout")
+	flag.StringVar(&flagK8sLabel, "l", "", "k8s configmap label, eg: -l auth")
 }
 
 func newApp(gs *grpc.Server, hs *http.Server) *kratos.App {
@@ -83,7 +83,7 @@ func main() {
 			k8sConfig.Namespace(namespace),
 		}
 		if flagK8sLabel != "" {
-			opts = append(opts, k8sConfig.LabelSelector(fmt.Sprintf("app=%s", flagK8sLabel)))
+			opts = append(opts, k8sConfig.LabelSelector(strings.Join([]string{"app", flagK8sLabel}, "=")))
 		}
 		sources = append(sources, k8sConfig.NewSource(opts...))
 	} else {

@@ -4,7 +4,6 @@ import (
 	"auth/api/reason"
 	"auth/internal/conf"
 	"context"
-	"fmt"
 	"github.com/go-cinch/common/captcha"
 	"github.com/go-cinch/common/constant"
 	"github.com/go-cinch/common/copierx"
@@ -16,6 +15,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/thoas/go-funk"
 	"golang.org/x/crypto/bcrypt"
+	"strings"
 )
 
 type User struct {
@@ -182,7 +182,7 @@ func (uc *UserUseCase) Delete(ctx context.Context, ids ...uint64) error {
 }
 
 func (uc *UserUseCase) Find(ctx context.Context, condition *FindUser) (rp []User) {
-	action := fmt.Sprintf("find_%s", utils.StructMd5(condition))
+	action := strings.Join([]string{"find", utils.StructMd5(condition)}, "_")
 	str, ok := uc.cache.Get(ctx, action, func(ctx context.Context) (string, bool) {
 		return uc.find(ctx, action, condition)
 	})
@@ -214,7 +214,7 @@ func (uc *UserUseCase) InfoFromCtx(ctx context.Context) (rp *UserInfo, err error
 
 func (uc *UserUseCase) Info(ctx context.Context, code string) (rp *UserInfo, err error) {
 	rp = &UserInfo{}
-	action := fmt.Sprintf("info_%s", code)
+	action := strings.Join([]string{"info", code}, "_")
 	str, ok := uc.cache.Get(ctx, action, func(ctx context.Context) (string, bool) {
 		return uc.info(ctx, action, code)
 	})
@@ -296,7 +296,7 @@ func (uc *UserUseCase) WrongPwd(ctx context.Context, req LoginTime) error {
 }
 
 func (uc *UserUseCase) refresh(ctx context.Context, username string) {
-	uc.cache.Del(ctx, fmt.Sprintf("status_%s", username))
+	uc.cache.Del(ctx, strings.Join([]string{"status", username}, "_"))
 }
 
 func (uc *UserUseCase) Pwd(ctx context.Context, item *User) error {
@@ -323,7 +323,7 @@ func (uc *UserUseCase) Pwd(ctx context.Context, item *User) error {
 
 func (uc *UserUseCase) Status(ctx context.Context, username string, captcha bool) (rp *UserStatus, err error) {
 	rp = &UserStatus{}
-	action := fmt.Sprintf("status_%s", username)
+	action := strings.Join([]string{"status", username}, "_")
 	str, ok := uc.cache.Get(ctx, action, func(ctx context.Context) (string, bool) {
 		return uc.status(ctx, action, username)
 	})
@@ -400,7 +400,7 @@ func genPwd(str string) string {
 }
 
 func (uc *UserUseCase) ComparePwd(ctx context.Context, condition ComparePwd) (rp bool, err error) {
-	action := fmt.Sprintf("compare_pwd_%s", utils.StructMd5(condition))
+	action := strings.Join([]string{"compare_pwd", utils.StructMd5(condition)}, "_")
 	str, ok := uc.cache.Get(ctx, action, func(ctx context.Context) (string, bool) {
 		return uc.comparePwd(ctx, action, condition)
 	})

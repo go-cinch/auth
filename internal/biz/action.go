@@ -3,9 +3,9 @@ package biz
 import (
 	"auth/internal/conf"
 	"context"
-	"fmt"
 	"github.com/go-cinch/common/page"
 	"github.com/go-cinch/common/utils"
+	"strings"
 )
 
 type Action struct {
@@ -70,7 +70,7 @@ func (uc *ActionUseCase) Create(ctx context.Context, item *Action) error {
 }
 
 func (uc *ActionUseCase) Find(ctx context.Context, condition *FindAction) (rp []Action) {
-	action := fmt.Sprintf("find_%s", utils.StructMd5(condition))
+	action := strings.Join([]string{"find", utils.StructMd5(condition)}, "_")
 	str, ok := uc.cache.Get(ctx, action, func(ctx context.Context) (string, bool) {
 		return uc.find(ctx, action, condition)
 	})

@@ -9,10 +9,10 @@ import (
 	"github.com/go-cinch/common/migrate"
 	glog "github.com/go-cinch/common/plugins/gorm/log"
 	"github.com/go-cinch/common/utils"
-	"github.com/go-redis/redis/v8"
 	"github.com/go-sql-driver/mysql"
 	"github.com/google/wire"
 	"github.com/pkg/errors"
+	"github.com/redis/go-redis/v9"
 	"go.opentelemetry.io/otel/sdk/trace"
 	m "gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -187,7 +187,10 @@ func NewSonyflake(c *conf.Bootstrap) (sf *id.Sonyflake, err error) {
 		}
 	}()
 	machineId, _ := strconv.ParseUint(c.Server.MachineId, 10, 16)
-	sf = id.NewSonyflake(id.WithSonyflakeMachineId(uint16(machineId)), id.WithSonyflakeStartTime(time.Date(100, 10, 10, 0, 0, 0, 0, time.UTC)))
+	sf = id.NewSonyflake(
+		id.WithSonyflakeMachineId(uint16(machineId)),
+		id.WithSonyflakeStartTime(time.Date(100, 10, 10, 0, 0, 0, 0, time.UTC)),
+	)
 	if sf.Error != nil {
 		err = errors.WithMessage(sf.Error, "initialize sonyflake failed")
 		return

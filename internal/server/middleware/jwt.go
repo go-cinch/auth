@@ -10,8 +10,9 @@ import (
 	"github.com/go-cinch/common/utils"
 	"github.com/go-kratos/kratos/v2/middleware"
 	"github.com/go-kratos/kratos/v2/middleware/selector"
-	"github.com/go-redis/redis/v8"
 	jwtV4 "github.com/golang-jwt/jwt/v4"
+	"github.com/redis/go-redis/v9"
+	"strings"
 	"time"
 )
 
@@ -33,7 +34,7 @@ func jwt(c *conf.Bootstrap, client redis.UniversalClient) func(handler middlewar
 			}
 			token := user.Token
 			if token != "" {
-				key := jwtTokenUserKey + utils.StructMd5(token)
+				key := strings.Join([]string{jwtTokenUserKey, utils.StructMd5(token)}, "")
 				// read user info from cache
 				res, e := client.Get(ctx, key).Result()
 				if e == nil {

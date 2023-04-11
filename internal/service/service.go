@@ -11,7 +11,7 @@ import (
 // ProviderSet is service providers.
 var ProviderSet = wire.NewSet(NewAuthService)
 
-// AuthService is a greeter service.
+// AuthService is a auth service.
 type AuthService struct {
 	auth.UnimplementedAuthServer
 

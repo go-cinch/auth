@@ -18,8 +18,8 @@ import (
 	"github.com/go-kratos/kratos/v2/middleware/validate"
 	"github.com/go-kratos/kratos/v2/transport/http"
 	"github.com/go-kratos/kratos/v2/transport/http/pprof"
-	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/handlers"
+	"github.com/redis/go-redis/v9"
 	"golang.org/x/text/language"
 )
 
@@ -37,10 +37,10 @@ func NewHTTPServer(c *conf.Bootstrap, client redis.UniversalClient, idt *idempot
 		middlewares,
 		logging.Server(log.DefaultWrapper.Options().Logger()),
 		i18nMiddleware.Translator(i18n.WithLanguage(language.Make(c.Server.Language)), i18n.WithFs(locales)),
-		validate.Validator(),
 		localMiddleware.Jwt(c, client),
 		localMiddleware.Permission(svc),
 		localMiddleware.Idempotent(idt),
+		validate.Validator(),
 	)
 	var opts = []http.ServerOption{
 		http.Filter(handlers.CORS(

@@ -2,8 +2,8 @@ package biz
 
 import (
 	"context"
-	"github.com/go-redis/redis/v8"
 	"github.com/google/wire"
+	"github.com/redis/go-redis/v9"
 )
 
 // ProviderSet is biz providers.
@@ -28,10 +28,10 @@ type Cache interface {
 	Get(ctx context.Context, action string, write func(context.Context) (string, bool)) (string, bool)
 	// Set is set data to redis
 	Set(ctx context.Context, action, data string, short bool)
-	// SetWithExpiration is set data to redis with custom expiration
-	SetWithExpiration(ctx context.Context, action, data string, seconds int64)
 	// Del delete key
 	Del(ctx context.Context, action string)
+	// SetWithExpiration is set data to redis with custom expiration
+	SetWithExpiration(ctx context.Context, action, data string, seconds int64)
 	// Flush is clean association cache if handler err=nil
 	Flush(ctx context.Context, handler func(context.Context) error) error
 }

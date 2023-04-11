@@ -18,7 +18,7 @@ import (
 	"github.com/go-kratos/kratos/v2/middleware/tracing"
 	"github.com/go-kratos/kratos/v2/middleware/validate"
 	"github.com/go-kratos/kratos/v2/transport/grpc"
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 	"golang.org/x/text/language"
 )
 
@@ -38,8 +38,8 @@ func NewGRPCServer(c *conf.Bootstrap, client redis.UniversalClient, idt *idempot
 		metadata.Server(),
 		localMiddleware.Jwt(c, client),
 		localMiddleware.Permission(svc),
-		validate.Validator(),
 		localMiddleware.Idempotent(idt),
+		validate.Validator(),
 	)
 	var opts = []grpc.ServerOption{grpc.Middleware(middlewares...)}
 	if c.Server.Grpc.Network != "" {

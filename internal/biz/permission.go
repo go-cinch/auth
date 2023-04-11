@@ -5,11 +5,11 @@ import (
 	"auth/internal/conf"
 	"context"
 	"errors"
-	"fmt"
 	"github.com/go-cinch/common/copierx"
 	"github.com/go-cinch/common/middleware/i18n"
 	"github.com/go-cinch/common/utils"
 	"strconv"
+	"strings"
 )
 
 type Permission struct {
@@ -39,7 +39,7 @@ func NewPermissionUseCase(c *conf.Bootstrap, repo PermissionRepo, cache Cache) *
 }
 
 func (uc *PermissionUseCase) Check(ctx context.Context, item *CheckPermission) (rp bool) {
-	action := fmt.Sprintf("check_%s_%s", item.Resource, item.UserCode)
+	action := strings.Join([]string{"check", item.Resource, item.UserCode}, "_")
 	str, ok := uc.cache.Get(ctx, action, func(ctx context.Context) (string, bool) {
 		return uc.check(ctx, action, item)
 	})
@@ -52,7 +52,7 @@ func (uc *PermissionUseCase) Check(ctx context.Context, item *CheckPermission) (
 func (uc *PermissionUseCase) check(ctx context.Context, action string, item *CheckPermission) (res string, ok bool) {
 	// read data from db and write to cache
 	pass := uc.repo.Check(ctx, item)
-	res = fmt.Sprintf("%v", pass)
+	res = strconv.FormatBool(pass)
 	uc.cache.Set(ctx, action, res, false)
 	ok = true
 	return
@@ -60,7 +60,7 @@ func (uc *PermissionUseCase) check(ctx context.Context, action string, item *Che
 
 func (uc *PermissionUseCase) GetByUserCode(ctx context.Context, code string) (rp *Permission, err error) {
 	rp = &Permission{}
-	action := fmt.Sprintf("get_by_user_code_%s", code)
+	action := strings.Join([]string{"get_by_user_code", code}, "_")
 	str, ok := uc.cache.Get(ctx, action, func(ctx context.Context) (string, bool) {
 		return uc.getByUserCode(ctx, action, code)
 	})

@@ -25,7 +25,7 @@ func wireApp(c *conf.Bootstrap) (*kratos.App, func(), error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	idempotentIdempotent, err := idempotent.NewIdempotent(universalClient)
+	idempotentIdempotent, err := idempotent.NewIdempotent(c, universalClient)
 	if err != nil {
 		return nil, nil, err
 	}

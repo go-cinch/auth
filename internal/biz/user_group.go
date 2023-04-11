@@ -3,9 +3,9 @@ package biz
 import (
 	"auth/internal/conf"
 	"context"
-	"fmt"
 	"github.com/go-cinch/common/page"
 	"github.com/go-cinch/common/utils"
+	"strings"
 )
 
 type UserGroup struct {
@@ -66,7 +66,7 @@ func (uc *UserGroupUseCase) Create(ctx context.Context, item *UserGroup) error {
 }
 
 func (uc *UserGroupUseCase) Find(ctx context.Context, condition *FindUserGroup) (rp []UserGroup) {
-	action := fmt.Sprintf("find_%s", utils.StructMd5(condition))
+	action := strings.Join([]string{"find", utils.StructMd5(condition)}, "_")
 	str, ok := uc.cache.Get(ctx, action, func(ctx context.Context) (string, bool) {
 		return uc.find(ctx, action, condition)
 	})

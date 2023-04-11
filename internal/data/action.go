@@ -4,7 +4,6 @@ import (
 	"auth/api/reason"
 	"auth/internal/biz"
 	"context"
-	"fmt"
 	"github.com/go-cinch/common/constant"
 	"github.com/go-cinch/common/copierx"
 	"github.com/go-cinch/common/id"
@@ -60,16 +59,16 @@ func (ro actionRepo) Find(ctx context.Context, condition *biz.FindAction) (rp []
 	rp = make([]biz.Action, 0)
 	list := make([]Action, 0)
 	if condition.Name != nil {
-		db.Where("`name` LIKE ?", fmt.Sprintf("%%%s%%", *condition.Name))
+		db.Where("`name` LIKE ?", strings.Join([]string{"%", *condition.Name, "%"}, ""))
 	}
 	if condition.Code != nil {
-		db.Where("`code` LIKE ?", fmt.Sprintf("%%%s%%", *condition.Code))
+		db.Where("`code` LIKE ?", strings.Join([]string{"%", *condition.Code, "%"}, ""))
 	}
 	if condition.Word != nil {
-		db.Where("`word` LIKE ?", fmt.Sprintf("%%%s%%", *condition.Word))
+		db.Where("`word` LIKE ?", strings.Join([]string{"%", *condition.Word, "%"}, ""))
 	}
 	if condition.Resource != nil {
-		db.Where("`resource` LIKE ?", fmt.Sprintf("%%%s%%", *condition.Resource))
+		db.Where("`resource` LIKE ?", strings.Join([]string{"%", *condition.Resource, "%"}, ""))
 	}
 	condition.Page.Primary = "id"
 	condition.Page.

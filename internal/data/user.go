@@ -4,7 +4,6 @@ import (
 	"auth/api/reason"
 	"auth/internal/biz"
 	"context"
-	"fmt"
 	"github.com/go-cinch/common/constant"
 	"github.com/go-cinch/common/copierx"
 	"github.com/go-cinch/common/id"
@@ -12,6 +11,8 @@ import (
 	"github.com/go-cinch/common/utils"
 	"github.com/golang-module/carbon/v2"
 	"gorm.io/gorm/clause"
+	"strconv"
+	"strings"
 )
 
 type userRepo struct {
@@ -81,13 +82,13 @@ func (ro userRepo) Find(ctx context.Context, condition *biz.FindUser) (rp []biz.
 		db.Where("`updated_at` < ?", condition.EndCreatedAt)
 	}
 	if condition.Username != nil {
-		db.Where("`username` LIKE ?", fmt.Sprintf("%%%s%%", *condition.Username))
+		db.Where("`username` LIKE ?", strings.Join([]string{"%", *condition.Username, "%"}, ""))
 	}
 	if condition.Code != nil {
-		db.Where("`code` LIKE ?", fmt.Sprintf("%%%s%%", *condition.Code))
+		db.Where("`code` LIKE ?", strings.Join([]string{"%", *condition.Code, "%"}, ""))
 	}
 	if condition.Platform != nil {
-		db.Where("`platform` LIKE ?", fmt.Sprintf("%%%s%%", *condition.Platform))
+		db.Where("`platform` LIKE ?", strings.Join([]string{"%", *condition.Platform, "%"}, ""))
 	}
 	if condition.Locked != nil {
 		db.Where("`locked` = ?", *condition.Locked)
@@ -115,21 +116,21 @@ func (ro userRepo) Find(ctx context.Context, condition *biz.FindUser) (rp []biz.
 		hours := diff / 3600
 		minutes := diff % 3600 / 60
 		seconds := diff % 3600 % 60
-		msg := ""
+		ms := make([]string, 0)
 		if hours < 24 {
 			if hours > 0 {
-				msg += fmt.Sprintf("%dh", hours)
+				ms = append(ms, strconv.FormatInt(hours, 10), "h")
 			}
 			if minutes > 0 {
-				msg += fmt.Sprintf("%dm", minutes)
+				ms = append(ms, strconv.FormatInt(minutes, 10), "m")
 			}
 			if seconds > 0 {
-				msg += fmt.Sprintf("%ds", seconds)
+				ms = append(ms, strconv.FormatInt(seconds, 10), "s")
 			}
 		} else {
-			msg = carbon.CreateFromTimestamp(item.LockExpire).ToDateTimeString()
+			ms = append(ms, carbon.CreateFromTimestamp(item.LockExpire).ToDateTimeString())
 		}
-		rp[i].LockMsg = msg
+		rp[i].LockMsg = strings.Join(ms, "")
 	}
 	return
 }
