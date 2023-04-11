@@ -36,11 +36,19 @@ func NewGRPCServer(c *conf.Bootstrap, client redis.UniversalClient, idt *idempot
 		logging.Server(log.DefaultWrapper.Options().Logger()),
 		i18nMiddleware.Translator(i18n.WithLanguage(language.Make(c.Server.Language)), i18n.WithFs(locales)),
 		metadata.Server(),
-		localMiddleware.Jwt(c, client),
-		localMiddleware.Permission(svc),
-		localMiddleware.Idempotent(idt),
-		validate.Validator(),
 	)
+	if c.Server.Jwt {
+		middlewares = append(middlewares, localMiddleware.Jwt(c, client))
+	}
+	if c.Server.Permission {
+		middlewares = append(middlewares, localMiddleware.Permission(svc))
+	}
+	if c.Server.Idempotent {
+		middlewares = append(middlewares, localMiddleware.Idempotent(idt))
+	}
+	if c.Server.Validate {
+		middlewares = append(middlewares, validate.Validator())
+	}
 	var opts = []grpc.ServerOption{grpc.Middleware(middlewares...)}
 	if c.Server.Grpc.Network != "" {
 		opts = append(opts, grpc.Network(c.Server.Grpc.Network))

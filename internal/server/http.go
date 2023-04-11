@@ -37,11 +37,19 @@ func NewHTTPServer(c *conf.Bootstrap, client redis.UniversalClient, idt *idempot
 		middlewares,
 		logging.Server(log.DefaultWrapper.Options().Logger()),
 		i18nMiddleware.Translator(i18n.WithLanguage(language.Make(c.Server.Language)), i18n.WithFs(locales)),
-		localMiddleware.Jwt(c, client),
-		localMiddleware.Permission(svc),
-		localMiddleware.Idempotent(idt),
-		validate.Validator(),
 	)
+	if c.Server.Jwt {
+		middlewares = append(middlewares, localMiddleware.Jwt(c, client))
+	}
+	if c.Server.Permission {
+		middlewares = append(middlewares, localMiddleware.Permission(svc))
+	}
+	if c.Server.Idempotent {
+		middlewares = append(middlewares, localMiddleware.Idempotent(idt))
+	}
+	if c.Server.Validate {
+		middlewares = append(middlewares, validate.Validator())
+	}
 	var opts = []http.ServerOption{
 		http.Filter(handlers.CORS(
 			handlers.AllowedHeaders([]string{"Content-Type", "Authorization", "X-Idempotent"}),

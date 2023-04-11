@@ -7,6 +7,10 @@ server:
     addr: 0.0.0.0:6160
     timeout: 20s
   language: 'en'
+  jwt: true
+  permission: true
+  idempotent: true
+  validate: true
 data:
   database:
     driver: mysql

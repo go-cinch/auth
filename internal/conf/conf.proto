@@ -30,6 +30,10 @@ message Server {
   HTTP http = 2;
   GRPC grpc = 3;
   string language = 4;
+  bool jwt = 5;
+  bool permission = 6;
+  bool idempotent = 7;
+  bool validate = 8;
 }
 
 message Data {
