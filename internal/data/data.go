@@ -38,6 +38,8 @@ var ProviderSet = wire.NewSet(
 	NewPermissionRepo,
 )
 
+type contextTxKey struct{}
+
 // Data .
 type Data struct {
 	db        *gorm.DB
@@ -45,7 +47,21 @@ type Data struct {
 	sonyflake *id.Sonyflake
 }
 
-type contextTxKey struct{}
+// NewData .
+func NewData(redis redis.UniversalClient, db *gorm.DB, sonyflake *id.Sonyflake, tp *trace.TracerProvider) (d *Data, cleanup func()) {
+	d = &Data{
+		redis:     redis,
+		db:        db,
+		sonyflake: sonyflake,
+	}
+	cleanup = func() {
+		if tp != nil {
+			tp.Shutdown(context.Background())
+		}
+		log.Info("clean data")
+	}
+	return
+}
 
 // Tx is transaction wrapper
 func (d *Data) Tx(ctx context.Context, handler func(ctx context.Context) error) error {
@@ -79,22 +95,6 @@ func (d *Data) Id(ctx context.Context) uint64 {
 // NewTransaction .
 func NewTransaction(d *Data) biz.Transaction {
 	return d
-}
-
-// NewData .
-func NewData(redis redis.UniversalClient, db *gorm.DB, sonyflake *id.Sonyflake, tp *trace.TracerProvider) (d *Data, cleanup func()) {
-	d = &Data{
-		redis:     redis,
-		db:        db,
-		sonyflake: sonyflake,
-	}
-	cleanup = func() {
-		if tp != nil {
-			tp.Shutdown(context.Background())
-		}
-		log.Info("clean data")
-	}
-	return
 }
 
 // NewRedis is initialize redis connection from config

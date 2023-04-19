@@ -1,7 +1,7 @@
 <h1 align="center">Go Cinch Auth</h1>
 
 <div align="center">
-Cinch Auth是一套权限验证服务.
+Auth是一套权限验证微服务.
 <p align="center">
 <img src="https://img.shields.io/github/go-mod/go-version/go-cinch/auth" alt="Go version"/>
 <img src="https://img.shields.io/badge/Kratos-v2.5.3-brightgreen" alt="Kratos version"/>
