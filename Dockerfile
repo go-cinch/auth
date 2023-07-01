@@ -1,6 +1,7 @@
 FROM golang:1.20.5 AS builder
 
 #ENV GOPROXY=https://goproxy.cn
+ENV CGO_ENABLED=0
 
 COPY . /src
 WORKDIR /src
