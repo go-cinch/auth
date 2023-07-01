@@ -1,15 +1,16 @@
 package biz
 
 import (
-	"auth/api/reason"
-	"auth/internal/conf"
 	"context"
 	"errors"
+	"strconv"
+	"strings"
+
+	"auth/api/reason"
+	"auth/internal/conf"
 	"github.com/go-cinch/common/copierx"
 	"github.com/go-cinch/common/middleware/i18n"
 	"github.com/go-cinch/common/utils"
-	"strconv"
-	"strings"
 )
 
 type Permission struct {
@@ -21,10 +22,12 @@ type Permission struct {
 type CheckPermission struct {
 	UserCode string `json:"userCode"`
 	Resource string `json:"resource"`
+	Method   string `json:"method"`
+	URI      string `json:"uri"`
 }
 
 type PermissionRepo interface {
-	Check(ctx context.Context, item *CheckPermission) bool
+	Check(ctx context.Context, item CheckPermission) bool
 	GetByUserCode(ctx context.Context, code string) (*Permission, error)
 }
 
@@ -35,11 +38,15 @@ type PermissionUseCase struct {
 }
 
 func NewPermissionUseCase(c *conf.Bootstrap, repo PermissionRepo, cache Cache) *PermissionUseCase {
-	return &PermissionUseCase{c: c, repo: repo, cache: cache.WithPrefix("auth_permission")}
+	return &PermissionUseCase{
+		c:     c,
+		repo:  repo,
+		cache: cache.WithPrefix("permission"),
+	}
 }
 
-func (uc *PermissionUseCase) Check(ctx context.Context, item *CheckPermission) (rp bool) {
-	action := strings.Join([]string{"check", item.Resource, item.UserCode}, "_")
+func (uc *PermissionUseCase) Check(ctx context.Context, item CheckPermission) (rp bool) {
+	action := strings.Join([]string{"check", utils.StructMd5(item)}, "_")
 	str, ok := uc.cache.Get(ctx, action, func(ctx context.Context) (string, bool) {
 		return uc.check(ctx, action, item)
 	})
@@ -49,7 +56,7 @@ func (uc *PermissionUseCase) Check(ctx context.Context, item *CheckPermission) (
 	return
 }
 
-func (uc *PermissionUseCase) check(ctx context.Context, action string, item *CheckPermission) (res string, ok bool) {
+func (uc *PermissionUseCase) check(ctx context.Context, action string, item CheckPermission) (res string, ok bool) {
 	// read data from db and write to cache
 	pass := uc.repo.Check(ctx, item)
 	res = strconv.FormatBool(pass)

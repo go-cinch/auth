@@ -2,6 +2,7 @@ package biz
 
 import (
 	"context"
+
 	"github.com/google/wire"
 	"github.com/redis/go-redis/v9"
 )
@@ -13,6 +14,7 @@ var ProviderSet = wire.NewSet(
 	NewRoleUseCase,
 	NewUserGroupUseCase,
 	NewPermissionUseCase,
+	NewWhitelistUseCase,
 )
 
 type Transaction interface {

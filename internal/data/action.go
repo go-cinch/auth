@@ -1,79 +1,89 @@
 package data
 
 import (
+	"context"
+	"strings"
+
 	"auth/api/reason"
 	"auth/internal/biz"
-	"context"
+	"auth/internal/conf"
+	"auth/internal/data/model"
+	"auth/internal/data/query"
 	"github.com/go-cinch/common/constant"
 	"github.com/go-cinch/common/copierx"
 	"github.com/go-cinch/common/id"
 	"github.com/go-cinch/common/middleware/i18n"
 	"github.com/go-cinch/common/utils"
-	"strings"
+	"github.com/gobwas/glob"
+	"gorm.io/gen"
 )
 
 type actionRepo struct {
+	c    *conf.Bootstrap
 	data *Data
 }
 
-// Action is database fields map
-type Action struct {
-	Id       uint64 `json:"id,string"` // auto increment id
-	Code     string `json:"code"`      // unique code
-	Name     string `json:"name"`      // name
-	Word     string `json:"word"`      // keyword, must be unique, used as frontend display
-	Resource string `json:"resource"`  // resource array, split by break line str, example: GET,/user+\n+POST,/role+\n+GET,/action
-	Menu     string `json:"menu"`      // menu array, split by break line str
-	Btn      string `json:"btn"`       // btn array, split by break line str
-}
-
-func NewActionRepo(data *Data) biz.ActionRepo {
+func NewActionRepo(c *conf.Bootstrap, data *Data) biz.ActionRepo {
 	return &actionRepo{
+		c:    c,
 		data: data,
 	}
 }
 
 func (ro actionRepo) Create(ctx context.Context, item *biz.Action) (err error) {
-	var m Action
 	err = ro.WordExists(ctx, item.Word)
 	if err == nil {
 		err = reason.ErrorIllegalParameter("%s `word`: %s", i18n.FromContext(ctx).T(biz.DuplicateField), item.Word)
 		return
 	}
+	var m model.Action
 	copierx.Copy(&m, item)
-	db := ro.data.DB(ctx)
-	m.Id = ro.data.Id(ctx)
-	m.Code = id.NewCode(m.Id)
+	p := query.Use(ro.data.DB(ctx)).Action
+	db := p.WithContext(ctx)
+	m.ID = ro.data.Id(ctx)
+	m.Code = id.NewCode(m.ID)
 	if m.Resource == "" {
 		m.Resource = "*"
 	}
-	err = db.Create(&m).Error
+	err = db.Create(&m)
+	return
+}
+
+func (ro actionRepo) GetDefault(ctx context.Context) (rp biz.Action) {
+	p := query.Use(ro.data.DB(ctx)).Action
+	db := p.WithContext(ctx)
+	m := db.GetByCol("word", "default")
+	copierx.Copy(&rp, m)
 	return
 }
 
 func (ro actionRepo) Find(ctx context.Context, condition *biz.FindAction) (rp []biz.Action) {
-	db := ro.data.DB(ctx)
-	db = db.
-		Model(&Action{}).
-		Order("id DESC")
+	p := query.Use(ro.data.DB(ctx)).Action
+	db := p.WithContext(ctx)
 	rp = make([]biz.Action, 0)
-	list := make([]Action, 0)
+	list := make([]model.Action, 0)
+	conditions := make([]gen.Condition, 0, 2)
 	if condition.Name != nil {
-		db.Where("`name` LIKE ?", strings.Join([]string{"%", *condition.Name, "%"}, ""))
+		conditions = append(conditions, p.Name.Like(strings.Join([]string{"%", *condition.Name, "%"}, "")))
 	}
 	if condition.Code != nil {
-		db.Where("`code` LIKE ?", strings.Join([]string{"%", *condition.Code, "%"}, ""))
+		conditions = append(conditions, p.Code.Like(strings.Join([]string{"%", *condition.Code, "%"}, "")))
 	}
 	if condition.Word != nil {
-		db.Where("`word` LIKE ?", strings.Join([]string{"%", *condition.Word, "%"}, ""))
+		conditions = append(conditions, p.Word.Like(strings.Join([]string{"%", *condition.Word, "%"}, "")))
 	}
 	if condition.Resource != nil {
-		db.Where("`resource` LIKE ?", strings.Join([]string{"%", *condition.Resource, "%"}, ""))
+		conditions = append(conditions, p.Resource.Like(strings.Join([]string{"%", *condition.Resource, "%"}, "")))
 	}
 	condition.Page.Primary = "id"
 	condition.Page.
 		WithContext(ctx).
-		Query(db).
+		Query(
+			db.
+				Order(p.ID.Desc()).
+				Where(conditions...).
+				UnderlyingDB(),
+		).
 		Find(&list)
 	copierx.Copy(&rp, list)
 	return
@@ -84,24 +94,22 @@ func (ro actionRepo) FindByCode(ctx context.Context, code string) (rp []biz.Acti
 	if code == "" {
 		return
 	}
-	list := make([]Action, 0)
-	db := ro.data.DB(ctx)
+	list := make([]*model.Action, 0)
+	p := query.Use(ro.data.DB(ctx)).Action
+	db := p.WithContext(ctx)
 	arr := strings.Split(code, ",")
-	db.
-		Model(&Action{}).
-		Where("`code` IN (?)", arr).
-		Find(&list)
+	list, _ = db.
+		Where(p.Code.In(arr...)).
+		Find()
 	copierx.Copy(&rp, list)
 	return
 }
 
 func (ro actionRepo) Update(ctx context.Context, item *biz.UpdateAction) (err error) {
-	var m Action
-	db := ro.data.DB(ctx)
-	db.
-		Where("`id` = ?", item.Id).
-		First(&m)
-	if m.Id == constant.UI0 {
+	p := query.Use(ro.data.DB(ctx)).Action
+	db := p.WithContext(ctx)
+	m := db.GetByID(item.Id)
+	if m.ID == constant.UI0 {
 		err = reason.ErrorNotFound("%s Action.id: %d", i18n.FromContext(ctx).T(biz.RecordNotFound), item.Id)
 		return
 	}
@@ -118,39 +126,35 @@ func (ro actionRepo) Update(ctx context.Context, item *biz.UpdateAction) (err er
 			return
 		}
 	}
-	err = db.
-		Model(&m).
-		Updates(&change).Error
+	_, err = db.
+		Where(p.ID.Eq(item.Id)).
+		Updates(&change)
 	return
 }
 
 func (ro actionRepo) Delete(ctx context.Context, ids ...uint64) (err error) {
-	db := ro.data.DB(ctx)
-	err = db.
-		Where("`id` IN (?)", ids).
-		Delete(&Action{}).Error
+	p := query.Use(ro.data.DB(ctx)).Action
+	db := p.WithContext(ctx)
+	_, err = db.
+		Where(p.ID.In(ids...)).
+		Delete()
 	if err != nil {
 		return
 	}
-	var count int64
-	db.
-		Model(&Action{}).
-		Count(&count)
+	count, _ := db.Count()
 	if count == 0 {
-		err = reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(biz.KeepLeastOntAction))
+		err = reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(biz.KeepLeastOneAction))
 	}
 	return
 }
 
 func (ro actionRepo) CodeExists(ctx context.Context, code string) (err error) {
-	var m Action
-	db := ro.data.DB(ctx)
+	p := query.Use(ro.data.DB(ctx)).Action
+	db := p.WithContext(ctx)
 	arr := strings.Split(code, ",")
 	for _, item := range arr {
-		db.
-			Where("`code` = ?", item).
-			First(&m)
-		if m.Id == constant.UI0 {
+		m := db.GetByCol("code", item)
+		if m.ID == constant.UI0 {
 			err = reason.ErrorNotFound("%s Action.code: %s", i18n.FromContext(ctx).T(biz.RecordNotFound), item)
 			return
 		}
@@ -159,14 +163,12 @@ func (ro actionRepo) CodeExists(ctx context.Context, code string) (err error) {
 }
 
 func (ro actionRepo) WordExists(ctx context.Context, word string) (err error) {
-	var m Action
-	db := ro.data.DB(ctx)
+	p := query.Use(ro.data.DB(ctx)).Action
+	db := p.WithContext(ctx)
 	arr := strings.Split(word, ",")
 	for _, item := range arr {
-		db.
-			Where("`word` = ?", item).
-			First(&m)
-		if m.Id == constant.UI0 {
+		m := db.GetByCol("word", item)
+		if m.ID == constant.UI0 {
 			err = reason.ErrorNotFound("%s Action.word: %s", i18n.FromContext(ctx).T(biz.RecordNotFound), item)
 			return
 		}
@@ -174,10 +176,10 @@ func (ro actionRepo) WordExists(ctx context.Context, word string) (err error) {
 	return
 }
 
-func (ro actionRepo) Permission(ctx context.Context, code, resource string) (pass bool) {
+func (ro actionRepo) Permission(ctx context.Context, code string, req biz.CheckPermission) (pass bool) {
 	arr := strings.Split(code, ",")
 	for _, item := range arr {
-		pass = ro.permission(ctx, item, resource)
+		pass = ro.permission(ctx, item, req)
 		if pass {
 			return
 		}
@@ -185,23 +187,63 @@ func (ro actionRepo) Permission(ctx context.Context, code, resource string) (pas
 	return
 }
 
-func (ro actionRepo) permission(ctx context.Context, code, resource string) (pass bool) {
+func (ro actionRepo) permission(ctx context.Context, code string, req biz.CheckPermission) (pass bool) {
 	if code == "" {
 		return
 	}
-	var m Action
-	db := ro.data.DB(ctx)
-	db.
-		Where("`code` = ?", code).
-		First(&m)
-	if m.Id == constant.UI0 {
+	p := query.Use(ro.data.DB(ctx)).Action
+	db := p.WithContext(ctx)
+	m := db.GetByCol("code", code)
+	if m.ID == constant.UI0 {
 		return
 	}
-	arr := strings.Split(m.Resource, "\n")
-	for _, v := range arr {
-		if v == "*" || v == resource {
+	return ro.MatchResource(ctx, m.Resource, req)
+}
+
+func (ro actionRepo) MatchResource(_ context.Context, resource string, req biz.CheckPermission) (pass bool) {
+	arr1 := strings.Split(resource, "\n")
+	for _, v1 := range arr1 {
+		if v1 == "*" {
 			pass = true
 			return
+		}
+		arr2 := strings.Split(v1, "|")
+		switch len(arr2) {
+		case 1:
+			// only grpc resource
+			if req.Resource == arr2[0] {
+				pass = true
+				return
+			}
+		case 2:
+			// only http method / http uri
+			methods := strings.Split(arr2[0], ",")
+			g, err := glob.Compile(arr2[1])
+			if err != nil {
+				return
+			}
+			matched := g.Match(strings.TrimPrefix(req.URI, ro.c.Server.Permission.Prefix))
+			if matched && utils.Contains[string](methods, req.Method) {
+				pass = true
+				return
+			}
+		case 3:
+			// grpc resource / http method / http uri
+			// match one means has permission
+			if req.Resource == arr2[2] {
+				pass = true
+				return
+			}
+			methods := strings.Split(arr2[0], ",")
+			g, err := glob.Compile(arr2[1])
+			if err != nil {
+				return
+			}
+			matched := g.Match(strings.TrimPrefix(req.URI, ro.c.Server.Permission.Prefix))
+			if matched && utils.Contains[string](methods, req.Method) {
+				pass = true
+				return
+			}
 		}
 	}
 	return

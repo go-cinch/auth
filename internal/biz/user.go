@@ -1,9 +1,11 @@
 package biz
 
 import (
+	"context"
+	"strings"
+
 	"auth/api/reason"
 	"auth/internal/conf"
-	"context"
 	"github.com/go-cinch/common/captcha"
 	"github.com/go-cinch/common/constant"
 	"github.com/go-cinch/common/copierx"
@@ -15,7 +17,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/thoas/go-funk"
 	"golang.org/x/crypto/bcrypt"
-	"strings"
 )
 
 type User struct {
@@ -33,10 +34,10 @@ type User struct {
 	NewPassword string          `json:"-"`
 	Platform    string          `json:"platform"`
 	LastLogin   carbon.DateTime `json:"lastLogin,string,omitempty"`
-	Locked      uint64          `json:"locked"`
+	Locked      bool            `json:"locked"`
 	LockExpire  int64           `json:"lockExpire"`
 	LockMsg     string          `json:"lockMsg"`
-	Wrong       int64           `json:"wrong"`
+	Wrong       uint64          `json:"wrong"`
 	Captcha     Captcha         `json:"-"`
 }
 
@@ -56,7 +57,7 @@ type FindUser struct {
 	Username       *string   `json:"username"`
 	Code           *string   `json:"code"`
 	Platform       *string   `json:"platform"`
-	Locked         *uint64   `json:"locked"`
+	Locked         *bool     `json:"locked"`
 }
 
 type FindUserCache struct {
@@ -65,12 +66,12 @@ type FindUserCache struct {
 }
 
 type UpdateUser struct {
-	Id         *uint64 `json:"id,string,omitempty"`
+	Id         uint64  `json:"id,string"`
 	Action     *string `json:"action,omitempty"`
 	Username   *string `json:"username,omitempty"`
 	Password   *string `json:"password,omitempty"`
 	Platform   *string `json:"platform,omitempty"`
-	Locked     *uint64 `json:"locked,omitempty"`
+	Locked     *bool   `json:"locked,omitempty"`
 	LockExpire *int64  `json:"lockExpire,omitempty"`
 	RoleId     *uint64 `json:"roleId,string,omitempty"`
 }
@@ -86,13 +87,13 @@ type Login struct {
 type LoginTime struct {
 	Username  string          `json:"username"`
 	LastLogin carbon.DateTime `json:"lastLogin"`
-	Wrong     int64           `json:"wrong"`
+	Wrong     uint64          `json:"wrong"`
 }
 
 type LoginToken struct {
 	Token   string `json:"token"`
 	Expires string `json:"expires"`
-	Wrong   int64  `json:"wrong"`
+	Wrong   uint64 `json:"wrong"`
 }
 
 type ComparePwd struct {
@@ -106,8 +107,8 @@ type UserStatus struct {
 	Code        string  `json:"code"`
 	Password    string  `json:"password"`
 	Platform    string  `json:"platform"`
-	Wrong       int64   `json:"wrong"`
-	Locked      uint64  `json:"locked"`
+	Wrong       uint64  `json:"wrong"`
+	Locked      bool    `json:"locked"`
 	LockExpire  int64   `json:"lockExpire"`
 	NeedCaptcha bool    `json:"needCaptcha"`
 	Captcha     Captcha `json:"captcha"`
@@ -139,7 +140,12 @@ type UserUseCase struct {
 }
 
 func NewUserUseCase(c *conf.Bootstrap, repo UserRepo, tx Transaction, cache Cache) *UserUseCase {
-	return &UserUseCase{c: c, repo: repo, tx: tx, cache: cache.WithPrefix("auth_user")}
+	return &UserUseCase{
+		c:     c,
+		repo:  repo,
+		tx:    tx,
+		cache: cache.WithPrefix("user"),
+	}
 }
 
 func (uc *UserUseCase) Create(ctx context.Context, item *User) error {
@@ -179,6 +185,35 @@ func (uc *UserUseCase) Delete(ctx context.Context, ids ...uint64) error {
 			return
 		})
 	})
+}
+
+func (uc *UserUseCase) GetUserByCode(ctx context.Context, code string) (rp *User, err error) {
+	rp = &User{}
+	action := strings.Join([]string{"get_user_by_code", code}, "_")
+	str, ok := uc.cache.Get(ctx, action, func(ctx context.Context) (string, bool) {
+		return uc.getUserByCode(ctx, action, code)
+	})
+	if ok {
+		utils.Json2Struct(&rp, str)
+		return
+	}
+	err = reason.ErrorTooManyRequests(i18n.FromContext(ctx).T(TooManyRequests))
+	return
+}
+
+func (uc *UserUseCase) getUserByCode(ctx context.Context, action string, code string) (res string, ok bool) {
+	// read data from db and write to cache
+	rp := &User{}
+	user, err := uc.repo.GetByCode(ctx, code)
+	notFound := errors.Is(err, reason.ErrorNotFound(i18n.FromContext(ctx).T(RecordNotFound)))
+	if err != nil && !notFound {
+		return
+	}
+	copierx.Copy(&rp, user)
+	res = utils.Struct2Json(rp)
+	uc.cache.Set(ctx, action, res, notFound)
+	ok = true
+	return
 }
 
 func (uc *UserUseCase) Find(ctx context.Context, condition *FindUser) (rp []User) {
@@ -242,7 +277,7 @@ func (uc *UserUseCase) Login(ctx context.Context, item *Login) (rp *LoginToken, 
 		return
 	}
 	// user is locked
-	if status.Locked == constant.UI1 {
+	if status.Locked {
 		err = reason.ErrorForbidden(i18n.FromContext(ctx).T(UserLocked))
 		return
 	}
@@ -254,13 +289,13 @@ func (uc *UserUseCase) Login(ctx context.Context, item *Login) (rp *LoginToken, 
 	}
 	if !pass {
 		err = reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(LoginFailed))
-		rp.Wrong = status.Wrong + constant.I1
+		rp.Wrong = status.Wrong + constant.UI1
 		return
 	}
 	// check platform
 	if item.Platform != "" && item.Platform != status.Platform {
 		err = reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(LoginFailed))
-		rp.Wrong = status.Wrong + constant.I1
+		rp.Wrong = status.Wrong + constant.UI1
 		return
 	}
 	authUser := jwt.User{
@@ -330,7 +365,7 @@ func (uc *UserUseCase) Status(ctx context.Context, username string, captcha bool
 	if ok {
 		utils.Json2Struct(&rp, str)
 		// TODO u can get max wrong count from env or dict
-		if rp.Wrong >= constant.I3 {
+		if rp.Wrong >= constant.UI3 {
 			// need captcha
 			rp.NeedCaptcha = true
 			if captcha {
@@ -338,9 +373,9 @@ func (uc *UserUseCase) Status(ctx context.Context, username string, captcha bool
 			}
 		}
 		timestamp := carbon.Now().Timestamp()
-		if rp.Locked == constant.UI1 && rp.LockExpire > constant.I0 && timestamp >= rp.LockExpire {
+		if rp.Locked && rp.LockExpire > constant.I0 && timestamp >= rp.LockExpire {
 			// unlock when lock time expiration
-			rp.Locked = constant.UI0
+			rp.Locked = false
 		}
 		return
 	}

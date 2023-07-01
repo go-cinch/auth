@@ -1,41 +1,27 @@
 package data
 
 import (
+	"context"
+	"strconv"
+	"strings"
+
 	"auth/api/reason"
 	"auth/internal/biz"
-	"context"
+	"auth/internal/data/model"
+	"auth/internal/data/query"
 	"github.com/go-cinch/common/constant"
 	"github.com/go-cinch/common/copierx"
 	"github.com/go-cinch/common/id"
 	"github.com/go-cinch/common/middleware/i18n"
 	"github.com/go-cinch/common/utils"
 	"github.com/golang-module/carbon/v2"
+	"gorm.io/gen"
 	"gorm.io/gorm/clause"
-	"strconv"
-	"strings"
 )
 
 type userRepo struct {
 	data   *Data
 	action biz.ActionRepo
-}
-
-// User is database fields map
-type User struct {
-	Id         uint64          `json:"id,string"`                     // auto increment id
-	CreatedAt  carbon.DateTime `json:"createdAt"`                     // create time
-	UpdatedAt  carbon.DateTime `json:"updatedAt"`                     // update time
-	RoleId     uint64          `json:"roleId,string"`                 // role id
-	Role       Role            `json:"role" gorm:"foreignKey:RoleId"` // role
-	Action     string          `json:"action"`                        // user action code array
-	Username   string          `json:"username"`                      // user login name
-	Code       string          `json:"code"`                          // user code
-	Password   string          `json:"password"`                      // password
-	Platform   string          `json:"platform"`                      // device platform: pc/android/ios/mini...
-	LastLogin  carbon.DateTime `json:"lastLogin"`                     // last login time
-	Locked     uint64          `json:"locked"`                        // locked(0: unlock, 1: locked)
-	LockExpire int64           `json:"lockExpire"`                    // lock expiration time
-	Wrong      int64           `json:"wrong"`                         // wrong password count
 }
 
 // NewUserRepo .
@@ -48,12 +34,13 @@ func NewUserRepo(data *Data, action biz.ActionRepo) biz.UserRepo {
 
 func (ro userRepo) GetByUsername(ctx context.Context, username string) (item *biz.User, err error) {
 	item = &biz.User{}
-	var m User
-	ro.data.DB(ctx).
+	p := query.Use(ro.data.DB(ctx)).User
+	db := p.WithContext(ctx)
+	m, err := db.
 		Clauses(clause.Locking{Strength: "UPDATE"}).
-		Where("`username` = ?", username).
-		First(&m)
-	if m.Id == constant.UI0 {
+		Where(p.Username.Eq(username)).
+		First()
+	if err != nil || m.ID == constant.UI0 {
 		err = reason.ErrorNotFound("%s User.username: %s", i18n.FromContext(ctx).T(biz.RecordNotFound), username)
 		return
 	}
@@ -62,41 +49,46 @@ func (ro userRepo) GetByUsername(ctx context.Context, username string) (item *bi
 }
 
 func (ro userRepo) Find(ctx context.Context, condition *biz.FindUser) (rp []biz.User) {
-	db := ro.data.DB(ctx)
-	db = db.
-		Model(&User{}).
-		Preload("Role").
-		Order("created_at DESC")
+	p := query.Use(ro.data.DB(ctx)).User
+	db := p.WithContext(ctx)
+	conditions := make([]gen.Condition, 0, 2)
 	rp = make([]biz.User, 0)
-	list := make([]User, 0)
+	list := make([]model.User, 0)
 	if condition.StartCreatedAt != nil {
-		db.Where("`created_at` >= ?", condition.StartCreatedAt)
+		conditions = append(conditions, p.CreatedAt.Gte(carbon.Parse(*condition.StartCreatedAt)))
 	}
 	if condition.EndCreatedAt != nil {
-		db.Where("`created_at` < ?", condition.EndCreatedAt)
+		conditions = append(conditions, p.CreatedAt.Lt(carbon.Parse(*condition.EndCreatedAt)))
 	}
 	if condition.StartUpdatedAt != nil {
-		db.Where("`updated_at` >= ?", condition.StartUpdatedAt)
+		conditions = append(conditions, p.CreatedAt.Gte(carbon.Parse(*condition.StartUpdatedAt)))
 	}
 	if condition.EndUpdatedAt != nil {
-		db.Where("`updated_at` < ?", condition.EndCreatedAt)
+		conditions = append(conditions, p.CreatedAt.Lt(carbon.Parse(*condition.EndUpdatedAt)))
 	}
 	if condition.Username != nil {
-		db.Where("`username` LIKE ?", strings.Join([]string{"%", *condition.Username, "%"}, ""))
+		conditions = append(conditions, p.Username.Like(strings.Join([]string{"%", *condition.Username, "%"}, "")))
 	}
 	if condition.Code != nil {
-		db.Where("`code` LIKE ?", strings.Join([]string{"%", *condition.Code, "%"}, ""))
+		conditions = append(conditions, p.Code.Like(strings.Join([]string{"%", *condition.Code, "%"}, "")))
 	}
 	if condition.Platform != nil {
-		db.Where("`platform` LIKE ?", strings.Join([]string{"%", *condition.Platform, "%"}, ""))
+		conditions = append(conditions, p.Platform.Like(strings.Join([]string{"%", *condition.Platform, "%"}, "")))
 	}
 	if condition.Locked != nil {
-		db.Where("`locked` = ?", *condition.Locked)
+		conditions = append(conditions, p.Locked.Is(*condition.Locked))
 	}
 	condition.Page.Primary = "id"
 	condition.Page.
 		WithContext(ctx).
-		Query(db).
+		Query(
+			db.
+				Preload(p.Role).
+				Order(p.CreatedAt.Desc()).
+				Where(conditions...).
+				UnderlyingDB().
+				Model(&model.User{}),
+		).
 		Find(&list)
 	copierx.Copy(&rp, list)
 	timestamp := carbon.Now().Timestamp()
@@ -104,8 +96,8 @@ func (ro userRepo) Find(ctx context.Context, condition *biz.FindUser) (rp []biz.
 		rp[i].Actions = make([]biz.Action, 0)
 		arr := ro.action.FindByCode(ctx, item.Action)
 		copierx.Copy(&rp[i].Actions, arr)
-		if item.Locked == constant.UI0 || (item.LockExpire > constant.I0 && timestamp > item.LockExpire) {
-			rp[i].Locked = constant.UI0
+		if !item.Locked || (item.LockExpire > constant.I0 && timestamp > item.LockExpire) {
+			rp[i].Locked = false
 			continue
 		}
 		if item.LockExpire == constant.I0 {
@@ -136,35 +128,31 @@ func (ro userRepo) Find(ctx context.Context, condition *biz.FindUser) (rp []biz.
 }
 
 func (ro userRepo) Create(ctx context.Context, item *biz.User) (err error) {
-	var m User
-	db := ro.data.DB(ctx)
-	db.
-		Where("`username` = ?", item.Username).
-		First(&m)
-	if m.Id > constant.UI0 {
+	p := query.Use(ro.data.DB(ctx)).User
+	db := p.WithContext(ctx)
+	m := db.GetByCol("username", item.Username)
+	if m.ID > constant.UI0 {
 		err = reason.ErrorIllegalParameter("%s `username`: %s", i18n.FromContext(ctx).T(biz.DuplicateField), item.Username)
 		return
 	}
 	copierx.Copy(&m, item)
-	m.Id = ro.data.Id(ctx)
-	m.Code = id.NewCode(m.Id)
+	m.ID = ro.data.Id(ctx)
+	m.Code = id.NewCode(m.ID)
 	if m.Action != "" {
 		err = ro.action.CodeExists(ctx, m.Action)
 		if err != nil {
 			return
 		}
 	}
-	err = db.Create(&m).Error
+	err = db.Create(&m)
 	return
 }
 
 func (ro userRepo) Update(ctx context.Context, item *biz.UpdateUser) (err error) {
-	var m User
-	db := ro.data.DB(ctx)
-	db.
-		Where("`id` = ?", item.Id).
-		First(&m)
-	if m.Id == constant.UI0 {
+	p := query.Use(ro.data.DB(ctx)).User
+	db := p.WithContext(ctx)
+	m := db.GetByID(item.Id)
+	if m.ID == constant.UI0 {
 		err = reason.ErrorNotFound("%s User.id: %d", i18n.FromContext(ctx).T(biz.RecordNotFound), item.Id)
 		return
 	}
@@ -183,9 +171,9 @@ func (ro userRepo) Update(ctx context.Context, item *biz.UpdateUser) (err error)
 					lockExpire = v2
 				}
 			}
-			if m.Locked == constant.UI1 && v1 == constant.UI0 {
+			if m.Locked && v1 == constant.UI0 {
 				change["lock_expire"] = constant.I0
-			} else if m.Locked == constant.UI0 && v1 == constant.UI1 {
+			} else if !m.Locked && v1 == constant.UI1 {
 				change["lock_expire"] = lockExpire
 			}
 		}
@@ -201,27 +189,27 @@ func (ro userRepo) Update(ctx context.Context, item *biz.UpdateUser) (err error)
 	}
 	if roleId, ok1 := change["role_id"]; ok1 {
 		if v, ok2 := roleId.(string); ok2 && v != "0" {
-			var role Role
-			db.
-				Where("`id` = ?", v).
-				First(&role)
-			if role.Id == constant.UI0 {
+			pRole := query.Use(ro.data.DB(ctx)).Role
+			dbRole := pRole.WithContext(ctx)
+			mRole := dbRole.GetByID(*item.RoleId)
+			if mRole.ID == constant.UI0 {
 				err = reason.ErrorNotFound("%s Role.id: %s", i18n.FromContext(ctx).T(biz.RecordNotFound), v)
 				return
 			}
 		}
 	}
-	err = db.
-		Model(&m).
-		Updates(&change).Error
+	_, err = db.
+		Where(p.ID.Eq(item.Id)).
+		Updates(&change)
 	return
 }
 
 func (ro userRepo) Delete(ctx context.Context, ids ...uint64) (err error) {
-	db := ro.data.DB(ctx)
-	err = db.
-		Where("`id` IN (?)", ids).
-		Delete(&User{}).Error
+	p := query.Use(ro.data.DB(ctx)).User
+	db := p.WithContext(ctx)
+	_, err = db.
+		Where(p.ID.In(ids...)).
+		Delete()
 	return
 }
 
@@ -231,10 +219,11 @@ func (ro userRepo) LastLogin(ctx context.Context, username string) (err error) {
 	fields["last_login"] = carbon.Now()
 	fields["locked"] = constant.UI0
 	fields["lock_expire"] = constant.I0
-	err = ro.data.DB(ctx).
-		Model(&User{}).
-		Where("`username` = ?", username).
-		Updates(&fields).Error
+	p := query.Use(ro.data.DB(ctx)).User
+	db := p.WithContext(ctx)
+	_, err = db.
+		Where(p.Username.Eq(username)).
+		Updates(&fields)
 	return
 }
 
@@ -247,40 +236,40 @@ func (ro userRepo) WrongPwd(ctx context.Context, req biz.LoginTime) (err error) 
 		// already login success, skip set wrong count
 		return
 	}
-	m := make(map[string]interface{})
+	change := make(map[string]interface{})
 	newWrong := oldItem.Wrong + 1
 	if req.Wrong > 0 {
 		newWrong = req.Wrong
 	}
 	if newWrong >= 5 {
-		m["locked"] = constant.UI1
+		change["locked"] = constant.UI1
 		if newWrong == 5 {
-			m["lock_expire"] = carbon.Now().AddDuration("5m").Carbon2Time().Unix()
+			change["lock_expire"] = carbon.Now().AddDuration("5m").Carbon2Time().Unix()
 		} else if newWrong == 10 {
-			m["lock_expire"] = carbon.Now().AddDuration("30m").Carbon2Time().Unix()
+			change["lock_expire"] = carbon.Now().AddDuration("30m").Carbon2Time().Unix()
 		} else if newWrong == 20 {
-			m["lock_expire"] = carbon.Now().AddDuration("24h").Carbon2Time().Unix()
+			change["lock_expire"] = carbon.Now().AddDuration("24h").Carbon2Time().Unix()
 		} else if newWrong >= 30 {
 			// forever lock
-			m["lock_expire"] = 0
+			change["lock_expire"] = 0
 		}
 	}
-	m["wrong"] = newWrong
-	err = ro.data.DB(ctx).
-		Model(&User{}).
-		Where("`id` = ?", oldItem.Id).
-		Where("`wrong` = ?", oldItem.Wrong).
-		Updates(&m).Error
+	change["wrong"] = newWrong
+
+	p := query.Use(ro.data.DB(ctx)).User
+	db := p.WithContext(ctx)
+	_, err = db.
+		Where(p.ID.Eq(oldItem.Id)).
+		Where(p.Wrong.Eq(oldItem.Wrong)).
+		Updates(&change)
 	return
 }
 
 func (ro userRepo) UpdatePassword(ctx context.Context, item *biz.User) (err error) {
-	var m User
-	db := ro.data.DB(ctx)
-	db.
-		Where("`username` = ?", item.Username).
-		First(&m)
-	if m.Id == constant.UI0 {
+	p := query.Use(ro.data.DB(ctx)).User
+	db := p.WithContext(ctx)
+	m := db.GetByCol("username", item.Username)
+	if m.ID == constant.UI0 {
 		err = reason.ErrorNotFound("%s User.username: %s", i18n.FromContext(ctx).T(biz.RecordNotFound), item.Username)
 		return
 	}
@@ -289,19 +278,17 @@ func (ro userRepo) UpdatePassword(ctx context.Context, item *biz.User) (err erro
 	fields["wrong"] = constant.I0
 	fields["locked"] = constant.UI0
 	fields["lock_expire"] = constant.I0
-	err = db.
-		Model(&User{}).
-		Where("`id` = ?", m.Id).
-		Updates(&fields).Error
+	_, err = db.
+		Where(p.ID.Eq(m.ID)).
+		Updates(&fields)
 	return
 }
 
 func (ro userRepo) IdExists(ctx context.Context, id uint64) (err error) {
-	var m User
-	ro.data.DB(ctx).
-		Where("`id` = ?", id).
-		First(&m)
-	if m.Id == constant.UI0 {
+	p := query.Use(ro.data.DB(ctx)).User
+	db := p.WithContext(ctx)
+	m := db.GetByID(id)
+	if m.ID == constant.UI0 {
 		err = reason.ErrorNotFound("%s User.id: %d", i18n.FromContext(ctx).T(biz.RecordNotFound), id)
 		return
 	}
@@ -310,12 +297,13 @@ func (ro userRepo) IdExists(ctx context.Context, id uint64) (err error) {
 
 func (ro userRepo) GetByCode(ctx context.Context, code string) (item *biz.User, err error) {
 	item = &biz.User{}
-	var m User
-	ro.data.DB(ctx).
-		Where("`code` = ?", code).
-		Preload("Role").
-		First(&m)
-	if m.Id == constant.UI0 {
+	p := query.Use(ro.data.DB(ctx)).User
+	db := p.WithContext(ctx)
+	m, err := db.
+		Preload(p.Role).
+		Where(p.Code.Eq(code)).
+		First()
+	if err != nil || m.ID == constant.UI0 {
 		err = reason.ErrorNotFound("%s User.code: %s", i18n.FromContext(ctx).T(biz.RecordNotFound), code)
 		return
 	}

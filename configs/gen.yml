@@ -1,0 +1,18 @@
+gen:
+  dsn: "root:root@tcp(127.0.0.1:3306)/auth?charset=utf8mb4&collation=utf8mb4_general_ci&parseTime=True&loc=Local&timeout=10000ms"
+  tables:
+    - user
+    - action
+    - role
+    - user_group
+    - user_user_group_relation
+    - whitelist
+  exclude:
+    - schema_migrations
+  association:
+    - 'user_group|user|Users|many_to_many|many2many:user_user_group_relation'
+    - 'user|role|Role|has_one|foreignKey:RoleID'
+  field-with-string-tag:
+    - 'user|role_id'
+    - 'user_group|lock_expire|wrong'
+    - 'user_user_group_relation|user_id|user_group_id'

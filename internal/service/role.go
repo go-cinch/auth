@@ -1,11 +1,13 @@
 package service
 
 import (
+	"context"
+
 	"auth/api/auth"
 	"auth/internal/biz"
-	"context"
 	"github.com/go-cinch/common/copierx"
 	"github.com/go-cinch/common/page"
+	"github.com/go-cinch/common/proto/params"
 	"github.com/go-cinch/common/utils"
 	"go.opentelemetry.io/otel"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -27,7 +29,7 @@ func (s *AuthService) FindRole(ctx context.Context, req *auth.FindRoleRequest) (
 	ctx, span := tr.Start(ctx, "FindRole")
 	defer span.End()
 	rp = &auth.FindRoleReply{}
-	rp.Page = &auth.Page{}
+	rp.Page = &params.Page{}
 	r := &biz.FindRole{}
 	r.Page = page.Page{}
 	copierx.Copy(&r, req)
@@ -52,7 +54,7 @@ func (s *AuthService) UpdateRole(ctx context.Context, req *auth.UpdateRoleReques
 	return
 }
 
-func (s *AuthService) DeleteRole(ctx context.Context, req *auth.IdsRequest) (rp *emptypb.Empty, err error) {
+func (s *AuthService) DeleteRole(ctx context.Context, req *params.IdsRequest) (rp *emptypb.Empty, err error) {
 	tr := otel.Tracer("api")
 	ctx, span := tr.Start(ctx, "DeleteRole")
 	defer span.End()

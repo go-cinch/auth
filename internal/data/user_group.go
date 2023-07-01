@@ -1,29 +1,24 @@
 package data
 
 import (
+	"context"
+	"strings"
+
 	"auth/api/reason"
 	"auth/internal/biz"
-	"context"
+	"auth/internal/data/model"
+	"auth/internal/data/query"
 	"github.com/go-cinch/common/constant"
 	"github.com/go-cinch/common/copierx"
 	"github.com/go-cinch/common/middleware/i18n"
 	"github.com/go-cinch/common/utils"
-	"strings"
+	"gorm.io/gen"
 )
 
 type userGroupRepo struct {
 	data   *Data
 	action biz.ActionRepo
 	user   biz.UserRepo
-}
-
-// UserGroup is database fields map
-type UserGroup struct {
-	Id     uint64 `json:"id,string"`                                      // auto increment id
-	Users  []User `gorm:"many2many:user_user_group_relation" json:"user"` // User and UserGroup many2many relation
-	Name   string `json:"name"`                                           // name
-	Word   string `json:"word"`                                           // keyword, must be unique, used as frontend display
-	Action string `json:"action"`                                         // user group action code array
 }
 
 type UserUserGroupRelation struct {
@@ -40,17 +35,15 @@ func NewUserGroupRepo(data *Data, action biz.ActionRepo, user biz.UserRepo) biz.
 }
 
 func (ro userGroupRepo) Create(ctx context.Context, item *biz.UserGroup) (err error) {
-	var m UserGroup
-	db := ro.data.DB(ctx)
-	db.
-		Where("`word` = ?", item.Word).
-		First(&m)
-	if m.Id > constant.UI0 {
+	p := query.Use(ro.data.DB(ctx)).UserGroup
+	db := p.WithContext(ctx)
+	m := db.GetByCol("word", item.Word)
+	if m.ID > constant.UI0 {
 		err = reason.ErrorIllegalParameter("%s `word`: %s", i18n.FromContext(ctx).T(biz.DuplicateField), item.Word)
 		return
 	}
 	copierx.Copy(&m, item)
-	m.Id = ro.data.Id(ctx)
+	m.ID = ro.data.Id(ctx)
 	if m.Action != "" {
 		err = ro.action.CodeExists(ctx, m.Action)
 		if err != nil {
@@ -58,18 +51,18 @@ func (ro userGroupRepo) Create(ctx context.Context, item *biz.UserGroup) (err er
 		}
 	}
 	if len(item.Users) > 0 {
-		m.Users = make([]User, 0)
+		m.Users = make([]model.User, 0)
 		for _, v := range item.Users {
 			err = ro.user.IdExists(ctx, v.Id)
 			if err != nil {
 				return
 			}
-			m.Users = append(m.Users, User{
-				Id: v.Id,
+			m.Users = append(m.Users, model.User{
+				ID: v.Id,
 			})
 		}
 	}
-	err = db.Create(&m).Error
+	err = db.Create(&m)
 	return
 }
 
@@ -79,48 +72,50 @@ func (ro userGroupRepo) FindGroupByUserCode(ctx context.Context, code string) (l
 	if err != nil {
 		return
 	}
-	db := ro.data.DB(ctx)
+	p := query.Use(ro.data.DB(ctx)).UserUserGroupRelation
+	db := p.WithContext(ctx)
 	groupIds := make([]uint64, 0)
 	db.
-		Model(&UserUserGroupRelation{}).
-		Where("`user_id` = ?", user.Id).
-		Pluck("`user_group_id`", &groupIds)
+		Where(p.UserID.Eq(user.Id)).
+		Pluck(p.UserGroupID, &groupIds)
 	if len(groupIds) == 0 {
 		return
 	}
-	groups := make([]UserGroup, 0)
-	db.
-		Model(&UserGroup{}).
-		Where("`id` IN (?)", groupIds).
-		Find(&groups)
+	pUserGroup := query.Use(ro.data.DB(ctx)).UserGroup
+	dbUserGroup := pUserGroup.WithContext(ctx)
+	groups, _ := dbUserGroup.
+		Where(pUserGroup.ID.In(groupIds...)).
+		Find()
 	copierx.Copy(&list, groups)
 	return
 }
 
 func (ro userGroupRepo) Find(ctx context.Context, condition *biz.FindUserGroup) (rp []biz.UserGroup) {
-	db := ro.data.DB(ctx)
-	db = db.
-		Model(&UserGroup{}).
-		Preload("Users").
-		Order("id DESC")
+	p := query.Use(ro.data.DB(ctx)).UserGroup
+	db := p.WithContext(ctx)
 	rp = make([]biz.UserGroup, 0)
-	list := make([]UserGroup, 0)
+	list := make([]model.UserGroup, 0)
+	conditions := make([]gen.Condition, 0, 2)
 	if condition.Name != nil {
-		db.Where("`name` LIKE ?", strings.Join([]string{"%", *condition.Name, "%"}, ""))
-	}
-	if condition.Code != nil {
-		db.Where("`code` LIKE ?", strings.Join([]string{"%", *condition.Code, "%"}, ""))
+		conditions = append(conditions, p.Name.Like(strings.Join([]string{"%", *condition.Name, "%"}, "")))
 	}
 	if condition.Word != nil {
-		db.Where("`word` LIKE ?", strings.Join([]string{"%", *condition.Word, "%"}, ""))
+		conditions = append(conditions, p.Word.Like(strings.Join([]string{"%", *condition.Word, "%"}, "")))
 	}
 	if condition.Action != nil {
-		db.Where("`action` LIKE ?", strings.Join([]string{"%", *condition.Action, "%"}, ""))
+		conditions = append(conditions, p.Action.Like(strings.Join([]string{"%", *condition.Action, "%"}, "")))
 	}
 	condition.Page.Primary = "id"
 	condition.Page.
 		WithContext(ctx).
-		Query(db).
+		Query(
+			db.
+				Preload(p.Users).
+				Order(p.ID.Desc()).
+				Where(conditions...).
+				UnderlyingDB().
+				Model(&model.UserGroup{}),
+		).
 		Find(&list)
 	copierx.Copy(&rp, list)
 	for i, item := range rp {
@@ -132,12 +127,10 @@ func (ro userGroupRepo) Find(ctx context.Context, condition *biz.FindUserGroup) 
 }
 
 func (ro userGroupRepo) Update(ctx context.Context, item *biz.UpdateUserGroup) (err error) {
-	var m UserGroup
-	db := ro.data.DB(ctx)
-	db.
-		Where("`id` = ?", item.Id).
-		First(&m)
-	if m.Id == constant.UI0 {
+	p := query.Use(ro.data.DB(ctx)).UserGroup
+	db := p.WithContext(ctx)
+	m := db.GetByID(item.Id)
+	if m.ID == constant.UI0 {
 		err = reason.ErrorNotFound("%s UserGroup.id: %d", i18n.FromContext(ctx).T(biz.RecordNotFound), item.Id)
 		return
 	}
@@ -157,45 +150,43 @@ func (ro userGroupRepo) Update(ctx context.Context, item *biz.UpdateUserGroup) (
 	if a, ok1 := change["users"]; ok1 {
 		if v, ok2 := a.(string); ok2 {
 			arr := utils.Str2Uint64Arr(v)
-			users := make([]User, 0)
+			users := make([]*model.User, 0)
 			for _, id := range arr {
-				users = append(users, User{
-					Id: id,
+				users = append(users, &model.User{
+					ID: id,
 				})
 			}
-			err = db.
+			err = p.Users.
 				Model(&m).
-				Association("Users").
-				Replace(users)
+				Replace(users...)
 			if err != nil {
 				return
 			}
 			delete(change, "users")
 		}
 	}
-	err = db.
-		Model(&m).
-		Updates(&change).Error
+	_, err = db.
+		Where(p.ID.Eq(item.Id)).
+		Updates(&change)
 	return
 }
 
 func (ro userGroupRepo) Delete(ctx context.Context, ids ...uint64) (err error) {
-	db := ro.data.DB(ctx)
-	err = db.
-		Where("`id` IN (?)", ids).
-		Delete(&UserGroup{}).Error
+	p := query.Use(ro.data.DB(ctx)).UserGroup
+	db := p.WithContext(ctx)
+	_, err = db.
+		Where(p.ID.In(ids...)).
+		Delete()
 	return
 }
 
 func (ro userGroupRepo) WordExists(ctx context.Context, word string) (err error) {
-	var m UserGroup
-	db := ro.data.DB(ctx)
+	p := query.Use(ro.data.DB(ctx)).UserGroup
+	db := p.WithContext(ctx)
 	arr := strings.Split(word, ",")
 	for _, item := range arr {
-		db.
-			Where("`word` = ?", item).
-			First(&m)
-		if m.Id == constant.UI0 {
+		m := db.GetByCol("word", word)
+		if m.ID == constant.UI0 {
 			err = reason.ErrorNotFound("%s UserGroup.code: %s", i18n.FromContext(ctx).T(biz.RecordNotFound), item)
 			return
 		}

@@ -1,11 +1,13 @@
 package service
 
 import (
+	"context"
+
 	"auth/api/auth"
 	"auth/internal/biz"
-	"context"
 	"github.com/go-cinch/common/copierx"
 	"github.com/go-cinch/common/page"
+	"github.com/go-cinch/common/proto/params"
 	"github.com/go-cinch/common/utils"
 	"go.opentelemetry.io/otel"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -27,7 +29,7 @@ func (s *AuthService) FindUserGroup(ctx context.Context, req *auth.FindUserGroup
 	ctx, span := tr.Start(ctx, "FindUserGroup")
 	defer span.End()
 	rp = &auth.FindUserGroupReply{}
-	rp.Page = &auth.Page{}
+	rp.Page = &params.Page{}
 	r := &biz.FindUserGroup{}
 	r.Page = page.Page{}
 	copierx.Copy(&r, req)
@@ -52,7 +54,7 @@ func (s *AuthService) UpdateUserGroup(ctx context.Context, req *auth.UpdateUserG
 	return
 }
 
-func (s *AuthService) DeleteUserGroup(ctx context.Context, req *auth.IdsRequest) (rp *emptypb.Empty, err error) {
+func (s *AuthService) DeleteUserGroup(ctx context.Context, req *params.IdsRequest) (rp *emptypb.Empty, err error) {
 	tr := otel.Tracer("api")
 	ctx, span := tr.Start(ctx, "DeleteUserGroup")
 	defer span.End()

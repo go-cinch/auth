@@ -1,11 +1,12 @@
 package biz
 
 import (
-	"auth/internal/conf"
 	"context"
+	"strings"
+
+	"auth/internal/conf"
 	"github.com/go-cinch/common/page"
 	"github.com/go-cinch/common/utils"
-	"strings"
 )
 
 type Role struct {
@@ -29,7 +30,7 @@ type FindRoleCache struct {
 }
 
 type UpdateRole struct {
-	Id     *uint64 `json:"id,string,omitempty"`
+	Id     uint64  `json:"id,string"`
 	Name   *string `json:"name,omitempty"`
 	Word   *string `json:"word,omitempty"`
 	Action *string `json:"action,omitempty"`
@@ -50,7 +51,12 @@ type RoleUseCase struct {
 }
 
 func NewRoleUseCase(c *conf.Bootstrap, repo RoleRepo, tx Transaction, cache Cache) *RoleUseCase {
-	return &RoleUseCase{c: c, repo: repo, tx: tx, cache: cache.WithPrefix("auth_role")}
+	return &RoleUseCase{
+		c:     c,
+		repo:  repo,
+		tx:    tx,
+		cache: cache.WithPrefix("role"),
+	}
 }
 
 func (uc *RoleUseCase) Create(ctx context.Context, item *Role) error {

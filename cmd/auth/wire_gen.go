@@ -17,6 +17,11 @@ import (
 	"github.com/go-kratos/kratos/v2"
 )
 
+import (
+	_ "github.com/go-cinch/common/plugins/gorm/filter"
+	_ "github.com/go-cinch/common/plugins/kratos/encoding/yml"
+)
+
 // Injectors from wire.go:
 
 // wireApp init kratos application.
@@ -25,11 +30,11 @@ func wireApp(c *conf.Bootstrap) (*kratos.App, func(), error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	idempotentIdempotent, err := idempotent.NewIdempotent(c, universalClient)
+	idempotentIdempotent, err := idempotent.New(c, universalClient)
 	if err != nil {
 		return nil, nil, err
 	}
-	db, err := data.NewDB(c)
+	tenant, err := data.NewDB(c)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -41,13 +46,13 @@ func wireApp(c *conf.Bootstrap) (*kratos.App, func(), error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	dataData, cleanup := data.NewData(universalClient, db, sonyflake, tracerProvider)
-	actionRepo := data.NewActionRepo(dataData)
+	dataData, cleanup := data.NewData(universalClient, tenant, sonyflake, tracerProvider)
+	actionRepo := data.NewActionRepo(c, dataData)
 	userRepo := data.NewUserRepo(dataData, actionRepo)
 	transaction := data.NewTransaction(dataData)
-	cache := data.NewCache(universalClient)
+	cache := data.NewCache(c, universalClient)
 	userUseCase := biz.NewUserUseCase(c, userRepo, transaction, cache)
-	taskTask, err := task.NewTask(c, userUseCase)
+	taskTask, err := task.New(c, userUseCase)
 	if err != nil {
 		cleanup()
 		return nil, nil, err
@@ -59,9 +64,11 @@ func wireApp(c *conf.Bootstrap) (*kratos.App, func(), error) {
 	userGroupUseCase := biz.NewUserGroupUseCase(c, userGroupRepo, transaction, cache)
 	permissionRepo := data.NewPermissionRepo(dataData, actionRepo, userRepo, userGroupRepo)
 	permissionUseCase := biz.NewPermissionUseCase(c, permissionRepo, cache)
-	authService := service.NewAuthService(taskTask, idempotentIdempotent, userUseCase, actionUseCase, roleUseCase, userGroupUseCase, permissionUseCase)
-	grpcServer := server.NewGRPCServer(c, universalClient, idempotentIdempotent, authService)
-	httpServer := server.NewHTTPServer(c, universalClient, idempotentIdempotent, authService)
+	whitelistRepo := data.NewWhitelistRepo(dataData, actionRepo)
+	whitelistUseCase := biz.NewWhitelistUseCase(c, whitelistRepo, transaction, cache)
+	authService := service.NewAuthService(taskTask, idempotentIdempotent, userUseCase, actionUseCase, roleUseCase, userGroupUseCase, permissionUseCase, whitelistUseCase)
+	grpcServer := server.NewGRPCServer(c, universalClient, idempotentIdempotent, authService, whitelistUseCase, permissionUseCase)
+	httpServer := server.NewHTTPServer(c, universalClient, idempotentIdempotent, authService, whitelistUseCase, permissionUseCase)
 	app := newApp(grpcServer, httpServer)
 	return app, func() {
 		cleanup()

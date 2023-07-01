@@ -1,57 +1,51 @@
 package data
 
 import (
+	"context"
+	"net/url"
+	"strconv"
+	"time"
+
 	"auth/internal/biz"
 	"auth/internal/conf"
-	"context"
+	"auth/internal/db"
 	"github.com/go-cinch/common/id"
 	"github.com/go-cinch/common/log"
-	"github.com/go-cinch/common/migrate"
 	glog "github.com/go-cinch/common/plugins/gorm/log"
+	"github.com/go-cinch/common/plugins/gorm/tenant"
 	"github.com/go-cinch/common/utils"
-	"github.com/go-sql-driver/mysql"
 	"github.com/google/wire"
 	"github.com/pkg/errors"
 	"github.com/redis/go-redis/v9"
 	"go.opentelemetry.io/otel/sdk/trace"
-	m "gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"gorm.io/gorm/schema"
-	"net/url"
-	"strconv"
-	"time"
 )
 
 // ProviderSet is data providers.
 var ProviderSet = wire.NewSet(
-	NewRedis,
-	NewDB,
-	NewSonyflake,
-	NewTracer,
-	NewData,
-	NewTransaction,
-	NewCache,
+	NewRedis, NewDB, NewSonyflake, NewTracer, NewData, NewTransaction, NewCache,
 	NewUserRepo,
 	NewActionRepo,
 	NewRoleRepo,
 	NewUserGroupRepo,
 	NewPermissionRepo,
+	NewWhitelistRepo,
 )
 
 type contextTxKey struct{}
 
 // Data .
 type Data struct {
-	db        *gorm.DB
+	tenant    *tenant.Tenant
 	redis     redis.UniversalClient
 	sonyflake *id.Sonyflake
 }
 
 // NewData .
-func NewData(redis redis.UniversalClient, db *gorm.DB, sonyflake *id.Sonyflake, tp *trace.TracerProvider) (d *Data, cleanup func()) {
+func NewData(redis redis.UniversalClient, gormTenant *tenant.Tenant, sonyflake *id.Sonyflake, tp *trace.TracerProvider) (d *Data, cleanup func()) {
 	d = &Data{
 		redis:     redis,
-		db:        db,
+		tenant:    gormTenant,
 		sonyflake: sonyflake,
 	}
 	cleanup = func() {
@@ -65,8 +59,7 @@ func NewData(redis redis.UniversalClient, db *gorm.DB, sonyflake *id.Sonyflake, 
 
 // Tx is transaction wrapper
 func (d *Data) Tx(ctx context.Context, handler func(ctx context.Context) error) error {
-	ctx = getDefaultTimeoutCtx(ctx)
-	return d.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+	return d.tenant.DB(ctx).Transaction(func(tx *gorm.DB) error {
 		ctx = context.WithValue(ctx, contextTxKey{}, tx)
 		return handler(ctx)
 	})
@@ -74,12 +67,17 @@ func (d *Data) Tx(ctx context.Context, handler func(ctx context.Context) error) 
 
 // DB can get tx from ctx, if not exist return db
 func (d *Data) DB(ctx context.Context) *gorm.DB {
-	ctx = getDefaultTimeoutCtx(ctx)
 	tx, ok := ctx.Value(contextTxKey{}).(*gorm.DB)
 	if ok {
 		return tx
 	}
-	return d.db.WithContext(ctx)
+	return d.tenant.DB(ctx)
+}
+
+// HiddenSQL return a hidden sql ctx
+func (*Data) HiddenSQL(ctx context.Context) context.Context {
+	ctx = glog.NewHiddenSqlContext(ctx)
+	return ctx
 }
 
 // Cache can get cache instance
@@ -132,49 +130,36 @@ func NewRedis(c *conf.Bootstrap) (client redis.UniversalClient, err error) {
 }
 
 // NewDB is initialize db connection from config
-func NewDB(c *conf.Bootstrap) (db *gorm.DB, err error) {
+func NewDB(c *conf.Bootstrap) (gormTenant *tenant.Tenant, err error) {
 	defer func() {
 		e := recover()
 		if e != nil {
 			err = errors.Errorf("%v", e)
 		}
 	}()
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	err = migrate.Do(
-		migrate.WithCtx(ctx),
-		migrate.WithUri(c.Data.Database.Dsn),
-		migrate.WithFs(conf.SqlFiles),
-		migrate.WithFsRoot("db"),
-		migrate.WithBefore(func(ctx context.Context) (err error) {
-			l := glog.New(
-				glog.WithColorful(true),
-				glog.WithSlow(200),
-			)
-			db, err = gorm.Open(m.Open(c.Data.Database.Dsn), &gorm.Config{
-				NamingStrategy: schema.NamingStrategy{
-					SingularTable: true,
-				},
-				QueryFields: true,
-				Logger:      l,
-			})
-			return
-		}),
-	)
-	var showDsn string
-	cfg, e := mysql.ParseDSN(c.Data.Database.Dsn)
-	if e == nil {
-		// hidden password
-		cfg.Passwd = "***"
-		showDsn = cfg.FormatDSN()
+
+	ops := make([]func(*tenant.Options), 0, len(c.Data.Database.Tenants)+3)
+	if len(c.Data.Database.Tenants) > 0 {
+		for k, v := range c.Data.Database.Tenants {
+			ops = append(ops, tenant.WithDSN(k, v))
+		}
+	} else {
+		ops = append(ops, tenant.WithDSN("", c.Data.Database.Dsn))
 	}
+	ops = append(ops, tenant.WithSQLFile(db.SQLFiles))
+	ops = append(ops, tenant.WithSQLRoot(db.SQLRoot))
+
+	gormTenant, err = tenant.New(ops...)
 	if err != nil {
-		err = errors.WithMessage(err, "initialize mysql failed")
+		err = errors.WithMessage(err, "initialize db failed")
 		return
 	}
-	log.
-		WithField("db.dsn", showDsn).
-		Info("initialize mysql success")
+	err = gormTenant.Migrate()
+	if err != nil {
+		err = errors.WithMessage(err, "initialize db failed")
+		return
+	}
+	log.Info("initialize db success")
 	return
 }
 

@@ -1,9 +1,10 @@
 package task
 
 import (
+	"context"
+
 	"auth/internal/biz"
 	"auth/internal/conf"
-	"context"
 	"github.com/go-cinch/common/log"
 	"github.com/go-cinch/common/utils"
 	"github.com/go-cinch/common/worker"
@@ -13,7 +14,7 @@ import (
 )
 
 // ProviderSet is task providers.
-var ProviderSet = wire.NewSet(NewTask)
+var ProviderSet = wire.NewSet(New)
 
 type Task struct {
 	worker *worker.Worker
@@ -27,8 +28,8 @@ func (tk Task) Cron(options ...func(*worker.RunOptions)) error {
 	return tk.worker.Cron(options...)
 }
 
-// NewTask is initialize task worker from config
-func NewTask(c *conf.Bootstrap, user *biz.UserUseCase) (tk *Task, err error) {
+// New is initialize task worker from config
+func New(c *conf.Bootstrap, user *biz.UserUseCase) (tk *Task, err error) {
 	defer func() {
 		e := recover()
 		if e != nil {
@@ -53,10 +54,6 @@ func NewTask(c *conf.Bootstrap, user *biz.UserUseCase) (tk *Task, err error) {
 
 	tk = &Task{
 		worker: w,
-	}
-
-	if len(c.Tasks) > 0 {
-		// TODO register cron tasks
 	}
 
 	log.Info("initialize worker success")

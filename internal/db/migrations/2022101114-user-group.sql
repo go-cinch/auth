@@ -1,6 +1,6 @@
 -- +migrate Up
 -- SQL in section 'Up' is executed when this migration is applied
-CREATE TABLE user_group
+CREATE TABLE `user_group`
 (
     `id`     BIGINT UNSIGNED AUTO_INCREMENT COMMENT 'auto increment id' PRIMARY KEY,
     `name`   VARCHAR(50) NULL COMMENT 'name',
@@ -10,7 +10,7 @@ CREATE TABLE user_group
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_general_ci;
 
-CREATE UNIQUE INDEX idx_word ON user_group (`word`);
+CREATE UNIQUE INDEX `idx_word` ON `user_group` (`word`);
 
 CREATE TABLE `user_user_group_relation`
 (
@@ -20,3 +20,7 @@ CREATE TABLE `user_user_group_relation`
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_general_ci;
+
+-- +migrate Down
+DROP TABLE `user_group`;
+DROP TABLE `user_user_group_relation`;

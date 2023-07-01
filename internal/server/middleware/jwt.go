@@ -1,10 +1,13 @@
 package middleware
 
 import (
+	"context"
+	"strings"
+	"time"
+
 	"auth/api/reason"
 	"auth/internal/biz"
 	"auth/internal/conf"
-	"context"
 	jwtLocal "github.com/go-cinch/common/jwt"
 	"github.com/go-cinch/common/middleware/i18n"
 	"github.com/go-cinch/common/utils"
@@ -12,25 +15,26 @@ import (
 	"github.com/go-kratos/kratos/v2/middleware/selector"
 	jwtV4 "github.com/golang-jwt/jwt/v4"
 	"github.com/redis/go-redis/v9"
-	"strings"
-	"time"
 )
 
-func Jwt(c *conf.Bootstrap, client redis.UniversalClient) middleware.Middleware {
+func Jwt(c *conf.Bootstrap, client redis.UniversalClient, whitelist *biz.WhitelistUseCase) middleware.Middleware {
 	return selector.Server(
-		jwt(c, client),
-	).Match(jwtWhitelist()).Build()
+		jwtHandler(c, client),
+	).Match(jwtWhitelist(whitelist)).Build()
 }
 
 const jwtTokenUserKey = "jwt_token_"
 
-func jwt(c *conf.Bootstrap, client redis.UniversalClient) func(handler middleware.Handler) middleware.Handler {
+func jwtHandler(c *conf.Bootstrap, client redis.UniversalClient) func(handler middleware.Handler) middleware.Handler {
 	return func(handler middleware.Handler) middleware.Handler {
 		return func(ctx context.Context, req interface{}) (rp interface{}, err error) {
 			user := jwtLocal.FromServerContext(ctx)
 			if user.Token == "" && user.Code == "" {
 				err = reason.ErrorUnauthorized(i18n.FromContext(ctx).T(biz.JwtMissingToken))
 				return
+			}
+			if user.Code != "" {
+				return handler(ctx, req)
 			}
 			token := user.Token
 			if token != "" {

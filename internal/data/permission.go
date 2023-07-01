@@ -1,10 +1,11 @@
 package data
 
 import (
-	"auth/internal/biz"
 	"context"
-	"github.com/go-cinch/common/utils"
 	"strings"
+
+	"auth/internal/biz"
+	"github.com/go-cinch/common/utils"
 )
 
 type permissionRepo struct {
@@ -24,28 +25,34 @@ func NewPermissionRepo(data *Data, action biz.ActionRepo, user biz.UserRepo, use
 	}
 }
 
-func (ro permissionRepo) Check(ctx context.Context, item *biz.CheckPermission) (pass bool) {
+func (ro permissionRepo) Check(ctx context.Context, item biz.CheckPermission) (pass bool) {
 	user, err := ro.user.GetByCode(ctx, item.UserCode)
 	if err != nil {
 		return
 	}
-	// 1. check user permission
-	pass = ro.action.Permission(ctx, user.Action, item.Resource)
+	// 1. check default permission
+	defaultAction := ro.action.GetDefault(ctx)
+	pass = ro.action.Permission(ctx, defaultAction.Code, item)
 	if pass {
 		return
 	}
-	// 2. check role permission
-	pass = ro.action.Permission(ctx, user.Role.Action, item.Resource)
+	// 2. check user permission
+	pass = ro.action.Permission(ctx, user.Action, item)
 	if pass {
 		return
 	}
-	// 3. check user group permission
+	// 3. check role permission
+	pass = ro.action.Permission(ctx, user.Role.Action, item)
+	if pass {
+		return
+	}
+	// 4. check user group permission
 	groups := ro.userGroup.FindGroupByUserCode(ctx, user.Code)
 	if err != nil {
 		return
 	}
 	for _, group := range groups {
-		pass = ro.action.Permission(ctx, group.Action, item.Resource)
+		pass = ro.action.Permission(ctx, group.Action, item)
 		if pass {
 			return
 		}

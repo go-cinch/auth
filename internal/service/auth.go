@@ -1,11 +1,14 @@
 package service
 
 import (
+	"context"
+	"errors"
+	"strings"
+	"time"
+
 	"auth/api/auth"
 	"auth/api/reason"
 	"auth/internal/biz"
-	"context"
-	"errors"
 	"github.com/go-cinch/common/copierx"
 	"github.com/go-cinch/common/jwt"
 	"github.com/go-cinch/common/middleware/i18n"
@@ -14,8 +17,6 @@ import (
 	"github.com/golang-module/carbon/v2"
 	"go.opentelemetry.io/otel"
 	"google.golang.org/protobuf/types/known/emptypb"
-	"strings"
-	"time"
 )
 
 func (s *AuthService) Register(ctx context.Context, req *auth.RegisterRequest) (rp *emptypb.Empty, err error) {
@@ -107,7 +108,7 @@ func (s *AuthService) Status(ctx context.Context, req *auth.StatusRequest) (rp *
 	return
 }
 
-func (s *AuthService) Captcha(ctx context.Context, req *emptypb.Empty) (rp *auth.CaptchaReply, err error) {
+func (s *AuthService) Captcha(ctx context.Context, _ *emptypb.Empty) (rp *auth.CaptchaReply, err error) {
 	tr := otel.Tracer("api")
 	ctx, span := tr.Start(ctx, "Captcha")
 	defer span.End()
@@ -118,17 +119,29 @@ func (s *AuthService) Captcha(ctx context.Context, req *emptypb.Empty) (rp *auth
 	return
 }
 
-func (s *AuthService) Permission(ctx context.Context, req *auth.PermissionRequest) (rp *auth.PermissionReply, err error) {
+func (s *AuthService) Permission(ctx context.Context, req *auth.PermissionRequest) (rp *emptypb.Empty, err error) {
 	tr := otel.Tracer("api")
 	ctx, span := tr.Start(ctx, "Permission")
 	defer span.End()
-	rp = &auth.PermissionReply{}
+	rp = &emptypb.Empty{}
 	user := jwt.FromServerContext(ctx)
-	r := &biz.CheckPermission{
+	r := biz.CheckPermission{
 		UserCode: user.Code,
-		Resource: req.Resource,
 	}
-	rp.Pass = s.permission.Check(ctx, r)
+	if req.Resource != nil {
+		r.Resource = *req.Resource
+	}
+	if req.Method != nil {
+		r.Method = *req.Method
+	}
+	if req.Uri != nil {
+		r.URI = *req.Uri
+	}
+	pass := s.permission.Check(ctx, r)
+	if !pass {
+		err = reason.ErrorForbidden(i18n.FromContext(ctx).T(biz.NoPermission))
+		return
+	}
 	info, err := s.user.Info(ctx, user.Code)
 	if err != nil {
 		return
@@ -140,7 +153,7 @@ func (s *AuthService) Permission(ctx context.Context, req *auth.PermissionReques
 	return
 }
 
-func (s *AuthService) Info(ctx context.Context, req *emptypb.Empty) (rp *auth.InfoReply, err error) {
+func (s *AuthService) Info(ctx context.Context, _ *emptypb.Empty) (rp *auth.InfoReply, err error) {
 	tr := otel.Tracer("api")
 	ctx, span := tr.Start(ctx, "Info")
 	defer span.End()

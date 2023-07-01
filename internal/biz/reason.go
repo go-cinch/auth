@@ -19,6 +19,6 @@ const (
 	InvalidCaptcha     = "login.invalid.captcha"
 	LoginFailed        = "login.failed"
 	UserLocked         = "login.user.locked"
-	KeepLeastOntAction = "action.keep.least.one.action"
+	KeepLeastOneAction = "action.keep.least.one.action"
 	DeleteYourself     = "user.delete.yourself"
 )

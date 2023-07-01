@@ -20,18 +20,24 @@ message Server {
     string network = 1;
     string addr = 2;
     google.protobuf.Duration timeout = 3;
+    string path = 4;
   }
   message GRPC {
     string network = 1;
     string addr = 2;
     google.protobuf.Duration timeout = 3;
   }
+  message Permission {
+    bool enable = 1;
+    bool direct = 2;
+    string prefix = 3;
+  }
   string machineId = 1;
   HTTP http = 2;
   GRPC grpc = 3;
   string language = 4;
   bool jwt = 5;
-  bool permission = 6;
+  Permission permission = 6;
   bool idempotent = 7;
   bool validate = 8;
 }
@@ -40,6 +46,7 @@ message Data {
   message Database {
     string driver = 1;
     string dsn = 2;
+    map<string, string> tenants = 3;
   }
   message Redis {
     string dsn = 1;
@@ -59,6 +66,10 @@ message Tracer {
   bool enable = 1;
   Otlp otlp = 2;
   Stdout stdout = 3;
+}
+
+message Client {
+  string auth = 1;
 }
 
 message Task {

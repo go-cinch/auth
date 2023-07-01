@@ -1,11 +1,12 @@
 package biz
 
 import (
-	"auth/internal/conf"
 	"context"
+	"strings"
+
+	"auth/internal/conf"
 	"github.com/go-cinch/common/page"
 	"github.com/go-cinch/common/utils"
-	"strings"
 )
 
 type Action struct {
@@ -32,7 +33,7 @@ type FindActionCache struct {
 }
 
 type UpdateAction struct {
-	Id       *uint64 `json:"id,string,omitempty"`
+	Id       uint64  `json:"id,string"`
 	Name     *string `json:"name,omitempty"`
 	Word     *string `json:"word,omitempty"`
 	Resource *string `json:"resource,omitempty"`
@@ -42,12 +43,14 @@ type UpdateAction struct {
 
 type ActionRepo interface {
 	Create(ctx context.Context, item *Action) error
+	GetDefault(ctx context.Context) Action
 	Find(ctx context.Context, condition *FindAction) []Action
 	FindByCode(ctx context.Context, code string) []Action
 	Update(ctx context.Context, item *UpdateAction) error
 	Delete(ctx context.Context, ids ...uint64) error
 	CodeExists(ctx context.Context, code string) error
-	Permission(ctx context.Context, code, resource string) bool
+	Permission(ctx context.Context, code string, req CheckPermission) bool
+	MatchResource(ctx context.Context, resource string, req CheckPermission) bool
 }
 
 type ActionUseCase struct {
@@ -58,7 +61,12 @@ type ActionUseCase struct {
 }
 
 func NewActionUseCase(c *conf.Bootstrap, repo ActionRepo, tx Transaction, cache Cache) *ActionUseCase {
-	return &ActionUseCase{c: c, repo: repo, tx: tx, cache: cache.WithPrefix("auth_action")}
+	return &ActionUseCase{
+		c:     c,
+		repo:  repo,
+		tx:    tx,
+		cache: cache.WithPrefix("action"),
+	}
 }
 
 func (uc *ActionUseCase) Create(ctx context.Context, item *Action) error {

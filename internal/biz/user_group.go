@@ -1,11 +1,12 @@
 package biz
 
 import (
-	"auth/internal/conf"
 	"context"
+	"strings"
+
+	"auth/internal/conf"
 	"github.com/go-cinch/common/page"
 	"github.com/go-cinch/common/utils"
-	"strings"
 )
 
 type UserGroup struct {
@@ -19,7 +20,6 @@ type UserGroup struct {
 
 type FindUserGroup struct {
 	Page   page.Page `json:"page"`
-	Code   *string   `json:"code"`
 	Name   *string   `json:"name"`
 	Word   *string   `json:"word"`
 	Action *string   `json:"action"`
@@ -31,7 +31,7 @@ type FindUserGroupCache struct {
 }
 
 type UpdateUserGroup struct {
-	Id     *uint64 `json:"id,string,omitempty"`
+	Id     uint64  `json:"id,string"`
 	Name   *string `json:"name,omitempty"`
 	Word   *string `json:"word,omitempty"`
 	Action *string `json:"action,omitempty"`
@@ -54,7 +54,12 @@ type UserGroupUseCase struct {
 }
 
 func NewUserGroupUseCase(c *conf.Bootstrap, repo UserGroupRepo, tx Transaction, cache Cache) *UserGroupUseCase {
-	return &UserGroupUseCase{c: c, repo: repo, tx: tx, cache: cache.WithPrefix("auth_user_group")}
+	return &UserGroupUseCase{
+		c:     c,
+		repo:  repo,
+		tx:    tx,
+		cache: cache.WithPrefix("group"), // not use user_group since user group cache will be flush when flush user cache
+	}
 }
 
 func (uc *UserGroupUseCase) Create(ctx context.Context, item *UserGroup) error {

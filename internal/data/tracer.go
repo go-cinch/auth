@@ -1,8 +1,10 @@
 package data
 
 import (
-	"auth/internal/conf"
 	"context"
+	"time"
+
+	"auth/internal/conf"
 	"github.com/go-cinch/common/log"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel"
@@ -14,7 +16,6 @@ import (
 	"go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.12.0"
 	"google.golang.org/grpc"
-	"time"
 )
 
 func NewTracer(c *conf.Bootstrap) (tp *trace.TracerProvider, err error) {
