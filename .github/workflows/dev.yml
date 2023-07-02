@@ -1,4 +1,4 @@
-name: Auth CI
+name: Build
 
 on:
   push:
