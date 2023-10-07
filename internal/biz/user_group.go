@@ -70,21 +70,22 @@ func (uc *UserGroupUseCase) Create(ctx context.Context, item *UserGroup) error {
 	})
 }
 
-func (uc *UserGroupUseCase) Find(ctx context.Context, condition *FindUserGroup) (rp []UserGroup) {
+func (uc *UserGroupUseCase) Find(ctx context.Context, condition *FindUserGroup) (rp []UserGroup, err error) {
 	action := strings.Join([]string{"find", utils.StructMd5(condition)}, "_")
-	str, ok := uc.cache.Get(ctx, action, func(ctx context.Context) (string, bool) {
+	str, err := uc.cache.Get(ctx, action, func(ctx context.Context) (string, error) {
 		return uc.find(ctx, action, condition)
 	})
-	if ok {
-		var cache FindUserGroupCache
-		utils.Json2Struct(&cache, str)
-		condition.Page = cache.Page
-		rp = cache.List
+	if err != nil {
+		return
 	}
+	var cache FindUserGroupCache
+	utils.Json2Struct(&cache, str)
+	condition.Page = cache.Page
+	rp = cache.List
 	return
 }
 
-func (uc *UserGroupUseCase) find(ctx context.Context, action string, condition *FindUserGroup) (res string, ok bool) {
+func (uc *UserGroupUseCase) find(ctx context.Context, action string, condition *FindUserGroup) (res string, err error) {
 	// read data from db and write to cache
 	list := uc.repo.Find(ctx, condition)
 	var cache FindUserGroupCache
@@ -92,7 +93,6 @@ func (uc *UserGroupUseCase) find(ctx context.Context, action string, condition *
 	cache.Page = condition.Page
 	res = utils.Struct2Json(cache)
 	uc.cache.Set(ctx, action, res, len(list) == 0)
-	ok = true
 	return
 }
 

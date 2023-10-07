@@ -6,10 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	"auth/api/reason"
 	"auth/internal/conf"
 	"github.com/go-cinch/common/copierx"
-	"github.com/go-cinch/common/middleware/i18n"
 	"github.com/go-cinch/common/utils"
 )
 
@@ -45,52 +43,50 @@ func NewPermissionUseCase(c *conf.Bootstrap, repo PermissionRepo, cache Cache) *
 	}
 }
 
-func (uc *PermissionUseCase) Check(ctx context.Context, item CheckPermission) (rp bool) {
+func (uc *PermissionUseCase) Check(ctx context.Context, item CheckPermission) (rp bool, err error) {
 	action := strings.Join([]string{"check", utils.StructMd5(item)}, "_")
-	str, ok := uc.cache.Get(ctx, action, func(ctx context.Context) (string, bool) {
+	str, err := uc.cache.Get(ctx, action, func(ctx context.Context) (string, error) {
 		return uc.check(ctx, action, item)
 	})
-	if ok {
-		rp, _ = strconv.ParseBool(str)
+	if err != nil {
+		return
 	}
+	rp, _ = strconv.ParseBool(str)
 	return
 }
 
-func (uc *PermissionUseCase) check(ctx context.Context, action string, item CheckPermission) (res string, ok bool) {
+func (uc *PermissionUseCase) check(ctx context.Context, action string, item CheckPermission) (res string, err error) {
 	// read data from db and write to cache
 	pass := uc.repo.Check(ctx, item)
 	res = strconv.FormatBool(pass)
 	uc.cache.Set(ctx, action, res, false)
-	ok = true
 	return
 }
 
 func (uc *PermissionUseCase) GetByUserCode(ctx context.Context, code string) (rp *Permission, err error) {
 	rp = &Permission{}
 	action := strings.Join([]string{"get_by_user_code", code}, "_")
-	str, ok := uc.cache.Get(ctx, action, func(ctx context.Context) (string, bool) {
+	str, err := uc.cache.Get(ctx, action, func(ctx context.Context) (string, error) {
 		return uc.getByUserCode(ctx, action, code)
 	})
-	if ok {
-		utils.Json2Struct(&rp, str)
+	if err != nil {
 		return
 	}
-	err = reason.ErrorTooManyRequests(i18n.FromContext(ctx).T(TooManyRequests))
+	utils.Json2Struct(&rp, str)
 	return
 }
 
-func (uc *PermissionUseCase) getByUserCode(ctx context.Context, action string, code string) (res string, ok bool) {
+func (uc *PermissionUseCase) getByUserCode(ctx context.Context, action string, code string) (res string, err error) {
 	// read data from db and write to cache
 	rp := &Permission{}
 	permission, err := uc.repo.GetByUserCode(ctx, code)
-	notFound := errors.Is(err, reason.ErrorNotFound(i18n.FromContext(ctx).T(RecordNotFound)))
+	notFound := errors.Is(err, ErrRecordNotFound(ctx))
 	if err != nil && !notFound {
 		return
 	}
 	copierx.Copy(&rp, permission)
 	res = utils.Struct2Json(rp)
 	uc.cache.Set(ctx, action, res, notFound)
-	ok = true
 	return
 }
 

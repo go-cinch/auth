@@ -4,9 +4,7 @@ import (
 	"context"
 
 	"auth/api/auth"
-	"auth/api/reason"
 	"auth/internal/biz"
-	"github.com/go-cinch/common/middleware/i18n"
 	"go.opentelemetry.io/otel"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
@@ -26,12 +24,12 @@ func (s *AuthService) CheckIdempotent(ctx context.Context, req *auth.CheckIdempo
 	defer span.End()
 	rp = &emptypb.Empty{}
 	if req.Token == "" {
-		err = reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(biz.IdempotentMissingToken))
+		err = biz.ErrIdempotentMissingToken(ctx)
 		return
 	}
 	pass := s.idempotent.Check(ctx, req.Token)
 	if !pass {
-		err = reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(biz.IdempotentTokenExpired))
+		err = biz.ErrIdempotentTokenExpired(ctx)
 		return
 	}
 	return

@@ -5,11 +5,9 @@ import (
 	"strings"
 
 	"auth/api/auth"
-	"auth/api/reason"
 	"auth/internal/biz"
 	"auth/internal/conf"
 	"github.com/go-cinch/common/jwt"
-	"github.com/go-cinch/common/middleware/i18n"
 	"github.com/go-kratos/kratos/v2/middleware"
 	"github.com/go-kratos/kratos/v2/transport"
 	kratosHttp "github.com/go-kratos/kratos/v2/transport/http"
@@ -20,7 +18,7 @@ func Permission(c *conf.Bootstrap, permission *biz.PermissionUseCase) middleware
 		return func(ctx context.Context, req interface{}) (rp interface{}, err error) {
 			tr, ok := transport.FromServerContext(ctx)
 			if !ok {
-				err = reason.ErrorForbidden(i18n.FromContext(ctx).T(biz.NoPermission))
+				err = biz.ErrNoPermission(ctx)
 				return
 			}
 			user := jwt.FromServerContext(ctx)
@@ -42,33 +40,41 @@ func Permission(c *conf.Bootstrap, permission *biz.PermissionUseCase) middleware
 				}
 				// user code is empty
 				if user.Code == "" {
-					err = reason.ErrorForbidden(i18n.FromContext(ctx).T(biz.NoPermission))
+					err = biz.ErrNoPermission(ctx)
 					return
 				}
 				// has user, check permission
-				pass := permission.Check(ctx, biz.CheckPermission{
+				var pass bool
+				pass, err = permission.Check(ctx, biz.CheckPermission{
 					UserCode: user.Code,
 					Method:   method,
 					URI:      path,
 				})
+				if err != nil {
+					return
+				}
 				if !pass {
-					err = reason.ErrorForbidden(i18n.FromContext(ctx).T(biz.NoPermission))
+					err = biz.ErrNoPermission(ctx)
 					return
 				}
 				// has permission
 			case transport.KindGRPC:
 				// direct call other grpc api
 				if user.Code == "" {
-					err = reason.ErrorForbidden(i18n.FromContext(ctx).T(biz.NoPermission))
+					err = biz.ErrNoPermission(ctx)
 					return
 				}
 				// has user, check permission
-				pass := permission.Check(ctx, biz.CheckPermission{
+				var pass bool
+				pass, err = permission.Check(ctx, biz.CheckPermission{
 					UserCode: user.Code,
 					Resource: operation,
 				})
+				if err != nil {
+					return
+				}
 				if !pass {
-					err = reason.ErrorForbidden(i18n.FromContext(ctx).T(biz.NoPermission))
+					err = biz.ErrNoPermission(ctx)
 					return
 				}
 				// has permission

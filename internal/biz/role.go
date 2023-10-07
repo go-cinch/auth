@@ -67,21 +67,22 @@ func (uc *RoleUseCase) Create(ctx context.Context, item *Role) error {
 	})
 }
 
-func (uc *RoleUseCase) Find(ctx context.Context, condition *FindRole) (rp []Role) {
+func (uc *RoleUseCase) Find(ctx context.Context, condition *FindRole) (rp []Role, err error) {
 	action := strings.Join([]string{"find", utils.StructMd5(condition)}, "_")
-	str, ok := uc.cache.Get(ctx, action, func(ctx context.Context) (string, bool) {
+	str, err := uc.cache.Get(ctx, action, func(ctx context.Context) (string, error) {
 		return uc.find(ctx, action, condition)
 	})
-	if ok {
-		var cache FindRoleCache
-		utils.Json2Struct(&cache, str)
-		condition.Page = cache.Page
-		rp = cache.List
+	if err != nil {
+		return
 	}
+	var cache FindRoleCache
+	utils.Json2Struct(&cache, str)
+	condition.Page = cache.Page
+	rp = cache.List
 	return
 }
 
-func (uc *RoleUseCase) find(ctx context.Context, action string, condition *FindRole) (res string, ok bool) {
+func (uc *RoleUseCase) find(ctx context.Context, action string, condition *FindRole) (res string, err error) {
 	// read data from db and write to cache
 	list := uc.repo.Find(ctx, condition)
 	var cache FindRoleCache
@@ -89,7 +90,6 @@ func (uc *RoleUseCase) find(ctx context.Context, action string, condition *FindR
 	cache.Page = condition.Page
 	res = utils.Struct2Json(cache)
 	uc.cache.Set(ctx, action, res, len(list) == 0)
-	ok = true
 	return
 }
 

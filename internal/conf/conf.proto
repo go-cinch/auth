@@ -1,5 +1,5 @@
 syntax = "proto3";
-package kratos.api;
+package cinch.conf;
 
 option go_package = "auth/internal/conf;conf";
 
@@ -40,13 +40,20 @@ message Server {
   Permission permission = 6;
   bool idempotent = 7;
   bool validate = 8;
+  bool nocache = 9;
+  string logLevel = 10;
 }
 
 message Data {
   message Database {
-    string driver = 1;
-    string dsn = 2;
-    map<string, string> tenants = 3;
+    string dsn = 1;
+    string driver = 2;
+    string endpoint = 3;
+    string username = 4;
+    string password = 5;
+    string schema = 6;
+    string query = 7;
+    map<string, string> tenants = 8;
   }
   message Redis {
     string dsn = 1;
@@ -66,10 +73,6 @@ message Tracer {
   bool enable = 1;
   Otlp otlp = 2;
   Stdout stdout = 3;
-}
-
-message Client {
-  string auth = 1;
 }
 
 message Task {
