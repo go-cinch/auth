@@ -38,7 +38,10 @@ func (s *AuthService) FindUser(ctx context.Context, req *auth.FindUserRequest) (
 	r.Page = page.Page{}
 	copierx.Copy(&r, req)
 	copierx.Copy(&r.Page, req.Page)
-	res := s.user.Find(ctx, r)
+	res, err := s.user.Find(ctx, r)
+	if err != nil {
+		return
+	}
 	copierx.Copy(&rp.Page, r.Page)
 	copierx.Copy(&rp.List, res)
 	return

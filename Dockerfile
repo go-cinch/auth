@@ -25,10 +25,6 @@ COPY --from=builder /go/bin/cinch /go/bin
 
 WORKDIR /app
 
-EXPOSE 6060
-EXPOSE 6160
 COPY configs /data/conf
 
 CMD ["sh", "-c", "./auth -c /data/conf"]
-# enable k8s config map
-#CMD ["sh", "-c", "./auth -c /data/conf -n cinch -l auth"]

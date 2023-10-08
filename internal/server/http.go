@@ -33,7 +33,6 @@ func NewHTTPServer(
 	idt *idempotent.Idempotent,
 	svc *service.AuthService,
 	whitelist *biz.WhitelistUseCase,
-	permission *biz.PermissionUseCase,
 ) *http.Server {
 	middlewares := []middleware.Middleware{
 		recovery.Recovery(),
@@ -49,13 +48,10 @@ func NewHTTPServer(
 		logging.Server(log.DefaultWrapper.Options().Logger()),
 		i18nMiddleware.Translator(i18n.WithLanguage(language.Make(c.Server.Language)), i18n.WithFs(locales)),
 		metadata.Server(),
-		localMiddleware.Whitelist(c, whitelist),
+		localMiddleware.Whitelist(whitelist),
 	)
-	if c.Server.Jwt {
+	if c.Server.Jwt.Enable {
 		middlewares = append(middlewares, localMiddleware.Jwt(c, client, whitelist))
-	}
-	if c.Server.Permission.Enable {
-		middlewares = append(middlewares, localMiddleware.Permission(c, permission))
 	}
 	if c.Server.Idempotent {
 		middlewares = append(middlewares, localMiddleware.Idempotent(idt, whitelist))
@@ -83,6 +79,7 @@ func NewHTTPServer(
 	}
 	srv := http.NewServer(opts...)
 	auth.RegisterAuthHTTPServer(srv, svc)
-	srv.HandlePrefix("/", pprof.NewHandler())
+	srv.HandlePrefix("/debug/pprof", pprof.NewHandler())
+	srv.HandlePrefix("/pub/healthcheck", HealthHandler(svc))
 	return srv
 }

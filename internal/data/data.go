@@ -2,6 +2,7 @@ package data
 
 import (
 	"context"
+	"fmt"
 	"net/url"
 	"strconv"
 	"time"
@@ -32,8 +33,6 @@ var ProviderSet = wire.NewSet(
 	NewWhitelistRepo,
 )
 
-type contextTxKey struct{}
-
 // Data .
 type Data struct {
 	tenant    *tenant.Tenant
@@ -56,6 +55,8 @@ func NewData(redis redis.UniversalClient, gormTenant *tenant.Tenant, sonyflake *
 	}
 	return
 }
+
+type contextTxKey struct{}
 
 // Tx is transaction wrapper
 func (d *Data) Tx(ctx context.Context, handler func(ctx context.Context) error) error {
@@ -144,7 +145,18 @@ func NewDB(c *conf.Bootstrap) (gormTenant *tenant.Tenant, err error) {
 			ops = append(ops, tenant.WithDSN(k, v))
 		}
 	} else {
-		ops = append(ops, tenant.WithDSN("", c.Data.Database.Dsn))
+		dsn := c.Data.Database.Dsn
+		if dsn == "" {
+			dsn = fmt.Sprintf(
+				"%s:%s@tcp(%s)/%s?%s",
+				c.Data.Database.Username,
+				c.Data.Database.Password,
+				c.Data.Database.Endpoint,
+				c.Data.Database.Schema,
+				c.Data.Database.Query,
+			)
+		}
+		ops = append(ops, tenant.WithDSN("", dsn))
 	}
 	ops = append(ops, tenant.WithSQLFile(db.SQLFiles))
 	ops = append(ops, tenant.WithSQLRoot(db.SQLRoot))
@@ -181,7 +193,7 @@ func NewSonyflake(c *conf.Bootstrap) (sf *id.Sonyflake, err error) {
 		return
 	}
 	log.
-		WithField("sonyflake.id", machineId).
+		WithField("machine.id", machineId).
 		Info("initialize sonyflake success")
 	return
 }

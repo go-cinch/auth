@@ -4,13 +4,11 @@ import (
 	"context"
 	"strings"
 
-	"auth/api/reason"
 	"auth/internal/biz"
 	"auth/internal/data/model"
 	"auth/internal/data/query"
 	"github.com/go-cinch/common/constant"
 	"github.com/go-cinch/common/copierx"
-	"github.com/go-cinch/common/middleware/i18n"
 	"github.com/go-cinch/common/utils"
 	"gorm.io/gen"
 )
@@ -84,13 +82,13 @@ func (ro whitelistRepo) Update(ctx context.Context, item *biz.UpdateWhitelist) (
 	db := p.WithContext(ctx)
 	m := db.GetByID(item.Id)
 	if m.ID == constant.UI0 {
-		err = reason.ErrorNotFound("%s Whitelist.id: %d", i18n.FromContext(ctx).T(biz.RecordNotFound), item.Id)
+		err = biz.ErrRecordNotFound(ctx)
 		return
 	}
 	change := make(map[string]interface{})
 	utils.CompareDiff(m, item, &change)
 	if len(change) == 0 {
-		err = reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(biz.DataNotChange))
+		err = biz.ErrDataNotChange(ctx)
 		return
 	}
 	_, err = db.

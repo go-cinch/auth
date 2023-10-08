@@ -32,7 +32,10 @@ func (s *AuthService) HasWhitelist(ctx context.Context, req *auth.HasWhitelistRe
 	rp = &auth.HasWhitelistReply{}
 	r := &biz.HasWhitelist{}
 	copierx.Copy(&r, req)
-	res := s.whitelist.Has(ctx, r)
+	res, err := s.whitelist.Has(ctx, r)
+	if err != nil {
+		return
+	}
 	rp.Ok = res
 	return
 }

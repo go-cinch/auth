@@ -83,19 +83,20 @@ func (uc *WhitelistUseCase) Create(ctx context.Context, item *Whitelist) error {
 
 func (uc *WhitelistUseCase) Find(ctx context.Context, condition *FindWhitelist) (rp []Whitelist) {
 	action := strings.Join([]string{"find", utils.StructMd5(condition)}, "_")
-	str, ok := uc.cache.Get(ctx, action, func(ctx context.Context) (string, bool) {
+	str, err := uc.cache.Get(ctx, action, func(ctx context.Context) (string, error) {
 		return uc.find(ctx, action, condition)
 	})
-	if ok {
-		var cache FindWhitelistCache
-		utils.Json2Struct(&cache, str)
-		condition.Page = cache.Page
-		rp = cache.List
+	if err != nil {
+		return
 	}
+	var cache FindWhitelistCache
+	utils.Json2Struct(&cache, str)
+	condition.Page = cache.Page
+	rp = cache.List
 	return
 }
 
-func (uc *WhitelistUseCase) find(ctx context.Context, action string, condition *FindWhitelist) (res string, ok bool) {
+func (uc *WhitelistUseCase) find(ctx context.Context, action string, condition *FindWhitelist) (res string, err error) {
 	// read data from db and write to cache
 	list := uc.repo.Find(ctx, condition)
 	var cache FindWhitelistCache
@@ -103,27 +104,26 @@ func (uc *WhitelistUseCase) find(ctx context.Context, action string, condition *
 	cache.Page = condition.Page
 	res = utils.Struct2Json(cache)
 	uc.cache.Set(ctx, action, res, len(list) == 0)
-	ok = true
 	return
 }
 
-func (uc *WhitelistUseCase) Has(ctx context.Context, condition *HasWhitelist) (rp bool) {
+func (uc *WhitelistUseCase) Has(ctx context.Context, condition *HasWhitelist) (rp bool, err error) {
 	action := strings.Join([]string{"has", utils.StructMd5(condition)}, "_")
-	str, ok := uc.cache.Get(ctx, action, func(ctx context.Context) (string, bool) {
+	str, err := uc.cache.Get(ctx, action, func(ctx context.Context) (string, error) {
 		return uc.has(ctx, action, condition)
 	})
-	if ok {
-		rp, _ = strconv.ParseBool(str)
+	if err != nil {
+		return
 	}
+	rp, _ = strconv.ParseBool(str)
 	return
 }
 
-func (uc *WhitelistUseCase) has(ctx context.Context, action string, condition *HasWhitelist) (res string, ok bool) {
+func (uc *WhitelistUseCase) has(ctx context.Context, action string, condition *HasWhitelist) (res string, err error) {
 	// read data from db and write to cache
 	has := uc.repo.Has(ctx, condition)
 	res = strconv.FormatBool(has)
 	uc.cache.Set(ctx, action, res, false)
-	ok = true
 	return
 }
 

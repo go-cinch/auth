@@ -34,7 +34,10 @@ func (s *AuthService) FindRole(ctx context.Context, req *auth.FindRoleRequest) (
 	r.Page = page.Page{}
 	copierx.Copy(&r, req)
 	copierx.Copy(&r.Page, req.Page)
-	res := s.role.Find(ctx, r)
+	res, err := s.role.Find(ctx, r)
+	if err != nil {
+		return
+	}
 	copierx.Copy(&rp.Page, r.Page)
 	copierx.Copy(&rp.List, res)
 	return
@@ -48,9 +51,10 @@ func (s *AuthService) UpdateRole(ctx context.Context, req *auth.UpdateRoleReques
 	r := &biz.UpdateRole{}
 	copierx.Copy(&r, req)
 	err = s.role.Update(ctx, r)
-	if err == nil {
-		s.permission.FlushCache(ctx)
+	if err != nil {
+		return
 	}
+	s.permission.FlushCache(ctx)
 	return
 }
 
@@ -60,8 +64,9 @@ func (s *AuthService) DeleteRole(ctx context.Context, req *params.IdsRequest) (r
 	defer span.End()
 	rp = &emptypb.Empty{}
 	err = s.role.Delete(ctx, utils.Str2Uint64Arr(req.Ids)...)
-	if err == nil {
-		s.permission.FlushCache(ctx)
+	if err != nil {
+		return
 	}
+	s.permission.FlushCache(ctx)
 	return
 }

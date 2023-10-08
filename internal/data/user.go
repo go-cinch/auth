@@ -5,14 +5,13 @@ import (
 	"strconv"
 	"strings"
 
-	"auth/api/reason"
 	"auth/internal/biz"
 	"auth/internal/data/model"
 	"auth/internal/data/query"
 	"github.com/go-cinch/common/constant"
 	"github.com/go-cinch/common/copierx"
 	"github.com/go-cinch/common/id"
-	"github.com/go-cinch/common/middleware/i18n"
+	"github.com/go-cinch/common/log"
 	"github.com/go-cinch/common/utils"
 	"github.com/golang-module/carbon/v2"
 	"gorm.io/gen"
@@ -41,7 +40,10 @@ func (ro userRepo) GetByUsername(ctx context.Context, username string) (item *bi
 		Where(p.Username.Eq(username)).
 		First()
 	if err != nil || m.ID == constant.UI0 {
-		err = reason.ErrorNotFound("%s User.username: %s", i18n.FromContext(ctx).T(biz.RecordNotFound), username)
+		err = biz.ErrRecordNotFound(ctx)
+		log.
+			WithError(err).
+			Error("invalid `username`: %s", username)
 		return
 	}
 	copierx.Copy(&item, m)
@@ -132,7 +134,7 @@ func (ro userRepo) Create(ctx context.Context, item *biz.User) (err error) {
 	db := p.WithContext(ctx)
 	m := db.GetByCol("username", item.Username)
 	if m.ID > constant.UI0 {
-		err = reason.ErrorIllegalParameter("%s `username`: %s", i18n.FromContext(ctx).T(biz.DuplicateField), item.Username)
+		err = biz.ErrDuplicateField(ctx, "username", item.Username)
 		return
 	}
 	copierx.Copy(&m, item)
@@ -153,13 +155,13 @@ func (ro userRepo) Update(ctx context.Context, item *biz.UpdateUser) (err error)
 	db := p.WithContext(ctx)
 	m := db.GetByID(item.Id)
 	if m.ID == constant.UI0 {
-		err = reason.ErrorNotFound("%s User.id: %d", i18n.FromContext(ctx).T(biz.RecordNotFound), item.Id)
+		err = biz.ErrRecordNotFound(ctx)
 		return
 	}
 	change := make(map[string]interface{})
 	utils.CompareDiff(m, item, &change)
 	if len(change) == 0 {
-		err = reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(biz.DataNotChange))
+		err = biz.ErrDataNotChange(ctx)
 		return
 	}
 	// check lock or unlock
@@ -182,7 +184,7 @@ func (ro userRepo) Update(ctx context.Context, item *biz.UpdateUser) (err error)
 		if v, ok2 := username.(string); ok2 {
 			_, err = ro.GetByUsername(ctx, v)
 			if err == nil {
-				err = reason.ErrorIllegalParameter("%s `username`: %s", i18n.FromContext(ctx).T(biz.DuplicateField), v)
+				err = biz.ErrDuplicateField(ctx, "username", v)
 				return
 			}
 		}
@@ -193,7 +195,10 @@ func (ro userRepo) Update(ctx context.Context, item *biz.UpdateUser) (err error)
 			dbRole := pRole.WithContext(ctx)
 			mRole := dbRole.GetByID(*item.RoleId)
 			if mRole.ID == constant.UI0 {
-				err = reason.ErrorNotFound("%s Role.id: %s", i18n.FromContext(ctx).T(biz.RecordNotFound), v)
+				err = biz.ErrRecordNotFound(ctx)
+				log.
+					WithError(err).
+					Error("invalid `roleId`: %s", v)
 				return
 			}
 		}
@@ -270,7 +275,7 @@ func (ro userRepo) UpdatePassword(ctx context.Context, item *biz.User) (err erro
 	db := p.WithContext(ctx)
 	m := db.GetByCol("username", item.Username)
 	if m.ID == constant.UI0 {
-		err = reason.ErrorNotFound("%s User.username: %s", i18n.FromContext(ctx).T(biz.RecordNotFound), item.Username)
+		err = biz.ErrRecordNotFound(ctx)
 		return
 	}
 	fields := make(map[string]interface{})
@@ -289,7 +294,7 @@ func (ro userRepo) IdExists(ctx context.Context, id uint64) (err error) {
 	db := p.WithContext(ctx)
 	m := db.GetByID(id)
 	if m.ID == constant.UI0 {
-		err = reason.ErrorNotFound("%s User.id: %d", i18n.FromContext(ctx).T(biz.RecordNotFound), id)
+		err = biz.ErrRecordNotFound(ctx)
 		return
 	}
 	return
@@ -304,7 +309,10 @@ func (ro userRepo) GetByCode(ctx context.Context, code string) (item *biz.User, 
 		Where(p.Code.Eq(code)).
 		First()
 	if err != nil || m.ID == constant.UI0 {
-		err = reason.ErrorNotFound("%s User.code: %s", i18n.FromContext(ctx).T(biz.RecordNotFound), code)
+		err = biz.ErrRecordNotFound(ctx)
+		log.
+			WithError(err).
+			Error("invalid `code`: %s", code)
 		return
 	}
 	copierx.Copy(&item, m)

@@ -1,24 +1,71 @@
 package biz
 
-const (
-	JwtMissingToken           = "jwt.token.missing"
-	JwtTokenInvalid           = "jwt.token.invalid"
-	JwtTokenExpired           = "jwt.token.expired"
-	JwtTokenParseFail         = "jwt.token.parse.failed"
-	JwtUnSupportSigningMethod = "jwt.wrong.signing.method"
-	IdempotentMissingToken    = "idempotent.token.missing"
-	IdempotentTokenExpired    = "idempotent.token.invalid"
+import (
+	"context"
 
-	TooManyRequests    = "too.many.requests"
-	DataNotChange      = "data.not.change"
-	DuplicateField     = "duplicate.field"
-	RecordNotFound     = "record.not.found"
-	NoPermission       = "no.permission"
-	IncorrectPassword  = "login.incorrect.password"
-	SamePassword       = "login.same.password"
-	InvalidCaptcha     = "login.invalid.captcha"
-	LoginFailed        = "login.failed"
-	UserLocked         = "login.user.locked"
-	KeepLeastOneAction = "action.keep.least.one.action"
-	DeleteYourself     = "user.delete.yourself"
+	"auth/api/reason"
+	"github.com/go-cinch/common/constant"
+	"github.com/go-cinch/common/middleware/i18n"
+)
+
+var (
+	ErrJwtMissingToken = func(ctx context.Context) error {
+		return reason.ErrorUnauthorized(i18n.FromContext(ctx).T(constant.JwtMissingToken))
+	}
+	ErrJwtTokenInvalid = func(ctx context.Context) error {
+		return reason.ErrorUnauthorized(i18n.FromContext(ctx).T(constant.JwtTokenInvalid))
+	}
+	ErrJwtTokenExpired = func(ctx context.Context) error {
+		return reason.ErrorUnauthorized(i18n.FromContext(ctx).T(constant.JwtTokenExpired))
+	}
+	ErrJwtTokenParseFail = func(ctx context.Context) error {
+		return reason.ErrorUnauthorized(i18n.FromContext(ctx).T(constant.JwtTokenParseFail))
+	}
+	ErrJwtUnSupportSigningMethod = func(ctx context.Context) error {
+		return reason.ErrorUnauthorized(i18n.FromContext(ctx).T(constant.JwtUnSupportSigningMethod))
+	}
+	ErrIdempotentMissingToken = func(ctx context.Context) error {
+		return reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(constant.IdempotentMissingToken))
+	}
+	ErrIdempotentTokenExpired = func(ctx context.Context) error {
+		return reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(constant.IdempotentTokenExpired))
+	}
+
+	ErrTooManyRequests = func(ctx context.Context) error {
+		return reason.ErrorTooManyRequests(i18n.FromContext(ctx).T(constant.TooManyRequests))
+	}
+	ErrRecordNotFound = func(ctx context.Context) error {
+		return reason.ErrorNotFound(i18n.FromContext(ctx).T(constant.RecordNotFound))
+	}
+	ErrNoPermission = func(ctx context.Context) error {
+		return reason.ErrorForbidden(i18n.FromContext(ctx).T(constant.NoPermission))
+	}
+
+	ErrIncorrectPassword = func(ctx context.Context) error {
+		return reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(constant.IncorrectPassword))
+	}
+	ErrSamePassword = func(ctx context.Context) error {
+		return reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(constant.SamePassword))
+	}
+	ErrDataNotChange = func(ctx context.Context) error {
+		return reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(constant.DataNotChange))
+	}
+	ErrDuplicateField = func(ctx context.Context, k, v string) error {
+		return reason.ErrorIllegalParameter("%s `%s`: %s", i18n.FromContext(ctx).T(constant.DuplicateField), k, v)
+	}
+	ErrInvalidCaptcha = func(ctx context.Context) error {
+		return reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(constant.InvalidCaptcha))
+	}
+	ErrLoginFailed = func(ctx context.Context) error {
+		return reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(constant.LoginFailed))
+	}
+	ErrUserLocked = func(ctx context.Context) error {
+		return reason.ErrorForbidden(i18n.FromContext(ctx).T(constant.UserLocked))
+	}
+	ErrDeleteYourself = func(ctx context.Context) error {
+		return reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(constant.DeleteYourself))
+	}
+	ErrKeepLeastOneAction = func(ctx context.Context) error {
+		return reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(constant.KeepLeastOneAction))
+	}
 )

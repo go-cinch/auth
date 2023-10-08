@@ -4,7 +4,6 @@ import (
 	"context"
 	"strings"
 
-	"auth/api/reason"
 	"auth/internal/biz"
 	"auth/internal/conf"
 	"auth/internal/data/model"
@@ -12,7 +11,7 @@ import (
 	"github.com/go-cinch/common/constant"
 	"github.com/go-cinch/common/copierx"
 	"github.com/go-cinch/common/id"
-	"github.com/go-cinch/common/middleware/i18n"
+	"github.com/go-cinch/common/log"
 	"github.com/go-cinch/common/utils"
 	"github.com/gobwas/glob"
 	"gorm.io/gen"
@@ -31,9 +30,9 @@ func NewActionRepo(c *conf.Bootstrap, data *Data) biz.ActionRepo {
 }
 
 func (ro actionRepo) Create(ctx context.Context, item *biz.Action) (err error) {
-	err = ro.WordExists(ctx, item.Word)
-	if err == nil {
-		err = reason.ErrorIllegalParameter("%s `word`: %s", i18n.FromContext(ctx).T(biz.DuplicateField), item.Word)
+	ok := ro.WordExists(ctx, item.Word)
+	if ok {
+		err = biz.ErrDuplicateField(ctx, "word", item.Word)
 		return
 	}
 	var m model.Action
@@ -110,19 +109,19 @@ func (ro actionRepo) Update(ctx context.Context, item *biz.UpdateAction) (err er
 	db := p.WithContext(ctx)
 	m := db.GetByID(item.Id)
 	if m.ID == constant.UI0 {
-		err = reason.ErrorNotFound("%s Action.id: %d", i18n.FromContext(ctx).T(biz.RecordNotFound), item.Id)
+		err = biz.ErrRecordNotFound(ctx)
 		return
 	}
 	change := make(map[string]interface{})
 	utils.CompareDiff(m, item, &change)
 	if len(change) == 0 {
-		err = reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(biz.DataNotChange))
+		err = biz.ErrDataNotChange(ctx)
 		return
 	}
 	if item.Word != nil && *item.Word != m.Word {
-		err = ro.WordExists(ctx, *item.Word)
-		if err == nil {
-			err = reason.ErrorIllegalParameter("%s `word`: %s", i18n.FromContext(ctx).T(biz.DuplicateField), *item.Word)
+		ok := ro.WordExists(ctx, *item.Word)
+		if ok {
+			err = biz.ErrDuplicateField(ctx, "word", *item.Word)
 			return
 		}
 	}
@@ -143,7 +142,7 @@ func (ro actionRepo) Delete(ctx context.Context, ids ...uint64) (err error) {
 	}
 	count, _ := db.Count()
 	if count == 0 {
-		err = reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(biz.KeepLeastOneAction))
+		err = biz.ErrKeepLeastOneAction(ctx)
 	}
 	return
 }
@@ -155,24 +154,28 @@ func (ro actionRepo) CodeExists(ctx context.Context, code string) (err error) {
 	for _, item := range arr {
 		m := db.GetByCol("code", item)
 		if m.ID == constant.UI0 {
-			err = reason.ErrorNotFound("%s Action.code: %s", i18n.FromContext(ctx).T(biz.RecordNotFound), item)
+			err = biz.ErrRecordNotFound(ctx)
+			log.
+				WithError(err).
+				Error("invalid `code`: %s", code)
 			return
 		}
 	}
 	return
 }
 
-func (ro actionRepo) WordExists(ctx context.Context, word string) (err error) {
+func (ro actionRepo) WordExists(ctx context.Context, word string) (ok bool) {
 	p := query.Use(ro.data.DB(ctx)).Action
 	db := p.WithContext(ctx)
 	arr := strings.Split(word, ",")
 	for _, item := range arr {
 		m := db.GetByCol("word", item)
 		if m.ID == constant.UI0 {
-			err = reason.ErrorNotFound("%s Action.word: %s", i18n.FromContext(ctx).T(biz.RecordNotFound), item)
+			log.Error("invalid `word`: %s", item)
 			return
 		}
 	}
+	ok = true
 	return
 }
 
@@ -200,7 +203,11 @@ func (ro actionRepo) permission(ctx context.Context, code string, req biz.CheckP
 	return ro.MatchResource(ctx, m.Resource, req)
 }
 
-func (ro actionRepo) MatchResource(_ context.Context, resource string, req biz.CheckPermission) (pass bool) {
+func (actionRepo) MatchResource(_ context.Context, resource string, req biz.CheckPermission) (pass bool) {
+	if resource == "" {
+		// empty resource no need match
+		return
+	}
 	arr1 := strings.Split(resource, "\n")
 	for _, v1 := range arr1 {
 		if v1 == "*" {
@@ -222,7 +229,7 @@ func (ro actionRepo) MatchResource(_ context.Context, resource string, req biz.C
 			if err != nil {
 				return
 			}
-			matched := g.Match(strings.TrimPrefix(req.URI, ro.c.Server.Permission.Prefix))
+			matched := g.Match(req.URI)
 			if matched && utils.Contains[string](methods, req.Method) {
 				pass = true
 				return
@@ -239,7 +246,7 @@ func (ro actionRepo) MatchResource(_ context.Context, resource string, req biz.C
 			if err != nil {
 				return
 			}
-			matched := g.Match(strings.TrimPrefix(req.URI, ro.c.Server.Permission.Prefix))
+			matched := g.Match(req.URI)
 			if matched && utils.Contains[string](methods, req.Method) {
 				pass = true
 				return

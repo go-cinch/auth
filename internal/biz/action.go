@@ -77,21 +77,22 @@ func (uc *ActionUseCase) Create(ctx context.Context, item *Action) error {
 	})
 }
 
-func (uc *ActionUseCase) Find(ctx context.Context, condition *FindAction) (rp []Action) {
+func (uc *ActionUseCase) Find(ctx context.Context, condition *FindAction) (rp []Action, err error) {
 	action := strings.Join([]string{"find", utils.StructMd5(condition)}, "_")
-	str, ok := uc.cache.Get(ctx, action, func(ctx context.Context) (string, bool) {
+	str, err := uc.cache.Get(ctx, action, func(ctx context.Context) (string, error) {
 		return uc.find(ctx, action, condition)
 	})
-	if ok {
-		var cache FindActionCache
-		utils.Json2Struct(&cache, str)
-		condition.Page = cache.Page
-		rp = cache.List
+	if err != nil {
+		return
 	}
+	var cache FindActionCache
+	utils.Json2Struct(&cache, str)
+	condition.Page = cache.Page
+	rp = cache.List
 	return
 }
 
-func (uc *ActionUseCase) find(ctx context.Context, action string, condition *FindAction) (res string, ok bool) {
+func (uc *ActionUseCase) find(ctx context.Context, action string, condition *FindAction) (res string, err error) {
 	// read data from db and write to cache
 	list := uc.repo.Find(ctx, condition)
 	var cache FindActionCache
@@ -99,7 +100,6 @@ func (uc *ActionUseCase) find(ctx context.Context, action string, condition *Fin
 	cache.Page = condition.Page
 	res = utils.Struct2Json(cache)
 	uc.cache.Set(ctx, action, res, len(list) == 0)
-	ok = true
 	return
 }
 
