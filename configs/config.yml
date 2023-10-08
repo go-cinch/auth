@@ -3,20 +3,16 @@ server:
   http:
     addr: 0.0.0.0:6060
     timeout: 20s
-    # service path prefix, check permission will use it
-    path: '/auth'
   grpc:
     addr: 0.0.0.0:6160
     timeout: 20s
   language: 'en'
-  jwt: true
-  permission:
+  jwt:
+    # enable jwt, default use jwtV4 and HS512 algorithm, see: https://github.com/go-cinch/common/blob/jwt/v1.0.3/jwt/jwt.go#L123
     enable: true
-    # use nginx auth_request set direct=false
-    # direct means call api directly not through /permission
-    direct: false
-    # nginx auth_request request_method: `GET` request_uri: `/api/auth/game`, action resource: `GET|/auth/game`, so prefix is `/api`
-    prefix: '/api'
+    key: 'auth'
+    expires: '24h'
+  permission: true
   idempotent: true
   validate: true
   # disable biz.Cache or not
@@ -45,12 +41,8 @@ data:
 tracer:
   enable: true
   otlp:
-    # how to run a otel-collector? see this: https://github.com/SigNoz/signoz/blob/develop/deploy/README.md#using-docker-compose
+    # how to run a otel-collector? see: https://github.com/SigNoz/signoz/blob/develop/deploy/README.md#using-docker-compose
     endpoint: ''
     insecure: true
   stdout:
     prettyPrint: false
-auth:
-  jwt:
-    key: 'auth'
-    expires: '24h'

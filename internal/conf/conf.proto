@@ -12,7 +12,6 @@ message Bootstrap {
   Data data = 4;
   Tracer tracer = 5;
   repeated Task tasks = 6;
-  Auth auth = 7;
 }
 
 message Server {
@@ -20,24 +19,23 @@ message Server {
     string network = 1;
     string addr = 2;
     google.protobuf.Duration timeout = 3;
-    string path = 4;
   }
   message GRPC {
     string network = 1;
     string addr = 2;
     google.protobuf.Duration timeout = 3;
   }
-  message Permission {
+  message Jwt {
     bool enable = 1;
-    bool direct = 2;
-    string prefix = 3;
+    string key = 2;
+    string expires = 3;
   }
   string machineId = 1;
   HTTP http = 2;
   GRPC grpc = 3;
   string language = 4;
-  bool jwt = 5;
-  Permission permission = 6;
+  Jwt jwt = 5;
+  bool permission = 6;
   bool idempotent = 7;
   bool validate = 8;
   bool nocache = 9;
@@ -81,12 +79,4 @@ message Task {
   string expr = 3;
   int64 timeout = 4;
   int64 retry = 5;
-}
-
-message Auth {
-  message Jwt {
-    string key = 1;
-    string expires = 2;
-  }
-  Jwt jwt = 1;
 }

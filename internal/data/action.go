@@ -203,7 +203,11 @@ func (ro actionRepo) permission(ctx context.Context, code string, req biz.CheckP
 	return ro.MatchResource(ctx, m.Resource, req)
 }
 
-func (ro actionRepo) MatchResource(_ context.Context, resource string, req biz.CheckPermission) (pass bool) {
+func (actionRepo) MatchResource(_ context.Context, resource string, req biz.CheckPermission) (pass bool) {
+	if resource == "" {
+		// empty resource no need match
+		return
+	}
 	arr1 := strings.Split(resource, "\n")
 	for _, v1 := range arr1 {
 		if v1 == "*" {
@@ -225,7 +229,7 @@ func (ro actionRepo) MatchResource(_ context.Context, resource string, req biz.C
 			if err != nil {
 				return
 			}
-			matched := g.Match(strings.TrimPrefix(req.URI, ro.c.Server.Permission.Prefix))
+			matched := g.Match(req.URI)
 			if matched && utils.Contains[string](methods, req.Method) {
 				pass = true
 				return
@@ -242,7 +246,7 @@ func (ro actionRepo) MatchResource(_ context.Context, resource string, req biz.C
 			if err != nil {
 				return
 			}
-			matched := g.Match(strings.TrimPrefix(req.URI, ro.c.Server.Permission.Prefix))
+			matched := g.Match(req.URI)
 			if matched && utils.Contains[string](methods, req.Method) {
 				pass = true
 				return

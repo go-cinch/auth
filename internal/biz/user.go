@@ -297,7 +297,7 @@ func (uc *UserUseCase) Login(ctx context.Context, item *Login) (rp *LoginToken, 
 		Code:     status.Code,
 		Platform: status.Platform,
 	}
-	token, expireTime := authUser.CreateToken(uc.c.Auth.Jwt.Key, uc.c.Auth.Jwt.Expires)
+	token, expireTime := authUser.CreateToken(uc.c.Server.Jwt.Key, uc.c.Server.Jwt.Expires)
 	rp.Token = token
 	rp.Expires = expireTime.ToDateTimeString()
 	return

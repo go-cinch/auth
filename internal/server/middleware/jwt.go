@@ -44,7 +44,7 @@ func jwtHandler(c *conf.Bootstrap, client redis.UniversalClient) func(handler mi
 				} else {
 					// parse Authorization jwt token to get user info
 					var info *jwtV4.Token
-					info, err = parseToken(ctx, c.Auth.Jwt.Key, token)
+					info, err = parseToken(ctx, c.Server.Jwt.Key, token)
 					if err != nil {
 						return
 					}

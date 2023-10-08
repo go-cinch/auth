@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"errors"
+	"fmt"
 	"math/rand"
 	"strings"
 	"time"
@@ -191,6 +192,7 @@ func (c *Cache) Lock(ctx context.Context, action string) (ok bool) {
 	retry := 0
 	var e error
 	for retry < 20 && !ok {
+		fmt.Println("retry", c.getLockKey(ctx, action))
 		ok, e = c.redis.SetNX(ctx, c.getLockKey(ctx, action), 1, time.Minute).Result()
 		if errors.Is(e, context.DeadlineExceeded) ||
 			errors.Is(e, context.Canceled) ||
@@ -214,10 +216,11 @@ func (c *Cache) Unlock(ctx context.Context, action string) {
 	if c.disable {
 		return
 	}
+	lockKey := c.getLockKey(ctx, action)
 	// get span and create new ctx since current ctx maybe timeout, unlock must be execution
 	span := trace.SpanFromContext(ctx)
 	ctx = trace.ContextWithSpan(context.Background(), span)
-	err := c.redis.Del(ctx, c.getLockKey(ctx, action)).Err()
+	err := c.redis.Del(ctx, lockKey).Err()
 	if err != nil {
 		log.
 			WithContext(ctx).

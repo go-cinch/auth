@@ -3,19 +3,16 @@ package middleware
 import (
 	"context"
 	"net/http"
-	"strings"
 
 	"auth/api/auth"
 	"auth/internal/biz"
-	"auth/internal/conf"
 	"github.com/go-kratos/kratos/v2/middleware"
 	"github.com/go-kratos/kratos/v2/middleware/selector"
 	"github.com/go-kratos/kratos/v2/transport"
-	kratosHttp "github.com/go-kratos/kratos/v2/transport/http"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func Whitelist(c *conf.Bootstrap, whitelist *biz.WhitelistUseCase) middleware.Middleware {
+func Whitelist(whitelist *biz.WhitelistUseCase) middleware.Middleware {
 	return func(handler middleware.Handler) middleware.Handler {
 		return func(ctx context.Context, req interface{}) (rp interface{}, err error) {
 			tr, ok := transport.FromServerContext(ctx)
@@ -23,87 +20,26 @@ func Whitelist(c *conf.Bootstrap, whitelist *biz.WhitelistUseCase) middleware.Mi
 				err = biz.ErrNoPermission(ctx)
 				return
 			}
+			var pass bool
 			operation := tr.Operation()
-			switch tr.Kind() {
-			case transport.KindHTTP:
-				var pass bool
-				if operation == auth.OperationAuthPermission {
-					// nginx auth_request
-					v, ok2 := req.(*auth.PermissionRequest)
-					if !ok2 {
-						err = biz.ErrNoPermission(ctx)
-						return
-					}
-					// check whitelist
-					pass, err = hasPermissionWhitelist(ctx, whitelist, v)
-					if err != nil {
-						return
-					}
-					if pass {
-						rp = &emptypb.Empty{}
-						return
-					}
-					// not in whitelist
-					return handler(ctx, req)
-				}
-				if !c.Server.Permission.Direct {
-					// called OperationAuthPermission means has permission
-					return handler(ctx, req)
-				}
-				// direct call other http api
-				var v auth.PermissionRequest
-				var method, path string
-				if ht, ok3 := tr.(kratosHttp.Transporter); ok3 {
-					method = ht.Request().Method
-					path = strings.Join([]string{c.Server.Http.Path, ht.Request().URL.Path}, "")
-					v.Method = &method
-					v.Uri = &path
+			if operation == auth.OperationAuthPermission {
+				// nginx auth_request
+				v, ok2 := req.(*auth.PermissionRequest)
+				if !ok2 {
+					err = biz.ErrNoPermission(ctx)
+					return
 				}
 				// check whitelist
-				pass, err = hasPermissionWhitelist(ctx, whitelist, &v)
+				pass, err = hasPermissionWhitelist(ctx, whitelist, v)
 				if err != nil {
 					return
 				}
 				if pass {
-					return handler(ctx, req)
-				}
-			case transport.KindGRPC:
-				var pass bool
-				if operation == auth.OperationAuthPermission {
-					// direct call /Permission
-					v, ok2 := req.(*auth.PermissionRequest)
-					if !ok2 {
-						err = biz.ErrNoPermission(ctx)
-						return
-					}
-					// check whitelist
-					pass, err = hasPermissionWhitelist(ctx, whitelist, v)
-					if err != nil {
-						return
-					}
-					if pass {
-						rp = &emptypb.Empty{}
-						return
-					}
-					// not in whitelist
-					return handler(ctx, req)
-				}
-				if !c.Server.Permission.Direct {
-					// called OperationAuthPermission means has permission
-					return handler(ctx, req)
-				}
-				// direct call other grpc api
-				var v auth.PermissionRequest
-				v.Resource = &operation
-				// check whitelist
-				pass, err = hasPermissionWhitelist(ctx, whitelist, &v)
-				if err != nil {
+					rp = &emptypb.Empty{}
 					return
-				}
-				if pass {
-					return handler(ctx, req)
 				}
 			}
+			// not in whitelist or not auth.OperationAuthPermission
 			return handler(ctx, req)
 		}
 	}
