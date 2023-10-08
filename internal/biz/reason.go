@@ -34,6 +34,12 @@ var (
 	ErrTooManyRequests = func(ctx context.Context) error {
 		return reason.ErrorTooManyRequests(i18n.FromContext(ctx).T(constant.TooManyRequests))
 	}
+	ErrDataNotChange = func(ctx context.Context) error {
+		return reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(constant.DataNotChange))
+	}
+	ErrDuplicateField = func(ctx context.Context, k, v string) error {
+		return reason.ErrorIllegalParameter("%s `%s`: %s", i18n.FromContext(ctx).T(constant.DuplicateField), k, v)
+	}
 	ErrRecordNotFound = func(ctx context.Context) error {
 		return reason.ErrorNotFound(i18n.FromContext(ctx).T(constant.RecordNotFound))
 	}
@@ -47,12 +53,6 @@ var (
 	ErrSamePassword = func(ctx context.Context) error {
 		return reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(constant.SamePassword))
 	}
-	ErrDataNotChange = func(ctx context.Context) error {
-		return reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(constant.DataNotChange))
-	}
-	ErrDuplicateField = func(ctx context.Context, k, v string) error {
-		return reason.ErrorIllegalParameter("%s `%s`: %s", i18n.FromContext(ctx).T(constant.DuplicateField), k, v)
-	}
 	ErrInvalidCaptcha = func(ctx context.Context) error {
 		return reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(constant.InvalidCaptcha))
 	}
@@ -62,10 +62,10 @@ var (
 	ErrUserLocked = func(ctx context.Context) error {
 		return reason.ErrorForbidden(i18n.FromContext(ctx).T(constant.UserLocked))
 	}
-	ErrDeleteYourself = func(ctx context.Context) error {
-		return reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(constant.DeleteYourself))
-	}
 	ErrKeepLeastOneAction = func(ctx context.Context) error {
 		return reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(constant.KeepLeastOneAction))
+	}
+	ErrDeleteYourself = func(ctx context.Context) error {
+		return reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(constant.DeleteYourself))
 	}
 )
