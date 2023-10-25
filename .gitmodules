@@ -1,8 +1,8 @@
 [submodule "api/auth-proto"]
 	path = api/auth-proto
 	url = https://github.com/go-cinch/auth-proto.git
-	branch = master
+	branch = main
 [submodule "api/reason-proto"]
 	path = api/reason-proto
 	url = https://github.com/go-cinch/reason-proto.git
-	branch = master
+	branch = main
