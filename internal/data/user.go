@@ -43,7 +43,7 @@ func (ro userRepo) GetByUsername(ctx context.Context, username string) (item *bi
 		err = biz.ErrRecordNotFound(ctx)
 		log.
 			WithError(err).
-			Error("invalid `username`: %s", username)
+			Error("invalid username: %s", username)
 		return
 	}
 	copierx.Copy(&item, m)
@@ -198,7 +198,7 @@ func (ro userRepo) Update(ctx context.Context, item *biz.UpdateUser) (err error)
 				err = biz.ErrRecordNotFound(ctx)
 				log.
 					WithError(err).
-					Error("invalid `roleId`: %s", v)
+					Error("invalid roleId: %s", v)
 				return
 			}
 		}
@@ -312,7 +312,7 @@ func (ro userRepo) GetByCode(ctx context.Context, code string) (item *biz.User, 
 		err = biz.ErrRecordNotFound(ctx)
 		log.
 			WithError(err).
-			Error("invalid `code`: %s", code)
+			Error("invalid code: %s", code)
 		return
 	}
 	copierx.Copy(&item, m)

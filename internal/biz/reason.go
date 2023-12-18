@@ -10,62 +10,62 @@ import (
 
 var (
 	ErrJwtMissingToken = func(ctx context.Context) error {
-		return reason.ErrorUnauthorized(i18n.FromContext(ctx).T(constant.JwtMissingToken))
+		return i18n.NewError(ctx, constant.JwtMissingToken, reason.ErrorUnauthorized)
 	}
 	ErrJwtTokenInvalid = func(ctx context.Context) error {
-		return reason.ErrorUnauthorized(i18n.FromContext(ctx).T(constant.JwtTokenInvalid))
+		return i18n.NewError(ctx, constant.JwtTokenInvalid, reason.ErrorUnauthorized)
 	}
 	ErrJwtTokenExpired = func(ctx context.Context) error {
-		return reason.ErrorUnauthorized(i18n.FromContext(ctx).T(constant.JwtTokenExpired))
+		return i18n.NewError(ctx, constant.JwtTokenExpired, reason.ErrorUnauthorized)
 	}
 	ErrJwtTokenParseFail = func(ctx context.Context) error {
-		return reason.ErrorUnauthorized(i18n.FromContext(ctx).T(constant.JwtTokenParseFail))
+		return i18n.NewError(ctx, constant.JwtTokenParseFail, reason.ErrorUnauthorized)
 	}
 	ErrJwtUnSupportSigningMethod = func(ctx context.Context) error {
-		return reason.ErrorUnauthorized(i18n.FromContext(ctx).T(constant.JwtUnSupportSigningMethod))
+		return i18n.NewError(ctx, constant.JwtUnSupportSigningMethod, reason.ErrorUnauthorized)
 	}
 	ErrIdempotentMissingToken = func(ctx context.Context) error {
-		return reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(constant.IdempotentMissingToken))
+		return i18n.NewError(ctx, constant.IdempotentMissingToken, reason.ErrorIllegalParameter)
 	}
 	ErrIdempotentTokenExpired = func(ctx context.Context) error {
-		return reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(constant.IdempotentTokenExpired))
+		return i18n.NewError(ctx, constant.IdempotentTokenExpired, reason.ErrorIllegalParameter)
 	}
 
 	ErrTooManyRequests = func(ctx context.Context) error {
-		return reason.ErrorTooManyRequests(i18n.FromContext(ctx).T(constant.TooManyRequests))
+		return i18n.NewError(ctx, constant.TooManyRequests, reason.ErrorTooManyRequests)
 	}
-	ErrRecordNotFound = func(ctx context.Context) error {
-		return reason.ErrorNotFound(i18n.FromContext(ctx).T(constant.RecordNotFound))
+	ErrDataNotChange = func(ctx context.Context, args ...string) error {
+		return i18n.NewError(ctx, constant.DataNotChange, reason.ErrorIllegalParameter, args...)
+	}
+	ErrDuplicateField = func(ctx context.Context, args ...string) error {
+		return i18n.NewError(ctx, constant.DuplicateField, reason.ErrorIllegalParameter, args...)
+	}
+	ErrRecordNotFound = func(ctx context.Context, args ...string) error {
+		return i18n.NewError(ctx, constant.RecordNotFound, reason.ErrorNotFound, args...)
 	}
 	ErrNoPermission = func(ctx context.Context) error {
-		return reason.ErrorForbidden(i18n.FromContext(ctx).T(constant.NoPermission))
+		return i18n.NewError(ctx, constant.NoPermission, reason.ErrorForbidden)
 	}
 
 	ErrIncorrectPassword = func(ctx context.Context) error {
-		return reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(constant.IncorrectPassword))
+		return i18n.NewError(ctx, constant.IncorrectPassword, reason.ErrorIllegalParameter)
 	}
 	ErrSamePassword = func(ctx context.Context) error {
-		return reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(constant.SamePassword))
-	}
-	ErrDataNotChange = func(ctx context.Context) error {
-		return reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(constant.DataNotChange))
-	}
-	ErrDuplicateField = func(ctx context.Context, k, v string) error {
-		return reason.ErrorIllegalParameter("%s `%s`: %s", i18n.FromContext(ctx).T(constant.DuplicateField), k, v)
+		return i18n.NewError(ctx, constant.SamePassword, reason.ErrorIllegalParameter)
 	}
 	ErrInvalidCaptcha = func(ctx context.Context) error {
-		return reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(constant.InvalidCaptcha))
+		return i18n.NewError(ctx, constant.InvalidCaptcha, reason.ErrorIllegalParameter)
 	}
 	ErrLoginFailed = func(ctx context.Context) error {
-		return reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(constant.LoginFailed))
+		return i18n.NewError(ctx, constant.LoginFailed, reason.ErrorIllegalParameter)
 	}
 	ErrUserLocked = func(ctx context.Context) error {
-		return reason.ErrorForbidden(i18n.FromContext(ctx).T(constant.UserLocked))
-	}
-	ErrDeleteYourself = func(ctx context.Context) error {
-		return reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(constant.DeleteYourself))
+		return i18n.NewError(ctx, constant.UserLocked, reason.ErrorForbidden)
 	}
 	ErrKeepLeastOneAction = func(ctx context.Context) error {
-		return reason.ErrorIllegalParameter(i18n.FromContext(ctx).T(constant.KeepLeastOneAction))
+		return i18n.NewError(ctx, constant.KeepLeastOneAction, reason.ErrorIllegalParameter)
+	}
+	ErrDeleteYourself = func(ctx context.Context) error {
+		return i18n.NewError(ctx, constant.DeleteYourself, reason.ErrorIllegalParameter)
 	}
 )

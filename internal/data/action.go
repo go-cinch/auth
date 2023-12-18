@@ -157,7 +157,7 @@ func (ro actionRepo) CodeExists(ctx context.Context, code string) (err error) {
 			err = biz.ErrRecordNotFound(ctx)
 			log.
 				WithError(err).
-				Error("invalid `code`: %s", code)
+				Error("invalid code: %s", code)
 			return
 		}
 	}
@@ -171,7 +171,7 @@ func (ro actionRepo) WordExists(ctx context.Context, word string) (ok bool) {
 	for _, item := range arr {
 		m := db.GetByCol("word", item)
 		if m.ID == constant.UI0 {
-			log.Error("invalid `word`: %s", item)
+			log.Error("invalid word: %s", item)
 			return
 		}
 	}
