@@ -28,7 +28,7 @@ Cinch是一套轻量级微服务脚手架, 基于[Kratos], 节省基础服务搭
 
 ## 特性
 
-- `Go` - 当前Go版本直接上`v1.20`
+- `Go` - 最新分支Go版本已更新至`v1.22`
 - `Proto` - proto协议同时开启gRPC & HTTP支持, 只需开发一次接口, 不用写两套
 - `Jwt` - 认证, 用户登入登出一键搞定
 - `Action` - 权限, 基于行为的权限校验
@@ -47,12 +47,12 @@ Cinch是一套轻量级微服务脚手架, 基于[Kratos], 节省基础服务搭
 - `Swagger` - Api文档一键生成, 无需在代码里写注解
 - `I18n` - 国际化支持, 简单切换多语言
 
-# 当前版本 <img src="https://img.shields.io/badge/Auth-v1.0.3-brightgreen" alt="Current version"/>
+# 当前版本 <img src="https://img.shields.io/badge/Auth-v1.0.4-brightgreen" alt="Current version"/>
 
 建议直接使用最后一个版本
 
 ```bash
-git clone -b v1.0.3 https://github.com/go-cinch/auth
+git clone -b v1.0.4 https://github.com/go-cinch/auth
 ```
 
 ## 在线演示
