@@ -1,0 +1,1087 @@
+# Generated with protoc-gen-openapi
+# https://github.com/google/gnostic/tree/master/cmd/protoc-gen-openapi
+
+openapi: 3.0.3
+info:
+    title: Auth API
+    description: The auth service definition.
+    version: 0.0.1
+paths:
+    /action:
+        get:
+            tags:
+                - Auth
+            operationId: Auth_FindAction
+            parameters:
+                - name: page.num
+                  in: query
+                  schema:
+                    type: string
+                - name: page.size
+                  in: query
+                  schema:
+                    type: string
+                - name: page.total
+                  in: query
+                  schema:
+                    type: string
+                - name: page.disable
+                  in: query
+                  schema:
+                    type: boolean
+                - name: code
+                  in: query
+                  schema:
+                    type: string
+                - name: name
+                  in: query
+                  schema:
+                    type: string
+                - name: word
+                  in: query
+                  schema:
+                    type: string
+                - name: resource
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/auth.v1.FindActionReply'
+        post:
+            tags:
+                - Auth
+            operationId: Auth_CreateAction
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/auth.v1.CreateActionRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+    /action/{ids}:
+        delete:
+            tags:
+                - Auth
+            operationId: Auth_DeleteAction
+            parameters:
+                - name: ids
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+    /action/{id}:
+        put:
+            tags:
+                - Auth
+            operationId: Auth_UpdateAction
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/auth.v1.UpdateActionRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+        patch:
+            tags:
+                - Auth
+            operationId: Auth_UpdateAction
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/auth.v1.UpdateActionRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+    /captcha:
+        get:
+            tags:
+                - Auth
+            operationId: Auth_Captcha
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/auth.v1.CaptchaReply'
+    /idempotent:
+        get:
+            tags:
+                - Auth
+            operationId: Auth_Idempotent
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/auth.v1.IdempotentReply'
+    /info:
+        get:
+            tags:
+                - Auth
+            operationId: Auth_Info
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/auth.v1.InfoReply'
+    /login:
+        post:
+            tags:
+                - Auth
+            operationId: Auth_Login
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/auth.v1.LoginRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/auth.v1.LoginReply'
+    /logout:
+        post:
+            tags:
+                - Auth
+            operationId: Auth_Logout
+            requestBody:
+                content:
+                    application/json: {}
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+    /permission:
+        get:
+            tags:
+                - Auth
+            operationId: Auth_Permission
+            parameters:
+                - name: resource
+                  in: query
+                  schema:
+                    type: string
+                - name: method
+                  in: query
+                  schema:
+                    type: string
+                - name: uri
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+    /pwd:
+        post:
+            tags:
+                - Auth
+            operationId: Auth_Pwd
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/auth.v1.PwdRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+    /refresh:
+        post:
+            tags:
+                - Auth
+            operationId: Auth_Refresh
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/auth.v1.RefreshRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/auth.v1.LoginReply'
+    /register:
+        post:
+            tags:
+                - Auth
+            operationId: Auth_Register
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/auth.v1.RegisterRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+    /role:
+        get:
+            tags:
+                - Auth
+            operationId: Auth_FindRole
+            parameters:
+                - name: page.num
+                  in: query
+                  schema:
+                    type: string
+                - name: page.size
+                  in: query
+                  schema:
+                    type: string
+                - name: page.total
+                  in: query
+                  schema:
+                    type: string
+                - name: page.disable
+                  in: query
+                  schema:
+                    type: boolean
+                - name: name
+                  in: query
+                  schema:
+                    type: string
+                - name: word
+                  in: query
+                  schema:
+                    type: string
+                - name: action
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/auth.v1.FindRoleReply'
+        post:
+            tags:
+                - Auth
+            operationId: Auth_CreateRole
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/auth.v1.CreateRoleRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+    /role/{ids}:
+        delete:
+            tags:
+                - Auth
+            operationId: Auth_DeleteRole
+            parameters:
+                - name: ids
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+    /role/{id}:
+        put:
+            tags:
+                - Auth
+            operationId: Auth_UpdateRole
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/auth.v1.UpdateRoleRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+        patch:
+            tags:
+                - Auth
+            operationId: Auth_UpdateRole
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/auth.v1.UpdateRoleRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+    /status:
+        get:
+            tags:
+                - Auth
+            operationId: Auth_Status
+            parameters:
+                - name: username
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/auth.v1.StatusReply'
+    /user:
+        get:
+            tags:
+                - Auth
+            operationId: Auth_FindUser
+            parameters:
+                - name: page.num
+                  in: query
+                  schema:
+                    type: string
+                - name: page.size
+                  in: query
+                  schema:
+                    type: string
+                - name: page.total
+                  in: query
+                  schema:
+                    type: string
+                - name: page.disable
+                  in: query
+                  schema:
+                    type: boolean
+                - name: startCreatedAt
+                  in: query
+                  schema:
+                    type: string
+                - name: endCreatedAt
+                  in: query
+                  schema:
+                    type: string
+                - name: startUpdatedAt
+                  in: query
+                  schema:
+                    type: string
+                - name: endUpdatedAt
+                  in: query
+                  schema:
+                    type: string
+                - name: username
+                  in: query
+                  schema:
+                    type: string
+                - name: code
+                  in: query
+                  schema:
+                    type: string
+                - name: platform
+                  in: query
+                  schema:
+                    type: string
+                - name: locked
+                  in: query
+                  schema:
+                    type: boolean
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/auth.v1.FindUserReply'
+    /user/group:
+        get:
+            tags:
+                - Auth
+            operationId: Auth_FindUserGroup
+            parameters:
+                - name: page.num
+                  in: query
+                  schema:
+                    type: string
+                - name: page.size
+                  in: query
+                  schema:
+                    type: string
+                - name: page.total
+                  in: query
+                  schema:
+                    type: string
+                - name: page.disable
+                  in: query
+                  schema:
+                    type: boolean
+                - name: name
+                  in: query
+                  schema:
+                    type: string
+                - name: word
+                  in: query
+                  schema:
+                    type: string
+                - name: action
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/auth.v1.FindUserGroupReply'
+        post:
+            tags:
+                - Auth
+            operationId: Auth_CreateUserGroup
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/auth.v1.CreateUserGroupRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+    /user/group/{ids}:
+        delete:
+            tags:
+                - Auth
+            operationId: Auth_DeleteUserGroup
+            parameters:
+                - name: ids
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+    /user/group/{id}:
+        put:
+            tags:
+                - Auth
+            operationId: Auth_UpdateUserGroup
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/auth.v1.UpdateUserGroupRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+        patch:
+            tags:
+                - Auth
+            operationId: Auth_UpdateUserGroup
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/auth.v1.UpdateUserGroupRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+    /user/{ids}:
+        delete:
+            tags:
+                - Auth
+            operationId: Auth_DeleteUser
+            parameters:
+                - name: ids
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+    /user/{id}:
+        put:
+            tags:
+                - Auth
+            operationId: Auth_UpdateUser
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/auth.v1.UpdateUserRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+        patch:
+            tags:
+                - Auth
+            operationId: Auth_UpdateUser
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/auth.v1.UpdateUserRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+    /whitelist:
+        get:
+            tags:
+                - Auth
+            operationId: Auth_FindWhitelist
+            parameters:
+                - name: page.num
+                  in: query
+                  schema:
+                    type: string
+                - name: page.size
+                  in: query
+                  schema:
+                    type: string
+                - name: page.total
+                  in: query
+                  schema:
+                    type: string
+                - name: page.disable
+                  in: query
+                  schema:
+                    type: boolean
+                - name: category
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint32
+                - name: resource
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/auth.v1.FindWhitelistReply'
+        post:
+            tags:
+                - Auth
+            operationId: Auth_CreateWhitelist
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/auth.v1.CreateWhitelistRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+    /whitelist/{ids}:
+        delete:
+            tags:
+                - Auth
+            operationId: Auth_DeleteWhitelist
+            parameters:
+                - name: ids
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+    /whitelist/{id}:
+        put:
+            tags:
+                - Auth
+            operationId: Auth_UpdateWhitelist
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/auth.v1.UpdateWhitelistRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+        patch:
+            tags:
+                - Auth
+            operationId: Auth_UpdateWhitelist
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/auth.v1.UpdateWhitelistRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+components:
+    schemas:
+        auth.v1.Action:
+            type: object
+            properties:
+                id:
+                    type: string
+                code:
+                    type: string
+                name:
+                    type: string
+                word:
+                    type: string
+                resource:
+                    type: string
+                menu:
+                    type: string
+                btn:
+                    type: string
+        auth.v1.Captcha:
+            type: object
+            properties:
+                id:
+                    type: string
+                img:
+                    type: string
+        auth.v1.CaptchaReply:
+            type: object
+            properties:
+                captcha:
+                    $ref: '#/components/schemas/auth.v1.Captcha'
+        auth.v1.CreateActionRequest:
+            type: object
+            properties:
+                name:
+                    type: string
+                word:
+                    type: string
+                resource:
+                    type: string
+                menu:
+                    type: string
+                btn:
+                    type: string
+        auth.v1.CreateRoleRequest:
+            type: object
+            properties:
+                name:
+                    type: string
+                word:
+                    type: string
+                action:
+                    type: string
+        auth.v1.CreateUserGroupRequest:
+            type: object
+            properties:
+                users:
+                    type: array
+                    items:
+                        type: string
+                name:
+                    type: string
+                word:
+                    type: string
+                action:
+                    type: string
+        auth.v1.CreateWhitelistRequest:
+            type: object
+            properties:
+                category:
+                    type: integer
+                    format: uint32
+                resource:
+                    type: string
+        auth.v1.FindActionReply:
+            type: object
+            properties:
+                page:
+                    $ref: '#/components/schemas/params.Page'
+                list:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/auth.v1.Action'
+        auth.v1.FindRoleReply:
+            type: object
+            properties:
+                page:
+                    $ref: '#/components/schemas/params.Page'
+                list:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/auth.v1.Role'
+        auth.v1.FindUserGroupReply:
+            type: object
+            properties:
+                page:
+                    $ref: '#/components/schemas/params.Page'
+                list:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/auth.v1.UserGroup'
+        auth.v1.FindUserReply:
+            type: object
+            properties:
+                page:
+                    $ref: '#/components/schemas/params.Page'
+                list:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/auth.v1.User'
+        auth.v1.FindWhitelistReply:
+            type: object
+            properties:
+                page:
+                    $ref: '#/components/schemas/params.Page'
+                list:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/auth.v1.Whitelist'
+        auth.v1.IdempotentReply:
+            type: object
+            properties:
+                token:
+                    type: string
+        auth.v1.InfoReply:
+            type: object
+            properties:
+                id:
+                    type: string
+                username:
+                    type: string
+                code:
+                    type: string
+                platform:
+                    type: string
+                permission:
+                    $ref: '#/components/schemas/auth.v1.Permission'
+        auth.v1.LoginReply:
+            type: object
+            properties:
+                token:
+                    type: string
+                expires:
+                    type: string
+        auth.v1.LoginRequest:
+            type: object
+            properties:
+                username:
+                    type: string
+                password:
+                    type: string
+                platform:
+                    type: string
+                captchaId:
+                    type: string
+                captchaAnswer:
+                    type: string
+        auth.v1.Permission:
+            type: object
+            properties:
+                resources:
+                    type: array
+                    items:
+                        type: string
+                menus:
+                    type: array
+                    items:
+                        type: string
+                btns:
+                    type: array
+                    items:
+                        type: string
+        auth.v1.PwdRequest:
+            type: object
+            properties:
+                username:
+                    type: string
+                oldPassword:
+                    type: string
+                newPassword:
+                    type: string
+        auth.v1.RefreshRequest:
+            type: object
+            properties:
+                token:
+                    type: string
+        auth.v1.RegisterRequest:
+            type: object
+            properties:
+                username:
+                    type: string
+                password:
+                    type: string
+                platform:
+                    type: string
+                captchaId:
+                    type: string
+                captchaAnswer:
+                    type: string
+        auth.v1.Role:
+            type: object
+            properties:
+                id:
+                    type: string
+                name:
+                    type: string
+                word:
+                    type: string
+                action:
+                    type: string
+                actions:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/auth.v1.Action'
+        auth.v1.StatusReply:
+            type: object
+            properties:
+                captcha:
+                    $ref: '#/components/schemas/auth.v1.Captcha'
+                locked:
+                    type: boolean
+                lockExpire:
+                    type: string
+        auth.v1.UpdateActionRequest:
+            type: object
+            properties:
+                id:
+                    type: string
+                name:
+                    type: string
+                word:
+                    type: string
+                resource:
+                    type: string
+                menu:
+                    type: string
+                btn:
+                    type: string
+        auth.v1.UpdateRoleRequest:
+            type: object
+            properties:
+                id:
+                    type: string
+                name:
+                    type: string
+                word:
+                    type: string
+                action:
+                    type: string
+        auth.v1.UpdateUserGroupRequest:
+            type: object
+            properties:
+                id:
+                    type: string
+                name:
+                    type: string
+                word:
+                    type: string
+                action:
+                    type: string
+                users:
+                    type: string
+        auth.v1.UpdateUserRequest:
+            type: object
+            properties:
+                id:
+                    type: string
+                username:
+                    type: string
+                password:
+                    type: string
+                platform:
+                    type: string
+                locked:
+                    type: boolean
+                lockExpireTime:
+                    type: string
+                action:
+                    type: string
+                roleId:
+                    type: string
+        auth.v1.UpdateWhitelistRequest:
+            type: object
+            properties:
+                id:
+                    type: string
+                category:
+                    type: integer
+                    format: uint32
+                resource:
+                    type: string
+        auth.v1.User:
+            type: object
+            properties:
+                id:
+                    type: string
+                createdAt:
+                    type: string
+                updatedAt:
+                    type: string
+                username:
+                    type: string
+                code:
+                    type: string
+                platform:
+                    type: string
+                locked:
+                    type: boolean
+                lastLogin:
+                    type: string
+                lockExpire:
+                    type: string
+                lockMsg:
+                    type: string
+                actions:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/auth.v1.Action'
+                roleId:
+                    type: string
+                role:
+                    $ref: '#/components/schemas/auth.v1.Role'
+        auth.v1.UserGroup:
+            type: object
+            properties:
+                id:
+                    type: string
+                name:
+                    type: string
+                word:
+                    type: string
+                actions:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/auth.v1.Action'
+                users:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/auth.v1.User'
+        auth.v1.Whitelist:
+            type: object
+            properties:
+                id:
+                    type: string
+                category:
+                    type: integer
+                    format: uint32
+                resource:
+                    type: string
+        params.Page:
+            type: object
+            properties:
+                num:
+                    type: string
+                size:
+                    type: string
+                total:
+                    type: string
+                disable:
+                    type: boolean
+tags:
+    - name: Auth

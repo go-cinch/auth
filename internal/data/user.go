@@ -138,7 +138,7 @@ func (ro userRepo) Create(ctx context.Context, item *biz.User) (err error) {
 		return
 	}
 	copierx.Copy(&m, item)
-	m.ID = ro.data.Id(ctx)
+	m.ID = ro.data.ID(ctx)
 	m.Code = id.NewCode(m.ID)
 	if m.Action != "" {
 		err = ro.action.CodeExists(ctx, m.Action)
@@ -249,11 +249,11 @@ func (ro userRepo) WrongPwd(ctx context.Context, req biz.LoginTime) (err error) 
 	if newWrong >= 5 {
 		change["locked"] = constant.UI1
 		if newWrong == 5 {
-			change["lock_expire"] = carbon.Now().AddDuration("5m").Carbon2Time().Unix()
+			change["lock_expire"] = carbon.Now().AddDuration("5m").StdTime().Unix()
 		} else if newWrong == 10 {
-			change["lock_expire"] = carbon.Now().AddDuration("30m").Carbon2Time().Unix()
+			change["lock_expire"] = carbon.Now().AddDuration("30m").StdTime().Unix()
 		} else if newWrong == 20 {
-			change["lock_expire"] = carbon.Now().AddDuration("24h").Carbon2Time().Unix()
+			change["lock_expire"] = carbon.Now().AddDuration("24h").StdTime().Unix()
 		} else if newWrong >= 30 {
 			// forever lock
 			change["lock_expire"] = 0

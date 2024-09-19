@@ -1,4 +1,5 @@
 server:
+  prod: false
   machineId: ''
   http:
     addr: 0.0.0.0:6060
@@ -17,7 +18,6 @@ server:
   validate: true
   # disable biz.Cache or not
   nocache: false
-  logLevel: 'info'
 data:
   database:
     driver: mysql
@@ -25,7 +25,7 @@ data:
     dsn: ''
     endpoint: '127.0.0.1:3306'
     username: 'root'
-    password: 'root'
+    password: 'passwd'
     schema: 'auth'
     query: 'charset=utf8mb4&collation=utf8mb4_general_ci&parseTime=True&loc=Local&timeout=10000ms'
   #    tenants:
@@ -38,11 +38,3 @@ data:
     # redis://[:password@]host[:port][/dbnumber]
     # redis://[:password@]host1[:port][,host2:[:port]][,hostN:[:port]][?master=masterName&sentinel=true]
     dsn: 'redis://127.0.0.1:6379/0'
-tracer:
-  enable: true
-  otlp:
-    # how to run a otel-collector? see: https://github.com/SigNoz/signoz/blob/develop/deploy/README.md#using-docker-compose
-    endpoint: ''
-    insecure: true
-  stdout:
-    prettyPrint: false

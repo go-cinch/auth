@@ -7,7 +7,7 @@ import (
 )
 
 func (*AuthService) HealthCheck(writer http.ResponseWriter, _ *http.Request) {
-	log.Info("healthcheck")
+	log.Debug("healthcheck")
 	writer.Header().Set("Content-Type", "application/json")
 	writer.WriteHeader(http.StatusOK)
 	_, _ = writer.Write([]byte("{}"))

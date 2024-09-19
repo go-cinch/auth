@@ -30,7 +30,7 @@ func (ro whitelistRepo) Create(ctx context.Context, item *biz.Whitelist) (err er
 	copierx.Copy(&m, item)
 	p := query.Use(ro.data.DB(ctx)).Whitelist
 	db := p.WithContext(ctx)
-	m.ID = ro.data.Id(ctx)
+	m.ID = ro.data.ID(ctx)
 	err = db.Create(&m)
 	return
 }

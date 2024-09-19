@@ -39,7 +39,7 @@ func (ro actionRepo) Create(ctx context.Context, item *biz.Action) (err error) {
 	copierx.Copy(&m, item)
 	p := query.Use(ro.data.DB(ctx)).Action
 	db := p.WithContext(ctx)
-	m.ID = ro.data.Id(ctx)
+	m.ID = ro.data.ID(ctx)
 	m.Code = id.NewCode(m.ID)
 	if m.Resource == "" {
 		m.Resource = "*"
