@@ -42,7 +42,7 @@ func (ro userGroupRepo) Create(ctx context.Context, item *biz.UserGroup) (err er
 		return
 	}
 	copierx.Copy(&m, item)
-	m.ID = ro.data.Id(ctx)
+	m.ID = ro.data.ID(ctx)
 	if m.Action != "" {
 		err = ro.action.CodeExists(ctx, m.Action)
 		if err != nil {

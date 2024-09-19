@@ -36,7 +36,7 @@ func (ro roleRepo) Create(ctx context.Context, item *biz.Role) (err error) {
 	copierx.Copy(&m, item)
 	p := query.Use(ro.data.DB(ctx)).Role
 	db := p.WithContext(ctx)
-	m.ID = ro.data.Id(ctx)
+	m.ID = ro.data.ID(ctx)
 	if m.Action != "" {
 		err = ro.action.CodeExists(ctx, m.Action)
 		if err != nil {

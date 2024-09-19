@@ -83,6 +83,8 @@ func (w whitelist) TableName() string { return w.whitelistDo.TableName() }
 
 func (w whitelist) Alias() string { return w.whitelistDo.Alias() }
 
+func (w whitelist) Columns(cols ...field.Expr) gen.Columns { return w.whitelistDo.Columns(cols...) }
+
 func (w *whitelist) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 	_f, ok := w.fieldMap[fieldName]
 	if !ok || _f == nil {
@@ -111,13 +113,13 @@ func (w whitelist) replaceDB(db *gorm.DB) whitelist {
 
 type whitelistDo struct{ gen.DO }
 
-// SELECT * FROM @@table WHERE id = @id LIMIT 1
+// SELECT * FROM `@@table` WHERE `id` = @id LIMIT 1
 func (w whitelistDo) GetByID(id uint64) (result model.Whitelist) {
 	var params []interface{}
 
 	var generateSQL strings.Builder
 	params = append(params, id)
-	generateSQL.WriteString("SELECT * FROM whitelist WHERE id = ? LIMIT 1 ")
+	generateSQL.WriteString("SELECT * FROM `whitelist` WHERE `id` = ? LIMIT 1 ")
 
 	var executeSQL *gorm.DB
 	executeSQL = w.UnderlyingDB().Raw(generateSQL.String(), params...).Take(&result) // ignore_security_alert
@@ -126,16 +128,16 @@ func (w whitelistDo) GetByID(id uint64) (result model.Whitelist) {
 	return
 }
 
-// SELECT * FROM @@table
+// SELECT * FROM `@@table`
 // {{where}}
 //
 //	{{if val != ""}}
 //	  {{if strings.HasPrefix(val, "%") && strings.HasSuffix(val, "%")}}
-//	    @@col LIKE concat('%', TRIM(BOTH '%' FROM @val), '%')
+//	    @@col LIKE CONCAT('%', TRIM(BOTH '%' FROM @val), '%')
 //	  {{else if strings.HasPrefix(val, "%")}}
-//	    @@col LIKE concat('%', TRIM(BOTH '%' FROM @val))
+//	    @@col LIKE CONCAT('%', TRIM(BOTH '%' FROM @val))
 //	  {{else if strings.HasSuffix(val, "%")}}
-//	    @@col LIKE concat(TRIM(BOTH '%' FROM @val), '%')
+//	    @@col LIKE CONCAT(TRIM(BOTH '%' FROM @val), '%')
 //	  {{else}}
 //	    @@col = @val
 //	  {{end}}
@@ -147,18 +149,18 @@ func (w whitelistDo) GetByCol(col string, val string) (result model.Whitelist) {
 	var params []interface{}
 
 	var generateSQL strings.Builder
-	generateSQL.WriteString("SELECT * FROM whitelist ")
+	generateSQL.WriteString("SELECT * FROM `whitelist` ")
 	var whereSQL0 strings.Builder
 	if val != "" {
 		if strings.HasPrefix(val, "%") && strings.HasSuffix(val, "%") {
 			params = append(params, val)
-			whereSQL0.WriteString(w.Quote(col) + " LIKE concat('%', TRIM(BOTH '%' FROM ?), '%') ")
+			whereSQL0.WriteString(w.Quote(col) + " LIKE CONCAT('%', TRIM(BOTH '%' FROM ?), '%') ")
 		} else if strings.HasPrefix(val, "%") {
 			params = append(params, val)
-			whereSQL0.WriteString(w.Quote(col) + " LIKE concat('%', TRIM(BOTH '%' FROM ?)) ")
+			whereSQL0.WriteString(w.Quote(col) + " LIKE CONCAT('%', TRIM(BOTH '%' FROM ?)) ")
 		} else if strings.HasSuffix(val, "%") {
 			params = append(params, val)
-			whereSQL0.WriteString(w.Quote(col) + " LIKE concat(TRIM(BOTH '%' FROM ?), '%') ")
+			whereSQL0.WriteString(w.Quote(col) + " LIKE CONCAT(TRIM(BOTH '%' FROM ?), '%') ")
 		} else {
 			params = append(params, val)
 			whereSQL0.WriteString(w.Quote(col) + " = ? ")
@@ -174,7 +176,7 @@ func (w whitelistDo) GetByCol(col string, val string) (result model.Whitelist) {
 	return
 }
 
-// SELECT * FROM @@table
+// SELECT * FROM `@@table`
 // {{if len(cols) == len(vals)}}
 // {{where}}
 //
@@ -183,11 +185,11 @@ func (w whitelistDo) GetByCol(col string, val string) (result model.Whitelist) {
 //	      {{if i == j}}
 //	        {{if val != ""}}
 //	          {{if strings.HasPrefix(val, "%") && strings.HasSuffix(val, "%")}}
-//	            @@col LIKE concat('%', TRIM(BOTH '%' FROM @val), '%') AND
+//	            @@col LIKE CONCAT('%', TRIM(BOTH '%' FROM @val), '%') AND
 //	          {{else if strings.HasPrefix(val, "%")}}
-//	            @@col LIKE concat('%', TRIM(BOTH '%' FROM @val)) AND
+//	            @@col LIKE CONCAT('%', TRIM(BOTH '%' FROM @val)) AND
 //	          {{else if strings.HasSuffix(val, "%")}}
-//	            @@col LIKE concat(TRIM(BOTH '%' FROM @val), '%') AND
+//	            @@col LIKE CONCAT(TRIM(BOTH '%' FROM @val), '%') AND
 //	          {{else}}
 //	            @@col = @val AND
 //	          {{end}}
@@ -203,7 +205,7 @@ func (w whitelistDo) GetByCols(cols []string, vals []string) (result model.White
 	var params []interface{}
 
 	var generateSQL strings.Builder
-	generateSQL.WriteString("SELECT * FROM whitelist ")
+	generateSQL.WriteString("SELECT * FROM `whitelist` ")
 	if len(cols) == len(vals) {
 		var whereSQL0 strings.Builder
 		for i, col := range cols {
@@ -212,13 +214,13 @@ func (w whitelistDo) GetByCols(cols []string, vals []string) (result model.White
 					if val != "" {
 						if strings.HasPrefix(val, "%") && strings.HasSuffix(val, "%") {
 							params = append(params, val)
-							whereSQL0.WriteString(w.Quote(col) + " LIKE concat('%', TRIM(BOTH '%' FROM ?), '%') AND ")
+							whereSQL0.WriteString(w.Quote(col) + " LIKE CONCAT('%', TRIM(BOTH '%' FROM ?), '%') AND ")
 						} else if strings.HasPrefix(val, "%") {
 							params = append(params, val)
-							whereSQL0.WriteString(w.Quote(col) + " LIKE concat('%', TRIM(BOTH '%' FROM ?)) AND ")
+							whereSQL0.WriteString(w.Quote(col) + " LIKE CONCAT('%', TRIM(BOTH '%' FROM ?)) AND ")
 						} else if strings.HasSuffix(val, "%") {
 							params = append(params, val)
-							whereSQL0.WriteString(w.Quote(col) + " LIKE concat(TRIM(BOTH '%' FROM ?), '%') AND ")
+							whereSQL0.WriteString(w.Quote(col) + " LIKE CONCAT(TRIM(BOTH '%' FROM ?), '%') AND ")
 						} else {
 							params = append(params, val)
 							whereSQL0.WriteString(w.Quote(col) + " = ? AND ")
@@ -238,16 +240,16 @@ func (w whitelistDo) GetByCols(cols []string, vals []string) (result model.White
 	return
 }
 
-// SELECT * FROM @@table
+// SELECT * FROM `@@table`
 // {{where}}
 //
 //	{{if val != ""}}
 //	  {{if strings.HasPrefix(val, "%") && strings.HasSuffix(val, "%")}}
-//	    @@col LIKE concat('%', TRIM(BOTH '%' FROM @val), '%')
+//	    @@col LIKE CONCAT('%', TRIM(BOTH '%' FROM @val), '%')
 //	  {{else if strings.HasPrefix(val, "%")}}
-//	    @@col LIKE concat('%', TRIM(BOTH '%' FROM @val))
+//	    @@col LIKE CONCAT('%', TRIM(BOTH '%' FROM @val))
 //	  {{else if strings.HasSuffix(val, "%")}}
-//	    @@col LIKE concat(TRIM(BOTH '%' FROM @val), '%')
+//	    @@col LIKE CONCAT(TRIM(BOTH '%' FROM @val), '%')
 //	  {{else}}
 //	    @@col = @val
 //	  {{end}}
@@ -258,18 +260,18 @@ func (w whitelistDo) FindByCol(col string, val string) (result []model.Whitelist
 	var params []interface{}
 
 	var generateSQL strings.Builder
-	generateSQL.WriteString("SELECT * FROM whitelist ")
+	generateSQL.WriteString("SELECT * FROM `whitelist` ")
 	var whereSQL0 strings.Builder
 	if val != "" {
 		if strings.HasPrefix(val, "%") && strings.HasSuffix(val, "%") {
 			params = append(params, val)
-			whereSQL0.WriteString(w.Quote(col) + " LIKE concat('%', TRIM(BOTH '%' FROM ?), '%') ")
+			whereSQL0.WriteString(w.Quote(col) + " LIKE CONCAT('%', TRIM(BOTH '%' FROM ?), '%') ")
 		} else if strings.HasPrefix(val, "%") {
 			params = append(params, val)
-			whereSQL0.WriteString(w.Quote(col) + " LIKE concat('%', TRIM(BOTH '%' FROM ?)) ")
+			whereSQL0.WriteString(w.Quote(col) + " LIKE CONCAT('%', TRIM(BOTH '%' FROM ?)) ")
 		} else if strings.HasSuffix(val, "%") {
 			params = append(params, val)
-			whereSQL0.WriteString(w.Quote(col) + " LIKE concat(TRIM(BOTH '%' FROM ?), '%') ")
+			whereSQL0.WriteString(w.Quote(col) + " LIKE CONCAT(TRIM(BOTH '%' FROM ?), '%') ")
 		} else {
 			params = append(params, val)
 			whereSQL0.WriteString(w.Quote(col) + " = ? ")
@@ -284,7 +286,7 @@ func (w whitelistDo) FindByCol(col string, val string) (result []model.Whitelist
 	return
 }
 
-// SELECT * FROM @@table
+// SELECT * FROM `@@table`
 // {{if len(cols) == len(vals)}}
 // {{where}}
 //
@@ -293,11 +295,11 @@ func (w whitelistDo) FindByCol(col string, val string) (result []model.Whitelist
 //	      {{if i == j}}
 //	        {{if val != ""}}
 //	          {{if strings.HasPrefix(val, "%") && strings.HasSuffix(val, "%")}}
-//	            @@col LIKE concat('%', TRIM(BOTH '%' FROM @val), '%') AND
+//	            @@col LIKE CONCAT('%', TRIM(BOTH '%' FROM @val), '%') AND
 //	          {{else if strings.HasPrefix(val, "%")}}
-//	            @@col LIKE concat('%', TRIM(BOTH '%' FROM @val)) AND
+//	            @@col LIKE CONCAT('%', TRIM(BOTH '%' FROM @val)) AND
 //	          {{else if strings.HasSuffix(val, "%")}}
-//	            @@col LIKE concat(TRIM(BOTH '%' FROM @val), '%') AND
+//	            @@col LIKE CONCAT(TRIM(BOTH '%' FROM @val), '%') AND
 //	          {{else}}
 //	            @@col = @val AND
 //	          {{end}}
@@ -312,7 +314,7 @@ func (w whitelistDo) FindByCols(cols []string, vals []string) (result []model.Wh
 	var params []interface{}
 
 	var generateSQL strings.Builder
-	generateSQL.WriteString("SELECT * FROM whitelist ")
+	generateSQL.WriteString("SELECT * FROM `whitelist` ")
 	if len(cols) == len(vals) {
 		var whereSQL0 strings.Builder
 		for i, col := range cols {
@@ -321,13 +323,13 @@ func (w whitelistDo) FindByCols(cols []string, vals []string) (result []model.Wh
 					if val != "" {
 						if strings.HasPrefix(val, "%") && strings.HasSuffix(val, "%") {
 							params = append(params, val)
-							whereSQL0.WriteString(w.Quote(col) + " LIKE concat('%', TRIM(BOTH '%' FROM ?), '%') AND ")
+							whereSQL0.WriteString(w.Quote(col) + " LIKE CONCAT('%', TRIM(BOTH '%' FROM ?), '%') AND ")
 						} else if strings.HasPrefix(val, "%") {
 							params = append(params, val)
-							whereSQL0.WriteString(w.Quote(col) + " LIKE concat('%', TRIM(BOTH '%' FROM ?)) AND ")
+							whereSQL0.WriteString(w.Quote(col) + " LIKE CONCAT('%', TRIM(BOTH '%' FROM ?)) AND ")
 						} else if strings.HasSuffix(val, "%") {
 							params = append(params, val)
-							whereSQL0.WriteString(w.Quote(col) + " LIKE concat(TRIM(BOTH '%' FROM ?), '%') AND ")
+							whereSQL0.WriteString(w.Quote(col) + " LIKE CONCAT(TRIM(BOTH '%' FROM ?), '%') AND ")
 						} else {
 							params = append(params, val)
 							whereSQL0.WriteString(w.Quote(col) + " = ? AND ")
@@ -388,10 +390,6 @@ func (w whitelistDo) Select(conds ...field.Expr) *whitelistDo {
 
 func (w whitelistDo) Where(conds ...gen.Condition) *whitelistDo {
 	return w.withDO(w.DO.Where(conds...))
-}
-
-func (w whitelistDo) Exists(subquery interface{ UnderlyingDB() *gorm.DB }) *whitelistDo {
-	return w.Where(field.CompareSubQuery(field.ExistsOp, nil, subquery.UnderlyingDB()))
 }
 
 func (w whitelistDo) Order(conds ...field.Expr) *whitelistDo {

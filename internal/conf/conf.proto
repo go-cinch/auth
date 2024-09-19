@@ -11,7 +11,9 @@ message Bootstrap {
   Server server = 3;
   Data data = 4;
   Tracer tracer = 5;
-  repeated Task tasks = 6;
+  map<string, Task> task = 6;
+  Client client = 7;
+  Log log = 8;
 }
 
 message Server {
@@ -30,16 +32,16 @@ message Server {
     string key = 2;
     string expires = 3;
   }
-  string machineId = 1;
-  HTTP http = 2;
-  GRPC grpc = 3;
-  string language = 4;
-  Jwt jwt = 5;
-  bool permission = 6;
-  bool idempotent = 7;
-  bool validate = 8;
-  bool nocache = 9;
-  string logLevel = 10;
+  bool prod = 1;
+  string machineId = 2;
+  HTTP http = 3;
+  GRPC grpc = 4;
+  string language = 5;
+  Jwt jwt = 6;
+  bool permission = 7;
+  bool idempotent = 8;
+  bool validate = 9;
+  bool nocache = 10;
 }
 
 message Data {
@@ -60,6 +62,12 @@ message Data {
   Redis redis = 2;
 }
 
+message Log {
+  string level = 1;
+  bool JSON = 2;
+  bool showSQL = 3;
+}
+
 message Tracer {
   message Otlp {
     string endpoint = 1;
@@ -69,14 +77,20 @@ message Tracer {
     bool prettyPrint = 1;
   }
   bool enable = 1;
-  Otlp otlp = 2;
-  Stdout stdout = 3;
+  float ratio = 2;
+  Otlp otlp = 3;
+  Stdout stdout = 4;
+}
+
+message Client {
+  bool health = 1;
+  google.protobuf.Duration timeout = 2;
+  string auth = 3;
 }
 
 message Task {
-  string category = 1;
-  string uuid = 2;
-  string expr = 3;
-  int64 timeout = 4;
-  int64 retry = 5;
+  string name = 1;
+  string expr = 2;
+  int64 timeout = 3;
+  int64 retry = 4;
 }

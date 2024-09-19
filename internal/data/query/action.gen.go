@@ -93,6 +93,8 @@ func (a action) TableName() string { return a.actionDo.TableName() }
 
 func (a action) Alias() string { return a.actionDo.Alias() }
 
+func (a action) Columns(cols ...field.Expr) gen.Columns { return a.actionDo.Columns(cols...) }
+
 func (a *action) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 	_f, ok := a.fieldMap[fieldName]
 	if !ok || _f == nil {
@@ -125,13 +127,13 @@ func (a action) replaceDB(db *gorm.DB) action {
 
 type actionDo struct{ gen.DO }
 
-// SELECT * FROM @@table WHERE id = @id LIMIT 1
+// SELECT * FROM `@@table` WHERE `id` = @id LIMIT 1
 func (a actionDo) GetByID(id uint64) (result model.Action) {
 	var params []interface{}
 
 	var generateSQL strings.Builder
 	params = append(params, id)
-	generateSQL.WriteString("SELECT * FROM action WHERE id = ? LIMIT 1 ")
+	generateSQL.WriteString("SELECT * FROM `action` WHERE `id` = ? LIMIT 1 ")
 
 	var executeSQL *gorm.DB
 	executeSQL = a.UnderlyingDB().Raw(generateSQL.String(), params...).Take(&result) // ignore_security_alert
@@ -140,16 +142,16 @@ func (a actionDo) GetByID(id uint64) (result model.Action) {
 	return
 }
 
-// SELECT * FROM @@table
+// SELECT * FROM `@@table`
 // {{where}}
 //
 //	{{if val != ""}}
 //	  {{if strings.HasPrefix(val, "%") && strings.HasSuffix(val, "%")}}
-//	    @@col LIKE concat('%', TRIM(BOTH '%' FROM @val), '%')
+//	    @@col LIKE CONCAT('%', TRIM(BOTH '%' FROM @val), '%')
 //	  {{else if strings.HasPrefix(val, "%")}}
-//	    @@col LIKE concat('%', TRIM(BOTH '%' FROM @val))
+//	    @@col LIKE CONCAT('%', TRIM(BOTH '%' FROM @val))
 //	  {{else if strings.HasSuffix(val, "%")}}
-//	    @@col LIKE concat(TRIM(BOTH '%' FROM @val), '%')
+//	    @@col LIKE CONCAT(TRIM(BOTH '%' FROM @val), '%')
 //	  {{else}}
 //	    @@col = @val
 //	  {{end}}
@@ -161,18 +163,18 @@ func (a actionDo) GetByCol(col string, val string) (result model.Action) {
 	var params []interface{}
 
 	var generateSQL strings.Builder
-	generateSQL.WriteString("SELECT * FROM action ")
+	generateSQL.WriteString("SELECT * FROM `action` ")
 	var whereSQL0 strings.Builder
 	if val != "" {
 		if strings.HasPrefix(val, "%") && strings.HasSuffix(val, "%") {
 			params = append(params, val)
-			whereSQL0.WriteString(a.Quote(col) + " LIKE concat('%', TRIM(BOTH '%' FROM ?), '%') ")
+			whereSQL0.WriteString(a.Quote(col) + " LIKE CONCAT('%', TRIM(BOTH '%' FROM ?), '%') ")
 		} else if strings.HasPrefix(val, "%") {
 			params = append(params, val)
-			whereSQL0.WriteString(a.Quote(col) + " LIKE concat('%', TRIM(BOTH '%' FROM ?)) ")
+			whereSQL0.WriteString(a.Quote(col) + " LIKE CONCAT('%', TRIM(BOTH '%' FROM ?)) ")
 		} else if strings.HasSuffix(val, "%") {
 			params = append(params, val)
-			whereSQL0.WriteString(a.Quote(col) + " LIKE concat(TRIM(BOTH '%' FROM ?), '%') ")
+			whereSQL0.WriteString(a.Quote(col) + " LIKE CONCAT(TRIM(BOTH '%' FROM ?), '%') ")
 		} else {
 			params = append(params, val)
 			whereSQL0.WriteString(a.Quote(col) + " = ? ")
@@ -188,7 +190,7 @@ func (a actionDo) GetByCol(col string, val string) (result model.Action) {
 	return
 }
 
-// SELECT * FROM @@table
+// SELECT * FROM `@@table`
 // {{if len(cols) == len(vals)}}
 // {{where}}
 //
@@ -197,11 +199,11 @@ func (a actionDo) GetByCol(col string, val string) (result model.Action) {
 //	      {{if i == j}}
 //	        {{if val != ""}}
 //	          {{if strings.HasPrefix(val, "%") && strings.HasSuffix(val, "%")}}
-//	            @@col LIKE concat('%', TRIM(BOTH '%' FROM @val), '%') AND
+//	            @@col LIKE CONCAT('%', TRIM(BOTH '%' FROM @val), '%') AND
 //	          {{else if strings.HasPrefix(val, "%")}}
-//	            @@col LIKE concat('%', TRIM(BOTH '%' FROM @val)) AND
+//	            @@col LIKE CONCAT('%', TRIM(BOTH '%' FROM @val)) AND
 //	          {{else if strings.HasSuffix(val, "%")}}
-//	            @@col LIKE concat(TRIM(BOTH '%' FROM @val), '%') AND
+//	            @@col LIKE CONCAT(TRIM(BOTH '%' FROM @val), '%') AND
 //	          {{else}}
 //	            @@col = @val AND
 //	          {{end}}
@@ -217,7 +219,7 @@ func (a actionDo) GetByCols(cols []string, vals []string) (result model.Action) 
 	var params []interface{}
 
 	var generateSQL strings.Builder
-	generateSQL.WriteString("SELECT * FROM action ")
+	generateSQL.WriteString("SELECT * FROM `action` ")
 	if len(cols) == len(vals) {
 		var whereSQL0 strings.Builder
 		for i, col := range cols {
@@ -226,13 +228,13 @@ func (a actionDo) GetByCols(cols []string, vals []string) (result model.Action) 
 					if val != "" {
 						if strings.HasPrefix(val, "%") && strings.HasSuffix(val, "%") {
 							params = append(params, val)
-							whereSQL0.WriteString(a.Quote(col) + " LIKE concat('%', TRIM(BOTH '%' FROM ?), '%') AND ")
+							whereSQL0.WriteString(a.Quote(col) + " LIKE CONCAT('%', TRIM(BOTH '%' FROM ?), '%') AND ")
 						} else if strings.HasPrefix(val, "%") {
 							params = append(params, val)
-							whereSQL0.WriteString(a.Quote(col) + " LIKE concat('%', TRIM(BOTH '%' FROM ?)) AND ")
+							whereSQL0.WriteString(a.Quote(col) + " LIKE CONCAT('%', TRIM(BOTH '%' FROM ?)) AND ")
 						} else if strings.HasSuffix(val, "%") {
 							params = append(params, val)
-							whereSQL0.WriteString(a.Quote(col) + " LIKE concat(TRIM(BOTH '%' FROM ?), '%') AND ")
+							whereSQL0.WriteString(a.Quote(col) + " LIKE CONCAT(TRIM(BOTH '%' FROM ?), '%') AND ")
 						} else {
 							params = append(params, val)
 							whereSQL0.WriteString(a.Quote(col) + " = ? AND ")
@@ -252,16 +254,16 @@ func (a actionDo) GetByCols(cols []string, vals []string) (result model.Action) 
 	return
 }
 
-// SELECT * FROM @@table
+// SELECT * FROM `@@table`
 // {{where}}
 //
 //	{{if val != ""}}
 //	  {{if strings.HasPrefix(val, "%") && strings.HasSuffix(val, "%")}}
-//	    @@col LIKE concat('%', TRIM(BOTH '%' FROM @val), '%')
+//	    @@col LIKE CONCAT('%', TRIM(BOTH '%' FROM @val), '%')
 //	  {{else if strings.HasPrefix(val, "%")}}
-//	    @@col LIKE concat('%', TRIM(BOTH '%' FROM @val))
+//	    @@col LIKE CONCAT('%', TRIM(BOTH '%' FROM @val))
 //	  {{else if strings.HasSuffix(val, "%")}}
-//	    @@col LIKE concat(TRIM(BOTH '%' FROM @val), '%')
+//	    @@col LIKE CONCAT(TRIM(BOTH '%' FROM @val), '%')
 //	  {{else}}
 //	    @@col = @val
 //	  {{end}}
@@ -272,18 +274,18 @@ func (a actionDo) FindByCol(col string, val string) (result []model.Action) {
 	var params []interface{}
 
 	var generateSQL strings.Builder
-	generateSQL.WriteString("SELECT * FROM action ")
+	generateSQL.WriteString("SELECT * FROM `action` ")
 	var whereSQL0 strings.Builder
 	if val != "" {
 		if strings.HasPrefix(val, "%") && strings.HasSuffix(val, "%") {
 			params = append(params, val)
-			whereSQL0.WriteString(a.Quote(col) + " LIKE concat('%', TRIM(BOTH '%' FROM ?), '%') ")
+			whereSQL0.WriteString(a.Quote(col) + " LIKE CONCAT('%', TRIM(BOTH '%' FROM ?), '%') ")
 		} else if strings.HasPrefix(val, "%") {
 			params = append(params, val)
-			whereSQL0.WriteString(a.Quote(col) + " LIKE concat('%', TRIM(BOTH '%' FROM ?)) ")
+			whereSQL0.WriteString(a.Quote(col) + " LIKE CONCAT('%', TRIM(BOTH '%' FROM ?)) ")
 		} else if strings.HasSuffix(val, "%") {
 			params = append(params, val)
-			whereSQL0.WriteString(a.Quote(col) + " LIKE concat(TRIM(BOTH '%' FROM ?), '%') ")
+			whereSQL0.WriteString(a.Quote(col) + " LIKE CONCAT(TRIM(BOTH '%' FROM ?), '%') ")
 		} else {
 			params = append(params, val)
 			whereSQL0.WriteString(a.Quote(col) + " = ? ")
@@ -298,7 +300,7 @@ func (a actionDo) FindByCol(col string, val string) (result []model.Action) {
 	return
 }
 
-// SELECT * FROM @@table
+// SELECT * FROM `@@table`
 // {{if len(cols) == len(vals)}}
 // {{where}}
 //
@@ -307,11 +309,11 @@ func (a actionDo) FindByCol(col string, val string) (result []model.Action) {
 //	      {{if i == j}}
 //	        {{if val != ""}}
 //	          {{if strings.HasPrefix(val, "%") && strings.HasSuffix(val, "%")}}
-//	            @@col LIKE concat('%', TRIM(BOTH '%' FROM @val), '%') AND
+//	            @@col LIKE CONCAT('%', TRIM(BOTH '%' FROM @val), '%') AND
 //	          {{else if strings.HasPrefix(val, "%")}}
-//	            @@col LIKE concat('%', TRIM(BOTH '%' FROM @val)) AND
+//	            @@col LIKE CONCAT('%', TRIM(BOTH '%' FROM @val)) AND
 //	          {{else if strings.HasSuffix(val, "%")}}
-//	            @@col LIKE concat(TRIM(BOTH '%' FROM @val), '%') AND
+//	            @@col LIKE CONCAT(TRIM(BOTH '%' FROM @val), '%') AND
 //	          {{else}}
 //	            @@col = @val AND
 //	          {{end}}
@@ -326,7 +328,7 @@ func (a actionDo) FindByCols(cols []string, vals []string) (result []model.Actio
 	var params []interface{}
 
 	var generateSQL strings.Builder
-	generateSQL.WriteString("SELECT * FROM action ")
+	generateSQL.WriteString("SELECT * FROM `action` ")
 	if len(cols) == len(vals) {
 		var whereSQL0 strings.Builder
 		for i, col := range cols {
@@ -335,13 +337,13 @@ func (a actionDo) FindByCols(cols []string, vals []string) (result []model.Actio
 					if val != "" {
 						if strings.HasPrefix(val, "%") && strings.HasSuffix(val, "%") {
 							params = append(params, val)
-							whereSQL0.WriteString(a.Quote(col) + " LIKE concat('%', TRIM(BOTH '%' FROM ?), '%') AND ")
+							whereSQL0.WriteString(a.Quote(col) + " LIKE CONCAT('%', TRIM(BOTH '%' FROM ?), '%') AND ")
 						} else if strings.HasPrefix(val, "%") {
 							params = append(params, val)
-							whereSQL0.WriteString(a.Quote(col) + " LIKE concat('%', TRIM(BOTH '%' FROM ?)) AND ")
+							whereSQL0.WriteString(a.Quote(col) + " LIKE CONCAT('%', TRIM(BOTH '%' FROM ?)) AND ")
 						} else if strings.HasSuffix(val, "%") {
 							params = append(params, val)
-							whereSQL0.WriteString(a.Quote(col) + " LIKE concat(TRIM(BOTH '%' FROM ?), '%') AND ")
+							whereSQL0.WriteString(a.Quote(col) + " LIKE CONCAT(TRIM(BOTH '%' FROM ?), '%') AND ")
 						} else {
 							params = append(params, val)
 							whereSQL0.WriteString(a.Quote(col) + " = ? AND ")
@@ -402,10 +404,6 @@ func (a actionDo) Select(conds ...field.Expr) *actionDo {
 
 func (a actionDo) Where(conds ...gen.Condition) *actionDo {
 	return a.withDO(a.DO.Where(conds...))
-}
-
-func (a actionDo) Exists(subquery interface{ UnderlyingDB() *gorm.DB }) *actionDo {
-	return a.Where(field.CompareSubQuery(field.ExistsOp, nil, subquery.UnderlyingDB()))
 }
 
 func (a actionDo) Order(conds ...field.Expr) *actionDo {

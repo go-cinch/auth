@@ -12,19 +12,19 @@ const TableNameUser = "user"
 
 // User mapped from table <user>
 type User struct {
-	ID         uint64          `gorm:"column:id;primaryKey;autoIncrement:true;comment:auto increment id" json:"id,string"`
-	CreatedAt  carbon.DateTime `gorm:"column:created_at;comment:create time" json:"createdAt"`
-	UpdatedAt  carbon.DateTime `gorm:"column:updated_at;comment:update time" json:"updatedAt"`
-	RoleID     uint64          `gorm:"column:role_id;comment:role id" json:"roleId,string"`
-	Action     string          `gorm:"column:action;comment:user action code array" json:"action"`
-	Username   string          `gorm:"column:username;comment:user login name" json:"username"`
-	Code       string          `gorm:"column:code;not null;comment:user code" json:"code"`
-	Password   string          `gorm:"column:password;comment:password" json:"password"`
-	Platform   string          `gorm:"column:platform;comment:device platform: pc/android/ios/mini..." json:"platform"`
-	LastLogin  carbon.DateTime `gorm:"column:last_login;comment:last login time" json:"lastLogin"`
-	Locked     bool            `gorm:"column:locked;comment:locked(0: unlock, 1: locked)" json:"locked"`
-	LockExpire uint64          `gorm:"column:lock_expire;comment:lock expiration time" json:"lockExpire"`
-	Wrong      uint64          `gorm:"column:wrong;comment:type wrong password count" json:"wrong"`
+	ID         uint64          `gorm:"column:id;primaryKey;autoIncrement:true;comment:auto increment id" json:"id,string"` // auto increment id
+	CreatedAt  carbon.DateTime `gorm:"column:created_at;comment:create time" json:"createdAt"`                             // create time
+	UpdatedAt  carbon.DateTime `gorm:"column:updated_at;comment:update time" json:"updatedAt"`                             // update time
+	RoleID     uint64          `gorm:"column:role_id;comment:role id" json:"roleId,string"`                                // role id
+	Action     string          `gorm:"column:action;comment:user action code array" json:"action"`                         // user action code array
+	Username   string          `gorm:"column:username;comment:user login name" json:"username"`                            // user login name
+	Code       string          `gorm:"column:code;not null;comment:user code" json:"code"`                                 // user code
+	Password   string          `gorm:"column:password;comment:password" json:"password"`                                   // password
+	Platform   string          `gorm:"column:platform;comment:device platform: pc/android/ios/mini..." json:"platform"`    // device platform: pc/android/ios/mini...
+	LastLogin  carbon.DateTime `gorm:"column:last_login;comment:last login time" json:"lastLogin"`                         // last login time
+	Locked     bool            `gorm:"column:locked;comment:locked(0: unlock, 1: locked)" json:"locked"`                   // locked(0: unlock, 1: locked)
+	LockExpire uint64          `gorm:"column:lock_expire;comment:lock expiration time" json:"lockExpire"`                  // lock expiration time
+	Wrong      uint64          `gorm:"column:wrong;comment:type wrong password count" json:"wrong"`                        // type wrong password count
 	Role       Role            `gorm:"foreignKey:RoleID" json:"role"`
 }
 

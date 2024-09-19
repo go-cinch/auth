@@ -59,7 +59,7 @@ func (s *AuthService) Login(ctx context.Context, req *auth.LoginRequest) (rp *au
 		if loginFailed {
 			s.task.Once(
 				worker.WithRunCtx(ctx),
-				worker.WithRunUuid(strings.Join([]string{"login.failed", req.Username}, ".")),
+				worker.WithRunUUID(strings.Join([]string{"login.failed", req.Username}, ".")),
 				worker.WithRunGroup("login.failed"),
 				worker.WithRunNow(true),
 				worker.WithRunTimeout(10),
@@ -84,7 +84,7 @@ func (s *AuthService) Login(ctx context.Context, req *auth.LoginRequest) (rp *au
 	copierx.Copy(&rp, res)
 	s.task.Once(
 		worker.WithRunCtx(ctx),
-		worker.WithRunUuid(strings.Join([]string{"login.last", req.Username}, ".")),
+		worker.WithRunUUID(strings.Join([]string{"login.last", req.Username}, ".")),
 		worker.WithRunGroup("login.last"),
 		worker.WithRunIn(time.Duration(10)*time.Second),
 		worker.WithRunTimeout(10),

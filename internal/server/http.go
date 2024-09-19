@@ -8,12 +8,11 @@ import (
 	localMiddleware "auth/internal/server/middleware"
 	"auth/internal/service"
 	"github.com/go-cinch/common/i18n"
-	"github.com/go-cinch/common/log"
 	i18nMiddleware "github.com/go-cinch/common/middleware/i18n"
+	"github.com/go-cinch/common/middleware/logging"
 	tenantMiddleware "github.com/go-cinch/common/middleware/tenant"
 	traceMiddleware "github.com/go-cinch/common/middleware/trace"
 	"github.com/go-kratos/kratos/v2/middleware"
-	"github.com/go-kratos/kratos/v2/middleware/logging"
 	"github.com/go-kratos/kratos/v2/middleware/metadata"
 	"github.com/go-kratos/kratos/v2/middleware/ratelimit"
 	"github.com/go-kratos/kratos/v2/middleware/recovery"
@@ -45,7 +44,7 @@ func NewHTTPServer(
 	}
 	middlewares = append(
 		middlewares,
-		logging.Server(log.DefaultWrapper.Options().Logger()),
+		logging.Server(),
 		i18nMiddleware.Translator(i18n.WithLanguage(language.Make(c.Server.Language)), i18n.WithFs(locales)),
 		metadata.Server(),
 		localMiddleware.Whitelist(whitelist),

@@ -8,8 +8,8 @@ const TableNameUserUserGroupRelation = "user_user_group_relation"
 
 // UserUserGroupRelation mapped from table <user_user_group_relation>
 type UserUserGroupRelation struct {
-	UserID      uint64 `gorm:"column:user_id;primaryKey;comment:auto increment id" json:"userId,string"`
-	UserGroupID uint64 `gorm:"column:user_group_id;primaryKey;comment:auto increment id" json:"userGroupId,string"`
+	UserID      uint64 `gorm:"column:user_id;primaryKey;comment:auto increment id" json:"userId,string"`            // auto increment id
+	UserGroupID uint64 `gorm:"column:user_group_id;primaryKey;comment:auto increment id" json:"userGroupId,string"` // auto increment id
 }
 
 // TableName UserUserGroupRelation's table name

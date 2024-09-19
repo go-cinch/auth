@@ -16,28 +16,10 @@ import (
 // ProviderSet is task providers.
 var ProviderSet = wire.NewSet(New)
 
-type Task struct {
-	worker *worker.Worker
-}
-
-func (tk Task) Once(options ...func(*worker.RunOptions)) error {
-	return tk.worker.Once(options...)
-}
-
-func (tk Task) Cron(options ...func(*worker.RunOptions)) error {
-	return tk.worker.Cron(options...)
-}
-
 // New is initialize task worker from config
-func New(c *conf.Bootstrap, user *biz.UserUseCase) (tk *Task, err error) {
-	defer func() {
-		e := recover()
-		if e != nil {
-			err = errors.Errorf("%v", e)
-		}
-	}()
-	w := worker.New(
-		worker.WithRedisUri(c.Data.Redis.Dsn),
+func New(c *conf.Bootstrap, user *biz.UserUseCase) (w *worker.Worker, err error) {
+	w = worker.New(
+		worker.WithRedisURI(c.Data.Redis.Dsn),
 		worker.WithGroup(c.Name),
 		worker.WithHandler(func(ctx context.Context, p worker.Payload) error {
 			return process(task{
@@ -48,12 +30,9 @@ func New(c *conf.Bootstrap, user *biz.UserUseCase) (tk *Task, err error) {
 		}),
 	)
 	if w.Error != nil {
-		err = errors.WithMessage(w.Error, "initialize worker failed")
+		log.Error(w.Error)
+		err = errors.New("initialize worker failed")
 		return
-	}
-
-	tk = &Task{
-		worker: w,
 	}
 
 	log.Info("initialize worker success")

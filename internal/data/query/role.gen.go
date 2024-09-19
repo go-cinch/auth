@@ -79,6 +79,8 @@ func (r role) TableName() string { return r.roleDo.TableName() }
 
 func (r role) Alias() string { return r.roleDo.Alias() }
 
+func (r role) Columns(cols ...field.Expr) gen.Columns { return r.roleDo.Columns(cols...) }
+
 func (r *role) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 	_f, ok := r.fieldMap[fieldName]
 	if !ok || _f == nil {
@@ -108,13 +110,13 @@ func (r role) replaceDB(db *gorm.DB) role {
 
 type roleDo struct{ gen.DO }
 
-// SELECT * FROM @@table WHERE id = @id LIMIT 1
+// SELECT * FROM `@@table` WHERE `id` = @id LIMIT 1
 func (r roleDo) GetByID(id uint64) (result model.Role) {
 	var params []interface{}
 
 	var generateSQL strings.Builder
 	params = append(params, id)
-	generateSQL.WriteString("SELECT * FROM role WHERE id = ? LIMIT 1 ")
+	generateSQL.WriteString("SELECT * FROM `role` WHERE `id` = ? LIMIT 1 ")
 
 	var executeSQL *gorm.DB
 	executeSQL = r.UnderlyingDB().Raw(generateSQL.String(), params...).Take(&result) // ignore_security_alert
@@ -123,16 +125,16 @@ func (r roleDo) GetByID(id uint64) (result model.Role) {
 	return
 }
 
-// SELECT * FROM @@table
+// SELECT * FROM `@@table`
 // {{where}}
 //
 //	{{if val != ""}}
 //	  {{if strings.HasPrefix(val, "%") && strings.HasSuffix(val, "%")}}
-//	    @@col LIKE concat('%', TRIM(BOTH '%' FROM @val), '%')
+//	    @@col LIKE CONCAT('%', TRIM(BOTH '%' FROM @val), '%')
 //	  {{else if strings.HasPrefix(val, "%")}}
-//	    @@col LIKE concat('%', TRIM(BOTH '%' FROM @val))
+//	    @@col LIKE CONCAT('%', TRIM(BOTH '%' FROM @val))
 //	  {{else if strings.HasSuffix(val, "%")}}
-//	    @@col LIKE concat(TRIM(BOTH '%' FROM @val), '%')
+//	    @@col LIKE CONCAT(TRIM(BOTH '%' FROM @val), '%')
 //	  {{else}}
 //	    @@col = @val
 //	  {{end}}
@@ -144,18 +146,18 @@ func (r roleDo) GetByCol(col string, val string) (result model.Role) {
 	var params []interface{}
 
 	var generateSQL strings.Builder
-	generateSQL.WriteString("SELECT * FROM role ")
+	generateSQL.WriteString("SELECT * FROM `role` ")
 	var whereSQL0 strings.Builder
 	if val != "" {
 		if strings.HasPrefix(val, "%") && strings.HasSuffix(val, "%") {
 			params = append(params, val)
-			whereSQL0.WriteString(r.Quote(col) + " LIKE concat('%', TRIM(BOTH '%' FROM ?), '%') ")
+			whereSQL0.WriteString(r.Quote(col) + " LIKE CONCAT('%', TRIM(BOTH '%' FROM ?), '%') ")
 		} else if strings.HasPrefix(val, "%") {
 			params = append(params, val)
-			whereSQL0.WriteString(r.Quote(col) + " LIKE concat('%', TRIM(BOTH '%' FROM ?)) ")
+			whereSQL0.WriteString(r.Quote(col) + " LIKE CONCAT('%', TRIM(BOTH '%' FROM ?)) ")
 		} else if strings.HasSuffix(val, "%") {
 			params = append(params, val)
-			whereSQL0.WriteString(r.Quote(col) + " LIKE concat(TRIM(BOTH '%' FROM ?), '%') ")
+			whereSQL0.WriteString(r.Quote(col) + " LIKE CONCAT(TRIM(BOTH '%' FROM ?), '%') ")
 		} else {
 			params = append(params, val)
 			whereSQL0.WriteString(r.Quote(col) + " = ? ")
@@ -171,7 +173,7 @@ func (r roleDo) GetByCol(col string, val string) (result model.Role) {
 	return
 }
 
-// SELECT * FROM @@table
+// SELECT * FROM `@@table`
 // {{if len(cols) == len(vals)}}
 // {{where}}
 //
@@ -180,11 +182,11 @@ func (r roleDo) GetByCol(col string, val string) (result model.Role) {
 //	      {{if i == j}}
 //	        {{if val != ""}}
 //	          {{if strings.HasPrefix(val, "%") && strings.HasSuffix(val, "%")}}
-//	            @@col LIKE concat('%', TRIM(BOTH '%' FROM @val), '%') AND
+//	            @@col LIKE CONCAT('%', TRIM(BOTH '%' FROM @val), '%') AND
 //	          {{else if strings.HasPrefix(val, "%")}}
-//	            @@col LIKE concat('%', TRIM(BOTH '%' FROM @val)) AND
+//	            @@col LIKE CONCAT('%', TRIM(BOTH '%' FROM @val)) AND
 //	          {{else if strings.HasSuffix(val, "%")}}
-//	            @@col LIKE concat(TRIM(BOTH '%' FROM @val), '%') AND
+//	            @@col LIKE CONCAT(TRIM(BOTH '%' FROM @val), '%') AND
 //	          {{else}}
 //	            @@col = @val AND
 //	          {{end}}
@@ -200,7 +202,7 @@ func (r roleDo) GetByCols(cols []string, vals []string) (result model.Role) {
 	var params []interface{}
 
 	var generateSQL strings.Builder
-	generateSQL.WriteString("SELECT * FROM role ")
+	generateSQL.WriteString("SELECT * FROM `role` ")
 	if len(cols) == len(vals) {
 		var whereSQL0 strings.Builder
 		for i, col := range cols {
@@ -209,13 +211,13 @@ func (r roleDo) GetByCols(cols []string, vals []string) (result model.Role) {
 					if val != "" {
 						if strings.HasPrefix(val, "%") && strings.HasSuffix(val, "%") {
 							params = append(params, val)
-							whereSQL0.WriteString(r.Quote(col) + " LIKE concat('%', TRIM(BOTH '%' FROM ?), '%') AND ")
+							whereSQL0.WriteString(r.Quote(col) + " LIKE CONCAT('%', TRIM(BOTH '%' FROM ?), '%') AND ")
 						} else if strings.HasPrefix(val, "%") {
 							params = append(params, val)
-							whereSQL0.WriteString(r.Quote(col) + " LIKE concat('%', TRIM(BOTH '%' FROM ?)) AND ")
+							whereSQL0.WriteString(r.Quote(col) + " LIKE CONCAT('%', TRIM(BOTH '%' FROM ?)) AND ")
 						} else if strings.HasSuffix(val, "%") {
 							params = append(params, val)
-							whereSQL0.WriteString(r.Quote(col) + " LIKE concat(TRIM(BOTH '%' FROM ?), '%') AND ")
+							whereSQL0.WriteString(r.Quote(col) + " LIKE CONCAT(TRIM(BOTH '%' FROM ?), '%') AND ")
 						} else {
 							params = append(params, val)
 							whereSQL0.WriteString(r.Quote(col) + " = ? AND ")
@@ -235,16 +237,16 @@ func (r roleDo) GetByCols(cols []string, vals []string) (result model.Role) {
 	return
 }
 
-// SELECT * FROM @@table
+// SELECT * FROM `@@table`
 // {{where}}
 //
 //	{{if val != ""}}
 //	  {{if strings.HasPrefix(val, "%") && strings.HasSuffix(val, "%")}}
-//	    @@col LIKE concat('%', TRIM(BOTH '%' FROM @val), '%')
+//	    @@col LIKE CONCAT('%', TRIM(BOTH '%' FROM @val), '%')
 //	  {{else if strings.HasPrefix(val, "%")}}
-//	    @@col LIKE concat('%', TRIM(BOTH '%' FROM @val))
+//	    @@col LIKE CONCAT('%', TRIM(BOTH '%' FROM @val))
 //	  {{else if strings.HasSuffix(val, "%")}}
-//	    @@col LIKE concat(TRIM(BOTH '%' FROM @val), '%')
+//	    @@col LIKE CONCAT(TRIM(BOTH '%' FROM @val), '%')
 //	  {{else}}
 //	    @@col = @val
 //	  {{end}}
@@ -255,18 +257,18 @@ func (r roleDo) FindByCol(col string, val string) (result []model.Role) {
 	var params []interface{}
 
 	var generateSQL strings.Builder
-	generateSQL.WriteString("SELECT * FROM role ")
+	generateSQL.WriteString("SELECT * FROM `role` ")
 	var whereSQL0 strings.Builder
 	if val != "" {
 		if strings.HasPrefix(val, "%") && strings.HasSuffix(val, "%") {
 			params = append(params, val)
-			whereSQL0.WriteString(r.Quote(col) + " LIKE concat('%', TRIM(BOTH '%' FROM ?), '%') ")
+			whereSQL0.WriteString(r.Quote(col) + " LIKE CONCAT('%', TRIM(BOTH '%' FROM ?), '%') ")
 		} else if strings.HasPrefix(val, "%") {
 			params = append(params, val)
-			whereSQL0.WriteString(r.Quote(col) + " LIKE concat('%', TRIM(BOTH '%' FROM ?)) ")
+			whereSQL0.WriteString(r.Quote(col) + " LIKE CONCAT('%', TRIM(BOTH '%' FROM ?)) ")
 		} else if strings.HasSuffix(val, "%") {
 			params = append(params, val)
-			whereSQL0.WriteString(r.Quote(col) + " LIKE concat(TRIM(BOTH '%' FROM ?), '%') ")
+			whereSQL0.WriteString(r.Quote(col) + " LIKE CONCAT(TRIM(BOTH '%' FROM ?), '%') ")
 		} else {
 			params = append(params, val)
 			whereSQL0.WriteString(r.Quote(col) + " = ? ")
@@ -281,7 +283,7 @@ func (r roleDo) FindByCol(col string, val string) (result []model.Role) {
 	return
 }
 
-// SELECT * FROM @@table
+// SELECT * FROM `@@table`
 // {{if len(cols) == len(vals)}}
 // {{where}}
 //
@@ -290,11 +292,11 @@ func (r roleDo) FindByCol(col string, val string) (result []model.Role) {
 //	      {{if i == j}}
 //	        {{if val != ""}}
 //	          {{if strings.HasPrefix(val, "%") && strings.HasSuffix(val, "%")}}
-//	            @@col LIKE concat('%', TRIM(BOTH '%' FROM @val), '%') AND
+//	            @@col LIKE CONCAT('%', TRIM(BOTH '%' FROM @val), '%') AND
 //	          {{else if strings.HasPrefix(val, "%")}}
-//	            @@col LIKE concat('%', TRIM(BOTH '%' FROM @val)) AND
+//	            @@col LIKE CONCAT('%', TRIM(BOTH '%' FROM @val)) AND
 //	          {{else if strings.HasSuffix(val, "%")}}
-//	            @@col LIKE concat(TRIM(BOTH '%' FROM @val), '%') AND
+//	            @@col LIKE CONCAT(TRIM(BOTH '%' FROM @val), '%') AND
 //	          {{else}}
 //	            @@col = @val AND
 //	          {{end}}
@@ -309,7 +311,7 @@ func (r roleDo) FindByCols(cols []string, vals []string) (result []model.Role) {
 	var params []interface{}
 
 	var generateSQL strings.Builder
-	generateSQL.WriteString("SELECT * FROM role ")
+	generateSQL.WriteString("SELECT * FROM `role` ")
 	if len(cols) == len(vals) {
 		var whereSQL0 strings.Builder
 		for i, col := range cols {
@@ -318,13 +320,13 @@ func (r roleDo) FindByCols(cols []string, vals []string) (result []model.Role) {
 					if val != "" {
 						if strings.HasPrefix(val, "%") && strings.HasSuffix(val, "%") {
 							params = append(params, val)
-							whereSQL0.WriteString(r.Quote(col) + " LIKE concat('%', TRIM(BOTH '%' FROM ?), '%') AND ")
+							whereSQL0.WriteString(r.Quote(col) + " LIKE CONCAT('%', TRIM(BOTH '%' FROM ?), '%') AND ")
 						} else if strings.HasPrefix(val, "%") {
 							params = append(params, val)
-							whereSQL0.WriteString(r.Quote(col) + " LIKE concat('%', TRIM(BOTH '%' FROM ?)) AND ")
+							whereSQL0.WriteString(r.Quote(col) + " LIKE CONCAT('%', TRIM(BOTH '%' FROM ?)) AND ")
 						} else if strings.HasSuffix(val, "%") {
 							params = append(params, val)
-							whereSQL0.WriteString(r.Quote(col) + " LIKE concat(TRIM(BOTH '%' FROM ?), '%') AND ")
+							whereSQL0.WriteString(r.Quote(col) + " LIKE CONCAT(TRIM(BOTH '%' FROM ?), '%') AND ")
 						} else {
 							params = append(params, val)
 							whereSQL0.WriteString(r.Quote(col) + " = ? AND ")
@@ -385,10 +387,6 @@ func (r roleDo) Select(conds ...field.Expr) *roleDo {
 
 func (r roleDo) Where(conds ...gen.Condition) *roleDo {
 	return r.withDO(r.DO.Where(conds...))
-}
-
-func (r roleDo) Exists(subquery interface{ UnderlyingDB() *gorm.DB }) *roleDo {
-	return r.Where(field.CompareSubQuery(field.ExistsOp, nil, subquery.UnderlyingDB()))
 }
 
 func (r roleDo) Order(conds ...field.Expr) *roleDo {
