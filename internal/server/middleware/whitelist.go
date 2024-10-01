@@ -6,6 +6,7 @@ import (
 
 	"auth/api/auth"
 	"auth/internal/biz"
+	"github.com/go-cinch/common/log"
 	"github.com/go-kratos/kratos/v2/middleware"
 	"github.com/go-kratos/kratos/v2/middleware/selector"
 	"github.com/go-kratos/kratos/v2/transport"
@@ -59,6 +60,7 @@ func hasPermissionWhitelist(ctx context.Context, whitelist *biz.WhitelistUseCase
 	if req.Resource != nil {
 		r.Resource = *req.Resource
 	}
+	log.WithContext(ctx).Info("method: %s, uri: %s, resource: %s", r.Method, r.URI, r.Resource)
 	// skip options
 	if r.Method == http.MethodOptions {
 		ok = true
