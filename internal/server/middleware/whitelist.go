@@ -30,6 +30,15 @@ func Whitelist(whitelist *biz.WhitelistUseCase) middleware.Middleware {
 					err = biz.ErrNoPermission(ctx)
 					return
 				}
+				// get from header if exist
+				method := tr.RequestHeader().Get("x-original-method")
+				uri := tr.RequestHeader().Get("x-permission-uri")
+				if v.Method == nil && method != "" {
+					v.Method = &method
+				}
+				if v.Uri == nil && uri != "" {
+					v.Uri = &uri
+				}
 				// check whitelist
 				pass, err = hasPermissionWhitelist(ctx, whitelist, v)
 				if err != nil {
