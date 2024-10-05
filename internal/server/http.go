@@ -20,7 +20,6 @@ import (
 	"github.com/go-kratos/kratos/v2/middleware/validate"
 	"github.com/go-kratos/kratos/v2/transport/http"
 	"github.com/go-kratos/kratos/v2/transport/http/pprof"
-	"github.com/gorilla/handlers"
 	"github.com/redis/go-redis/v9"
 	"golang.org/x/text/language"
 )
@@ -59,12 +58,13 @@ func NewHTTPServer(
 		middlewares = append(middlewares, validate.Validator())
 	}
 	var opts = []http.ServerOption{
-		http.Filter(handlers.CORS(
-			handlers.AllowedHeaders([]string{"Content-Type", "Authorization", "X-Idempotent"}),
-			handlers.AllowedMethods([]string{"OPTIONS", "GET", "POST", "PUT", "PATCH", "DELETE"}),
-			handlers.AllowedOrigins([]string{"*"}),
-			handlers.AllowCredentials(),
-		)),
+		// already set cors header in nginx
+		// http.Filter(handlers.CORS(
+		// 	handlers.AllowedHeaders([]string{"Content-Type", "Authorization", "X-Idempotent"}),
+		// 	handlers.AllowedMethods([]string{"OPTIONS", "GET", "POST", "PUT", "PATCH", "DELETE"}),
+		// 	handlers.AllowedOrigins([]string{"*"}),
+		// 	handlers.AllowCredentials(),
+		// )),
 		http.Middleware(middlewares...),
 	}
 	if c.Server.Http.Network != "" {
