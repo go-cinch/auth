@@ -42,6 +42,7 @@ func (ro userRepo) GetByUsername(ctx context.Context, username string) (item *bi
 	if err != nil || m.ID == constant.UI0 {
 		err = biz.ErrRecordNotFound(ctx)
 		log.
+			WithContext(ctx).
 			WithError(err).
 			Error("invalid username: %s", username)
 		return
@@ -197,6 +198,7 @@ func (ro userRepo) Update(ctx context.Context, item *biz.UpdateUser) (err error)
 			if mRole.ID == constant.UI0 {
 				err = biz.ErrRecordNotFound(ctx)
 				log.
+					WithContext(ctx).
 					WithError(err).
 					Error("invalid roleId: %s", v)
 				return
@@ -311,6 +313,7 @@ func (ro userRepo) GetByCode(ctx context.Context, code string) (item *biz.User, 
 	if err != nil || m.ID == constant.UI0 {
 		err = biz.ErrRecordNotFound(ctx)
 		log.
+			WithContext(ctx).
 			WithError(err).
 			Error("invalid code: %s", code)
 		return
