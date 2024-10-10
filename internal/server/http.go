@@ -32,17 +32,16 @@ func NewHTTPServer(
 	svc *service.AuthService,
 	whitelist *biz.WhitelistUseCase,
 ) *http.Server {
-	middlewares := []middleware.Middleware{
-		recovery.Recovery(),
-		tenantMiddleware.Tenant(),
-		ratelimit.Server(),
-		localMiddleware.Header(),
-	}
+	var middlewares []middleware.Middleware
 	if c.Tracer.Enable {
 		middlewares = append(middlewares, tracing.Server(), traceMiddleware.Id())
 	}
 	middlewares = append(
 		middlewares,
+		recovery.Recovery(),
+		tenantMiddleware.Tenant(),
+		ratelimit.Server(),
+		localMiddleware.Header(),
 		logging.Server(),
 		i18nMiddleware.Translator(i18n.WithLanguage(language.Make(c.Server.Language)), i18n.WithFs(locales)),
 		metadata.Server(),
