@@ -186,7 +186,9 @@ func (ro userGroupRepo) WordExists(ctx context.Context, word string) (ok bool) {
 	for _, item := range arr {
 		m := db.GetByCol("word", item)
 		if m.ID == constant.UI0 {
-			log.Error("invalid word: %s", item)
+			log.
+				WithContext(ctx).
+				Error("invalid word: %s", item)
 			return
 		}
 	}
