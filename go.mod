@@ -11,7 +11,7 @@ require (
 	github.com/go-cinch/common/id v1.0.4
 	github.com/go-cinch/common/idempotent v1.0.4
 	github.com/go-cinch/common/jwt v1.0.3
-	github.com/go-cinch/common/log v1.1.0
+	github.com/go-cinch/common/log v1.1.1
 	github.com/go-cinch/common/middleware/i18n v1.0.5
 	github.com/go-cinch/common/middleware/logging v1.0.0
 	github.com/go-cinch/common/middleware/tenant v1.0.1
@@ -31,7 +31,6 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/golang-module/carbon/v2 v2.3.12
 	github.com/google/wire v0.6.0
-	github.com/gorilla/handlers v1.5.1
 	github.com/pkg/errors v0.9.1
 	github.com/redis/go-redis/v9 v9.2.1
 	github.com/thoas/go-funk v0.9.3
@@ -56,7 +55,6 @@ require (
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
-	github.com/felixge/httpsnoop v1.0.1 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/go-cinch/common/migrate v1.0.4 // indirect
 	github.com/go-cinch/common/nx v1.0.4 // indirect
