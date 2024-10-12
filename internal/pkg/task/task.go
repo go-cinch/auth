@@ -17,7 +17,7 @@ import (
 var ProviderSet = wire.NewSet(New)
 
 // New is initialize task worker from config
-func New(c *conf.Bootstrap, user *biz.UserUseCase) (w *worker.Worker, err error) {
+func New(c *conf.Bootstrap, user *biz.UserUseCase, hotspot *biz.HotspotUseCase) (w *worker.Worker, err error) {
 	w = worker.New(
 		worker.WithRedisURI(c.Data.Redis.Dsn),
 		worker.WithGroup(c.Name),
@@ -26,6 +26,7 @@ func New(c *conf.Bootstrap, user *biz.UserUseCase) (w *worker.Worker, err error)
 				ctx:     ctx,
 				payload: p,
 				user:    user,
+				hotspot: hotspot,
 			})
 		}),
 	)
@@ -33,6 +34,21 @@ func New(c *conf.Bootstrap, user *biz.UserUseCase) (w *worker.Worker, err error)
 		log.Error(w.Error)
 		err = errors.New("initialize worker failed")
 		return
+	}
+
+	for id, item := range c.Task {
+		err = w.Cron(
+			worker.WithRunUUID(id),
+			worker.WithRunGroup(item.Name),
+			worker.WithRunExpr(item.Expr),
+			worker.WithRunTimeout(int(item.Timeout)),
+			worker.WithRunMaxRetry(int(item.Retry)),
+		)
+		if err != nil {
+			log.Error(err)
+			err = errors.New("initialize worker failed")
+			return
+		}
 	}
 
 	log.Info("initialize worker success")
@@ -43,6 +59,7 @@ type task struct {
 	ctx     context.Context
 	payload worker.Payload
 	user    *biz.UserUseCase
+	hotspot *biz.HotspotUseCase
 }
 
 func process(t task) (err error) {
@@ -58,6 +75,8 @@ func process(t task) (err error) {
 		var req biz.LoginTime
 		utils.Json2Struct(&req, t.payload.Payload)
 		err = t.user.LastLogin(ctx, req.Username)
+	case "refresh.hotspot":
+		err = t.hotspot.Refresh(ctx)
 	}
 	return
 }

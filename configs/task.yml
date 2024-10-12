@@ -1,1 +1,4 @@
 task:
+  refresh.hotspot:
+    name: 'refresh.hotspot'
+    expr: '0 0/5 * * * * *'

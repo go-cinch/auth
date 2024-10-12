@@ -18,14 +18,16 @@ import (
 )
 
 type actionRepo struct {
-	c    *conf.Bootstrap
-	data *Data
+	c       *conf.Bootstrap
+	data    *Data
+	hotspot biz.HotspotRepo
 }
 
-func NewActionRepo(c *conf.Bootstrap, data *Data) biz.ActionRepo {
+func NewActionRepo(c *conf.Bootstrap, data *Data, hotspot biz.HotspotRepo) biz.ActionRepo {
 	return &actionRepo{
-		c:    c,
-		data: data,
+		c:       c,
+		data:    data,
+		hotspot: hotspot,
 	}
 }
 
@@ -197,13 +199,8 @@ func (ro actionRepo) permission(ctx context.Context, code string, req biz.CheckP
 	if code == "" {
 		return
 	}
-	p := query.Use(ro.data.DB(ctx)).Action
-	db := p.WithContext(ctx)
-	m := db.GetByCol("code", code)
-	if m.ID == constant.UI0 {
-		return
-	}
-	return ro.MatchResource(ctx, m.Resource, req)
+	action := ro.hotspot.GetActionByCode(ctx, code)
+	return ro.MatchResource(ctx, action.Resource, req)
 }
 
 func (actionRepo) MatchResource(_ context.Context, resource string, req biz.CheckPermission) (pass bool) {

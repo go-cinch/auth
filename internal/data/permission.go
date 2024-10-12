@@ -13,25 +13,24 @@ type permissionRepo struct {
 	action    biz.ActionRepo
 	user      biz.UserRepo
 	userGroup biz.UserGroupRepo
+	hotspot   biz.HotspotRepo
 }
 
 // NewPermissionRepo .
-func NewPermissionRepo(data *Data, action biz.ActionRepo, user biz.UserRepo, userGroup biz.UserGroupRepo) biz.PermissionRepo {
+func NewPermissionRepo(data *Data, action biz.ActionRepo, user biz.UserRepo, userGroup biz.UserGroupRepo, hotspot biz.HotspotRepo) biz.PermissionRepo {
 	return &permissionRepo{
 		data:      data,
 		action:    action,
 		user:      user,
 		userGroup: userGroup,
+		hotspot:   hotspot,
 	}
 }
 
 func (ro permissionRepo) Check(ctx context.Context, item biz.CheckPermission) (pass bool) {
-	user, err := ro.user.GetByCode(ctx, item.UserCode)
-	if err != nil {
-		return
-	}
+	user := ro.hotspot.GetUserByCode(ctx, item.UserCode)
 	// 1. check default permission
-	defaultAction := ro.action.GetDefault(ctx)
+	defaultAction := ro.hotspot.GetActionByWord(ctx, "default")
 	pass = ro.action.Permission(ctx, defaultAction.Code, item)
 	if pass {
 		return
@@ -47,10 +46,7 @@ func (ro permissionRepo) Check(ctx context.Context, item biz.CheckPermission) (p
 		return
 	}
 	// 4. check user group permission
-	groups := ro.userGroup.FindGroupByUserCode(ctx, user.Code)
-	if err != nil {
-		return
-	}
+	groups := ro.hotspot.FindUserGroupByUserCode(ctx, user.Code)
 	for _, group := range groups {
 		pass = ro.action.Permission(ctx, group.Action, item)
 		if pass {

@@ -3,7 +3,6 @@ package biz
 import (
 	"context"
 	"errors"
-	"strconv"
 	"strings"
 
 	"auth/internal/conf"
@@ -43,23 +42,8 @@ func NewPermissionUseCase(c *conf.Bootstrap, repo PermissionRepo, cache Cache) *
 	}
 }
 
-func (uc *PermissionUseCase) Check(ctx context.Context, item CheckPermission) (rp bool, err error) {
-	action := strings.Join([]string{"check", utils.StructMd5(item)}, "_")
-	str, err := uc.cache.Get(ctx, action, func(ctx context.Context) (string, error) {
-		return uc.check(ctx, action, item)
-	})
-	if err != nil {
-		return
-	}
-	rp, _ = strconv.ParseBool(str)
-	return
-}
-
-func (uc *PermissionUseCase) check(ctx context.Context, action string, item CheckPermission) (res string, err error) {
-	// read data from db and write to cache
-	pass := uc.repo.Check(ctx, item)
-	res = strconv.FormatBool(pass)
-	uc.cache.Set(ctx, action, res, false)
+func (uc *PermissionUseCase) Check(ctx context.Context, item CheckPermission) (rp bool) {
+	rp = uc.repo.Check(ctx, item)
 	return
 }
 

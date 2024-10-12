@@ -14,14 +14,16 @@ import (
 )
 
 type whitelistRepo struct {
-	data   *Data
-	action biz.ActionRepo
+	data    *Data
+	action  biz.ActionRepo
+	hotspot biz.HotspotRepo
 }
 
-func NewWhitelistRepo(data *Data, action biz.ActionRepo) biz.WhitelistRepo {
+func NewWhitelistRepo(data *Data, action biz.ActionRepo, hotspot biz.HotspotRepo) biz.WhitelistRepo {
 	return &whitelistRepo{
-		data:   data,
-		action: action,
+		data:    data,
+		action:  action,
+		hotspot: hotspot,
 	}
 }
 
@@ -62,12 +64,7 @@ func (ro whitelistRepo) Find(ctx context.Context, condition *biz.FindWhitelist) 
 }
 
 func (ro whitelistRepo) Has(ctx context.Context, condition *biz.HasWhitelist) (has bool) {
-	p := query.Use(ro.data.DB(ctx)).Whitelist
-	db := p.WithContext(ctx)
-	resources := make([]string, 0)
-	db.
-		Where(p.Category.Eq(condition.Category)).
-		Pluck(p.Resource, &resources)
+	resources := ro.hotspot.FindWhitelistResourceByCategory(ctx, condition.Category)
 	for _, item := range resources {
 		has = ro.action.MatchResource(ctx, item, condition.Permission)
 		if has {

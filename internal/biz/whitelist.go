@@ -2,7 +2,6 @@ package biz
 
 import (
 	"context"
-	"strconv"
 	"strings"
 
 	"auth/internal/conf"
@@ -108,22 +107,7 @@ func (uc *WhitelistUseCase) find(ctx context.Context, action string, condition *
 }
 
 func (uc *WhitelistUseCase) Has(ctx context.Context, condition *HasWhitelist) (rp bool, err error) {
-	action := strings.Join([]string{"has", utils.StructMd5(condition)}, "_")
-	str, err := uc.cache.Get(ctx, action, func(ctx context.Context) (string, error) {
-		return uc.has(ctx, action, condition)
-	})
-	if err != nil {
-		return
-	}
-	rp, _ = strconv.ParseBool(str)
-	return
-}
-
-func (uc *WhitelistUseCase) has(ctx context.Context, action string, condition *HasWhitelist) (res string, err error) {
-	// read data from db and write to cache
-	has := uc.repo.Has(ctx, condition)
-	res = strconv.FormatBool(has)
-	uc.cache.Set(ctx, action, res, false)
+	rp = uc.repo.Has(ctx, condition)
 	return
 }
 

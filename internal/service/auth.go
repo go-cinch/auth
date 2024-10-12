@@ -138,10 +138,7 @@ func (s *AuthService) Permission(ctx context.Context, req *auth.PermissionReques
 	if req.Uri != nil {
 		r.URI = *req.Uri
 	}
-	pass, err := s.permission.Check(ctx, r)
-	if err != nil {
-		return
-	}
+	pass := s.permission.Check(ctx, r)
 	if !pass {
 		err = biz.ErrNoPermission(ctx)
 		return

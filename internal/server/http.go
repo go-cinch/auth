@@ -14,7 +14,6 @@ import (
 	traceMiddleware "github.com/go-cinch/common/middleware/trace"
 	"github.com/go-kratos/kratos/v2/middleware"
 	"github.com/go-kratos/kratos/v2/middleware/metadata"
-	"github.com/go-kratos/kratos/v2/middleware/ratelimit"
 	"github.com/go-kratos/kratos/v2/middleware/recovery"
 	"github.com/go-kratos/kratos/v2/middleware/tracing"
 	"github.com/go-kratos/kratos/v2/middleware/validate"
@@ -40,7 +39,7 @@ func NewHTTPServer(
 		middlewares,
 		recovery.Recovery(),
 		tenantMiddleware.Tenant(),
-		ratelimit.Server(),
+		// ratelimit.Server(),
 		localMiddleware.Header(),
 		logging.Server(),
 		i18nMiddleware.Translator(i18n.WithLanguage(language.Make(c.Server.Language)), i18n.WithFs(locales)),

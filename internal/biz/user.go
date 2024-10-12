@@ -131,18 +131,20 @@ type UserRepo interface {
 }
 
 type UserUseCase struct {
-	c     *conf.Bootstrap
-	repo  UserRepo
-	tx    Transaction
-	cache Cache
+	c       *conf.Bootstrap
+	repo    UserRepo
+	hotspot HotspotRepo
+	tx      Transaction
+	cache   Cache
 }
 
-func NewUserUseCase(c *conf.Bootstrap, repo UserRepo, tx Transaction, cache Cache) *UserUseCase {
+func NewUserUseCase(c *conf.Bootstrap, repo UserRepo, hotspot HotspotRepo, tx Transaction, cache Cache) *UserUseCase {
 	return &UserUseCase{
-		c:     c,
-		repo:  repo,
-		tx:    tx,
-		cache: cache.WithPrefix("user"),
+		c:       c,
+		repo:    repo,
+		hotspot: hotspot,
+		tx:      tx,
+		cache:   cache.WithPrefix("user"),
 	}
 }
 
@@ -186,30 +188,7 @@ func (uc *UserUseCase) Delete(ctx context.Context, ids ...uint64) error {
 }
 
 func (uc *UserUseCase) GetUserByCode(ctx context.Context, code string) (rp *User, err error) {
-	rp = &User{}
-	action := strings.Join([]string{"get_user_by_code", code}, "_")
-	str, err := uc.cache.Get(ctx, action, func(ctx context.Context) (string, error) {
-		return uc.getUserByCode(ctx, action, code)
-	})
-	if err != nil {
-		return
-	}
-	utils.Json2Struct(&rp, str)
-	return
-}
-
-func (uc *UserUseCase) getUserByCode(ctx context.Context, action string, code string) (res string, err error) {
-	// read data from db and write to cache
-	rp := &User{}
-	user, err := uc.repo.GetByCode(ctx, code)
-	notFound := errors.Is(err, ErrRecordNotFound(ctx))
-	if err != nil && !notFound {
-		return
-	}
-	copierx.Copy(&rp, user)
-	res = utils.Struct2Json(rp)
-	uc.cache.Set(ctx, action, res, notFound)
-	return
+	return uc.repo.GetByCode(ctx, code)
 }
 
 func (uc *UserUseCase) Find(ctx context.Context, condition *FindUser) (rp []User, err error) {
@@ -245,14 +224,8 @@ func (uc *UserUseCase) InfoFromCtx(ctx context.Context) (rp *UserInfo, err error
 
 func (uc *UserUseCase) Info(ctx context.Context, code string) (rp *UserInfo, err error) {
 	rp = &UserInfo{}
-	action := strings.Join([]string{"info", code}, "_")
-	str, err := uc.cache.Get(ctx, action, func(ctx context.Context) (string, error) {
-		return uc.info(ctx, action, code)
-	})
-	if err != nil {
-		return
-	}
-	utils.Json2Struct(&rp, str)
+	user, err := uc.GetUserByCode(ctx, code)
+	utils.Struct2StructByJson(rp, user)
 	return
 }
 
@@ -353,14 +326,12 @@ func (uc *UserUseCase) Pwd(ctx context.Context, item *User) error {
 
 func (uc *UserUseCase) Status(ctx context.Context, username string, captcha bool) (rp *UserStatus, err error) {
 	rp = &UserStatus{}
-	action := strings.Join([]string{"status", username}, "_")
-	str, err := uc.cache.Get(ctx, action, func(ctx context.Context) (string, error) {
-		return uc.status(ctx, action, username)
-	})
-	if err != nil {
+	user := uc.hotspot.GetUserByUsername(ctx, username)
+	if user.Id == constant.UI0 {
+		err = ErrRecordNotFound(ctx)
 		return
 	}
-	utils.Json2Struct(&rp, str)
+	copierx.Copy(&rp, user)
 	// TODO u can get max wrong count from env or dict
 	if rp.Wrong >= constant.UI3 {
 		// need captcha
@@ -396,20 +367,6 @@ func (uc *UserUseCase) status(ctx context.Context, action string, username strin
 	// read data from db and write to cache
 	rp := &UserStatus{}
 	user, err := uc.repo.GetByUsername(ctx, username)
-	notFound := errors.Is(err, ErrRecordNotFound(ctx))
-	if err != nil && !notFound {
-		return
-	}
-	copierx.Copy(&rp, user)
-	res = utils.Struct2Json(rp)
-	uc.cache.Set(ctx, action, res, notFound)
-	return
-}
-
-func (uc *UserUseCase) info(ctx context.Context, action string, code string) (res string, err error) {
-	// read data from db and write to cache
-	rp := &UserInfo{}
-	user, err := uc.repo.GetByCode(ctx, code)
 	notFound := errors.Is(err, ErrRecordNotFound(ctx))
 	if err != nil && !notFound {
 		return
