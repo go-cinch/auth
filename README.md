@@ -5,11 +5,11 @@ Auth是一套权限验证微服务.
 <p align="center">
 <a href="https://github.com/go-cinch/auth/actions"><img src="https://github.com/go-cinch/auth/workflows/Build/badge.svg" alt="Build Status"></a>
 <img src="https://img.shields.io/github/go-mod/go-version/go-cinch/auth" alt="Go version"/>
-<img src="https://img.shields.io/badge/Kratos-v2.6.2-brightgreen" alt="Kratos version"/>
+<img src="https://img.shields.io/badge/Kratos-v2.7.0-brightgreen" alt="Kratos version"/>
 <img src="https://img.shields.io/badge/MySQL-8.0-brightgreen" alt="MySQL version"/>
-<img src="https://img.shields.io/badge/Go--Redis-v9.0.5-brightgreen" alt="Go redis version"/>
+<img src="https://img.shields.io/badge/Go--Redis-v9.2.1-brightgreen" alt="Go redis version"/>
 <img src="https://img.shields.io/badge/Gorm-v1.25.2-brightgreen" alt="Gorm version"/>
-<img src="https://img.shields.io/badge/Wire-0.5.0-brightgreen" alt="Wire version"/>
+<img src="https://img.shields.io/badge/Wire-0.6.0-brightgreen" alt="Wire version"/>
 <a href="https://goreportcard.com/report/github.com/go-cinch/auth"><img src="https://goreportcard.com/badge/github.com/go-cinch/auth" alt="Go Report Card"></a>
 <img src="https://img.shields.io/github/license/go-cinch/auth" alt="License"/>
 </p>
@@ -46,19 +46,24 @@ Cinch是一套轻量级微服务脚手架, 基于[Kratos], 节省基础服务搭
 - `Wire` - 依赖注入, 编译时完成依赖注入
 - `Swagger` - Api文档一键生成, 无需在代码里写注解
 - `I18n` - 国际化支持, 简单切换多语言
+- `Minio` - 对象存储
 
-# 当前版本 <img src="https://img.shields.io/badge/Auth-v1.0.4-brightgreen" alt="Current version"/>
+# 当前版本 <img src="https://img.shields.io/badge/Auth-v1.1.0-brightgreen" alt="Current version"/>
 
 建议直接使用最后一个版本
 
 ```bash
-git clone -b v1.0.4 https://github.com/go-cinch/auth
+git clone -b v1.1.0 https://github.com/go-cinch/auth
 ```
 
 ## 在线演示
 
-[Vue3入口](https://vue3.go-cinch.top/)  
-[React入口](https://react.go-cinch.top/)
+[Vue3入口](https://vue3.go-cinch.top/) super/cinch123(超级管理员) guest/cinch123(访客) write/cinch123(读写权限) readonly/cinch123(只读权限) nodelete/cinch123(不能删除权限)   
+[React入口](https://react.go-cinch.top/) 同上  
+[Argocd入口](https://argocd.go-cinch.top/) guest/guest123  
+[Asynqmon入口](https://asynqmon.go-cinch.top/) 查看定时任务运行情况  
+[Minio入口](https://minio.go-cinch.top/) 对象存储 cinch/cinch123456  
+[Grafana入口](https://grafana.go-cinch.top/) 监控面板 cinch/cinch123456  
 
 # 项目模板
 
