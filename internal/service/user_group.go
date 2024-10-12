@@ -21,6 +21,7 @@ func (s *AuthService) CreateUserGroup(ctx context.Context, req *auth.CreateUserG
 	r := &biz.UserGroup{}
 	copierx.Copy(&r, req)
 	err = s.userGroup.Create(ctx, r)
+	s.flushCache(ctx)
 	return
 }
 
@@ -51,9 +52,7 @@ func (s *AuthService) UpdateUserGroup(ctx context.Context, req *auth.UpdateUserG
 	r := &biz.UpdateUserGroup{}
 	copierx.Copy(&r, req)
 	err = s.userGroup.Update(ctx, r)
-	if err == nil {
-		s.permission.FlushCache(ctx)
-	}
+	s.flushCache(ctx)
 	return
 }
 
@@ -63,8 +62,6 @@ func (s *AuthService) DeleteUserGroup(ctx context.Context, req *params.IdsReques
 	defer span.End()
 	rp = &emptypb.Empty{}
 	err = s.userGroup.Delete(ctx, utils.Str2Uint64Arr(req.Ids)...)
-	if err == nil {
-		s.permission.FlushCache(ctx)
-	}
+	s.flushCache(ctx)
 	return
 }

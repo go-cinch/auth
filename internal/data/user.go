@@ -19,17 +19,15 @@ import (
 )
 
 type userRepo struct {
-	data    *Data
-	action  biz.ActionRepo
-	hotspot biz.HotspotRepo
+	data   *Data
+	action biz.ActionRepo
 }
 
 // NewUserRepo .
-func NewUserRepo(data *Data, action biz.ActionRepo, hotspot biz.HotspotRepo) biz.UserRepo {
+func NewUserRepo(data *Data, action biz.ActionRepo) biz.UserRepo {
 	return &userRepo{
-		data:    data,
-		action:  action,
-		hotspot: hotspot,
+		data:   data,
+		action: action,
 	}
 }
 
@@ -301,10 +299,5 @@ func (ro userRepo) IdExists(ctx context.Context, id uint64) (err error) {
 		err = biz.ErrRecordNotFound(ctx)
 		return
 	}
-	return
-}
-
-func (ro userRepo) GetByCode(ctx context.Context, code string) (item *biz.User, err error) {
-	item = ro.hotspot.GetUserByCode(ctx, code)
 	return
 }

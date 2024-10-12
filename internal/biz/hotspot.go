@@ -13,6 +13,7 @@ type HotspotRepo interface {
 	GetRoleByID(ctx context.Context, id uint64) *Role
 	GetActionByWord(ctx context.Context, word string) *Action
 	GetActionByCode(ctx context.Context, code string) *Action
+	FindActionByCode(ctx context.Context, codes ...string) []Action
 	FindWhitelistResourceByCategory(ctx context.Context, category uint32) []string
 	FindUserGroupByUserCode(ctx context.Context, code string) []UserGroup
 }

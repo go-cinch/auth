@@ -127,7 +127,6 @@ type UserRepo interface {
 	WrongPwd(ctx context.Context, req LoginTime) error
 	UpdatePassword(ctx context.Context, item *User) error
 	IdExists(ctx context.Context, id uint64) error
-	GetByCode(ctx context.Context, code string) (*User, error)
 }
 
 type UserUseCase struct {
@@ -173,10 +172,7 @@ func (uc *UserUseCase) Update(ctx context.Context, item *UpdateUser) error {
 func (uc *UserUseCase) Delete(ctx context.Context, ids ...uint64) error {
 	return uc.tx.Tx(ctx, func(ctx context.Context) error {
 		return uc.cache.Flush(ctx, func(ctx context.Context) (err error) {
-			info, err := uc.InfoFromCtx(ctx)
-			if err != nil {
-				return
-			}
+			info := uc.InfoFromCtx(ctx)
 			if funk.ContainsUInt64(ids, info.Id) {
 				err = ErrDeleteYourself(ctx)
 				return
@@ -187,8 +183,8 @@ func (uc *UserUseCase) Delete(ctx context.Context, ids ...uint64) error {
 	})
 }
 
-func (uc *UserUseCase) GetUserByCode(ctx context.Context, code string) (rp *User, err error) {
-	return uc.repo.GetByCode(ctx, code)
+func (uc *UserUseCase) GetUserByCode(ctx context.Context, code string) (rp *User) {
+	return uc.hotspot.GetUserByCode(ctx, code)
 }
 
 func (uc *UserUseCase) Find(ctx context.Context, condition *FindUser) (rp []User, err error) {
@@ -217,14 +213,14 @@ func (uc *UserUseCase) find(ctx context.Context, action string, condition *FindU
 	return
 }
 
-func (uc *UserUseCase) InfoFromCtx(ctx context.Context) (rp *UserInfo, err error) {
+func (uc *UserUseCase) InfoFromCtx(ctx context.Context) (rp *UserInfo) {
 	user := jwt.FromServerContext(ctx)
 	return uc.Info(ctx, user.Code)
 }
 
-func (uc *UserUseCase) Info(ctx context.Context, code string) (rp *UserInfo, err error) {
+func (uc *UserUseCase) Info(ctx context.Context, code string) (rp *UserInfo) {
 	rp = &UserInfo{}
-	user, err := uc.GetUserByCode(ctx, code)
+	user := uc.hotspot.GetUserByCode(ctx, code)
 	utils.Struct2StructByJson(rp, user)
 	return
 }

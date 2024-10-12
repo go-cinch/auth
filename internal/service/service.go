@@ -3,6 +3,7 @@ package service
 import (
 	"auth/api/auth"
 	"auth/internal/biz"
+	"auth/internal/conf"
 	"auth/internal/pkg/idempotent"
 	"github.com/go-cinch/common/worker"
 	"github.com/google/wire"
@@ -15,7 +16,8 @@ var ProviderSet = wire.NewSet(NewAuthService)
 type AuthService struct {
 	auth.UnimplementedAuthServer
 
-	task 	   *worker.Worker
+	c          *conf.Bootstrap
+	task       *worker.Worker
 	idempotent *idempotent.Idempotent
 	user       *biz.UserUseCase
 	action     *biz.ActionUseCase
@@ -27,7 +29,8 @@ type AuthService struct {
 
 // NewAuthService new an auth service.
 func NewAuthService(
-	task 	   *worker.Worker,
+	c *conf.Bootstrap,
+	task *worker.Worker,
 	idempotent *idempotent.Idempotent,
 	user *biz.UserUseCase,
 	action *biz.ActionUseCase,
@@ -37,6 +40,7 @@ func NewAuthService(
 	whitelist *biz.WhitelistUseCase,
 ) *AuthService {
 	return &AuthService{
+		c:          c,
 		task:       task,
 		idempotent: idempotent,
 		user:       user,

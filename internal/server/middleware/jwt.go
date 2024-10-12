@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"time"
 
@@ -65,7 +66,8 @@ func parseToken(ctx context.Context, key, jwtToken string) (info *jwtV4.Token, e
 		return
 	})
 	if err != nil {
-		ve, ok := err.(*jwtV4.ValidationError)
+		var ve *jwtV4.ValidationError
+		ok := errors.As(err, &ve)
 		if !ok {
 			return
 		}

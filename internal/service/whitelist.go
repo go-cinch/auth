@@ -21,7 +21,7 @@ func (s *AuthService) CreateWhitelist(ctx context.Context, req *auth.CreateWhite
 	r := &biz.Whitelist{}
 	copierx.Copy(&r, req)
 	err = s.whitelist.Create(ctx, r)
-	s.flushUserAndPermissionCache(ctx)
+	s.flushCache(ctx)
 	return
 }
 
@@ -32,10 +32,7 @@ func (s *AuthService) HasWhitelist(ctx context.Context, req *auth.HasWhitelistRe
 	rp = &auth.HasWhitelistReply{}
 	r := &biz.HasWhitelist{}
 	copierx.Copy(&r, req)
-	res, err := s.whitelist.Has(ctx, r)
-	if err != nil {
-		return
-	}
+	res := s.whitelist.Has(ctx, r)
 	rp.Ok = res
 	return
 }
@@ -64,7 +61,7 @@ func (s *AuthService) UpdateWhitelist(ctx context.Context, req *auth.UpdateWhite
 	r := &biz.UpdateWhitelist{}
 	copierx.Copy(&r, req)
 	err = s.whitelist.Update(ctx, r)
-	s.flushUserAndPermissionCache(ctx)
+	s.flushCache(ctx)
 	return
 }
 
@@ -74,6 +71,6 @@ func (s *AuthService) DeleteWhitelist(ctx context.Context, req *params.IdsReques
 	defer span.End()
 	rp = &emptypb.Empty{}
 	err = s.whitelist.Delete(ctx, utils.Str2Uint64Arr(req.Ids)...)
-	s.flushUserAndPermissionCache(ctx)
+	s.flushCache(ctx)
 	return
 }

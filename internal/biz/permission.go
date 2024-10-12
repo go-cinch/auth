@@ -2,12 +2,8 @@ package biz
 
 import (
 	"context"
-	"errors"
-	"strings"
 
 	"auth/internal/conf"
-	"github.com/go-cinch/common/copierx"
-	"github.com/go-cinch/common/utils"
 )
 
 type Permission struct {
@@ -25,20 +21,18 @@ type CheckPermission struct {
 
 type PermissionRepo interface {
 	Check(ctx context.Context, item CheckPermission) bool
-	GetByUserCode(ctx context.Context, code string) (*Permission, error)
+	GetByUserCode(ctx context.Context, code string) *Permission
 }
 
 type PermissionUseCase struct {
-	c     *conf.Bootstrap
-	repo  PermissionRepo
-	cache Cache
+	c    *conf.Bootstrap
+	repo PermissionRepo
 }
 
-func NewPermissionUseCase(c *conf.Bootstrap, repo PermissionRepo, cache Cache) *PermissionUseCase {
+func NewPermissionUseCase(c *conf.Bootstrap, repo PermissionRepo) *PermissionUseCase {
 	return &PermissionUseCase{
-		c:     c,
-		repo:  repo,
-		cache: cache.WithPrefix("permission"),
+		c:    c,
+		repo: repo,
 	}
 }
 
@@ -47,35 +41,7 @@ func (uc *PermissionUseCase) Check(ctx context.Context, item CheckPermission) (r
 	return
 }
 
-func (uc *PermissionUseCase) GetByUserCode(ctx context.Context, code string) (rp *Permission, err error) {
-	rp = &Permission{}
-	action := strings.Join([]string{"get_by_user_code", code}, "_")
-	str, err := uc.cache.Get(ctx, action, func(ctx context.Context) (string, error) {
-		return uc.getByUserCode(ctx, action, code)
-	})
-	if err != nil {
-		return
-	}
-	utils.Json2Struct(&rp, str)
+func (uc *PermissionUseCase) GetByUserCode(ctx context.Context, code string) (rp *Permission) {
+	rp = uc.repo.GetByUserCode(ctx, code)
 	return
-}
-
-func (uc *PermissionUseCase) getByUserCode(ctx context.Context, action string, code string) (res string, err error) {
-	// read data from db and write to cache
-	rp := &Permission{}
-	permission, err := uc.repo.GetByUserCode(ctx, code)
-	notFound := errors.Is(err, ErrRecordNotFound(ctx))
-	if err != nil && !notFound {
-		return
-	}
-	copierx.Copy(&rp, permission)
-	res = utils.Struct2Json(rp)
-	uc.cache.Set(ctx, action, res, notFound)
-	return
-}
-
-func (uc *PermissionUseCase) FlushCache(ctx context.Context) {
-	uc.cache.Flush(ctx, func(ctx context.Context) (err error) {
-		return
-	})
 }

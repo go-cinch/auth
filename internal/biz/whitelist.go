@@ -106,9 +106,8 @@ func (uc *WhitelistUseCase) find(ctx context.Context, action string, condition *
 	return
 }
 
-func (uc *WhitelistUseCase) Has(ctx context.Context, condition *HasWhitelist) (rp bool, err error) {
-	rp = uc.repo.Has(ctx, condition)
-	return
+func (uc *WhitelistUseCase) Has(ctx context.Context, condition *HasWhitelist) (rp bool) {
+	return uc.repo.Has(ctx, condition)
 }
 
 func (uc *WhitelistUseCase) Update(ctx context.Context, item *UpdateWhitelist) error {

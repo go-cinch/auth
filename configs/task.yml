@@ -1,4 +1,16 @@
 task:
-  refresh.hotspot:
-    name: 'refresh.hotspot'
-    expr: '0 0/5 * * * * *'
+  # cron task list
+  cron:
+    refresh.hotspot:
+      name: 'refresh.hotspot'
+      expr: '0 0/5 * * * * *'
+  # all group name list(cron or once)
+  group:
+    # login failed will delay to update wrong count(once)
+    loginFailed: 'login.failed'
+    # login success will delay to update last login time(once)
+    loginLast: 'login.last'
+    # refresh hotspot(cron)
+    refreshHotspot: 'refresh.hotspot'
+    # refresh hotspot manual(once)
+    refreshHotspotManual: 'refresh.hotspot.manual'

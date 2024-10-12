@@ -64,8 +64,16 @@ func (ro hotspotRepo) GetUserByCode(ctx context.Context, code string) *biz.User 
 		code,
 	}, ".")
 	res, _ := rds.HGetAll(ctx, key).Result()
+	m := make(map[string]interface{}, len(res))
+	copierx.Copy(&m, res)
+	if v, ok := m[utils.CamelCase(p.Locked.ColumnName().String())]; ok {
+		m[utils.CamelCase(p.Locked.ColumnName().String())], _ = strconv.ParseBool(v.(string))
+	}
+	if v, ok := m[utils.CamelCase(p.Wrong.ColumnName().String())]; ok {
+		m[utils.CamelCase(p.Wrong.ColumnName().String())], _ = strconv.ParseUint(v.(string), 10, 64)
+	}
 	var item biz.User
-	utils.Struct2StructByJson(&item, res)
+	utils.Struct2StructByJson(&item, m)
 	if item.RoleId > constant.UI0 {
 		item.Role = *ro.GetRoleByID(ctx, item.RoleId)
 	}
@@ -174,6 +182,16 @@ func (ro hotspotRepo) GetActionByCode(ctx context.Context, code string) *biz.Act
 		attribute.String("code", item.Code),
 	)
 	return &item
+}
+
+func (ro hotspotRepo) FindActionByCode(ctx context.Context, codes ...string) (list []biz.Action) {
+	tr := otel.Tracer("data")
+	ctx, span := tr.Start(ctx, "FindActionByCode")
+	defer span.End()
+	for _, code := range codes {
+		list = append(list, *ro.GetActionByCode(ctx, code))
+	}
+	return
 }
 
 func (ro hotspotRepo) FindUserGroupByUserCode(ctx context.Context, code string) (list []biz.UserGroup) {
@@ -325,6 +343,7 @@ func (ro hotspotRepo) refreshUserUserGroupRelation(ctx context.Context, pipe red
 			p.UserID.ColumnName().String(),
 			strconv.FormatUint(userID, 10),
 		}, ".")
+		pipe.Del(ctx, userIDKey)
 		for _, id := range groupIDs {
 			pipe.HSet(
 				ctx, userIDKey,
@@ -480,6 +499,7 @@ func (ro hotspotRepo) refreshWhitelist(ctx context.Context, pipe redis.Pipeliner
 			p.Category.ColumnName().String(),
 			strconv.FormatUint(uint64(category), 10),
 		}, ".")
+		pipe.Del(ctx, categoryKey)
 		for _, resource := range resources {
 			pipe.HSet(
 				ctx, categoryKey,

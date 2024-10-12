@@ -43,7 +43,6 @@ type UserGroupRepo interface {
 	Find(ctx context.Context, condition *FindUserGroup) []UserGroup
 	Update(ctx context.Context, item *UpdateUserGroup) error
 	Delete(ctx context.Context, ids ...uint64) error
-	FindGroupByUserCode(ctx context.Context, code string) []UserGroup
 }
 
 type UserGroupUseCase struct {
