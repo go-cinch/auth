@@ -47,12 +47,14 @@ func wireApp(c *conf.Bootstrap) (*kratos.App, func(), error) {
 		return nil, nil, err
 	}
 	dataData, cleanup := data.NewData(universalClient, tenant, sonyflake, tracerProvider)
-	actionRepo := data.NewActionRepo(c, dataData)
-	userRepo := data.NewUserRepo(dataData, actionRepo)
+	hotspotRepo := data.NewHotspotRepo(c, dataData)
+	actionRepo := data.NewActionRepo(c, dataData, hotspotRepo)
+	userRepo := data.NewUserRepo(dataData, actionRepo, hotspotRepo)
 	transaction := data.NewTransaction(dataData)
 	cache := data.NewCache(c, universalClient)
-	userUseCase := biz.NewUserUseCase(c, userRepo, transaction, cache)
-	worker, err := task.New(c, userUseCase)
+	userUseCase := biz.NewUserUseCase(c, userRepo, hotspotRepo, transaction, cache)
+	hotspotUseCase := biz.NewHotspotUseCase(c, hotspotRepo)
+	worker, err := task.New(c, userUseCase, hotspotUseCase)
 	if err != nil {
 		cleanup()
 		return nil, nil, err
@@ -62,9 +64,9 @@ func wireApp(c *conf.Bootstrap) (*kratos.App, func(), error) {
 	roleUseCase := biz.NewRoleUseCase(c, roleRepo, transaction, cache)
 	userGroupRepo := data.NewUserGroupRepo(dataData, actionRepo, userRepo)
 	userGroupUseCase := biz.NewUserGroupUseCase(c, userGroupRepo, transaction, cache)
-	permissionRepo := data.NewPermissionRepo(dataData, actionRepo, userRepo, userGroupRepo)
+	permissionRepo := data.NewPermissionRepo(dataData, actionRepo, userRepo, userGroupRepo, hotspotRepo)
 	permissionUseCase := biz.NewPermissionUseCase(c, permissionRepo, cache)
-	whitelistRepo := data.NewWhitelistRepo(dataData, actionRepo)
+	whitelistRepo := data.NewWhitelistRepo(dataData, actionRepo, hotspotRepo)
 	whitelistUseCase := biz.NewWhitelistUseCase(c, whitelistRepo, transaction, cache)
 	authService := service.NewAuthService(worker, idempotentIdempotent, userUseCase, actionUseCase, roleUseCase, userGroupUseCase, permissionUseCase, whitelistUseCase)
 	grpcServer := server.NewGRPCServer(c, universalClient, idempotentIdempotent, authService, whitelistUseCase)
