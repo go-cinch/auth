@@ -2,7 +2,7 @@ name: Build
 
 on:
   push:
-    branches: [ "piupuer/dev" ]
+    branches: [ "dev" ]
   pull_request:
     branches: [ "dev" ]
 
