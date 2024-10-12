@@ -19,10 +19,7 @@ func (s *AuthService) GetUserByCode(ctx context.Context, req *auth.GetUserByCode
 	ctx, span := tr.Start(ctx, "GetUserByCode")
 	defer span.End()
 	rp = &auth.GetUserByCodeReply{}
-	user, err := s.user.GetUserByCode(ctx, req.Code)
-	if err != nil {
-		return
-	}
+	user := s.user.GetUserByCode(ctx, req.Code)
 	rp.User = &auth.User{}
 	copierx.Copy(&rp.User, user)
 	return
@@ -59,9 +56,7 @@ func (s *AuthService) UpdateUser(ctx context.Context, req *auth.UpdateUserReques
 		r.LockExpire = &lockExpire
 	}
 	err = s.user.Update(ctx, r)
-	if err == nil {
-		s.permission.FlushCache(ctx)
-	}
+	s.flushCache(ctx)
 	return
 }
 
@@ -71,8 +66,6 @@ func (s *AuthService) DeleteUser(ctx context.Context, req *params.IdsRequest) (r
 	defer span.End()
 	rp = &emptypb.Empty{}
 	err = s.user.Delete(ctx, utils.Str2Uint64Arr(req.Ids)...)
-	if err == nil {
-		s.permission.FlushCache(ctx)
-	}
+	s.flushCache(ctx)
 	return
 }

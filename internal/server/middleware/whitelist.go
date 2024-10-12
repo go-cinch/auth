@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	"auth/api/auth"
 	"auth/internal/biz"
@@ -38,6 +39,11 @@ func Whitelist(whitelist *biz.WhitelistUseCase) middleware.Middleware {
 				}
 				if v.Uri == nil && uri != "" {
 					v.Uri = &uri
+				}
+				// public api no need check
+				if v.Uri != nil && strings.Contains(*v.Uri, "/pub/") {
+					rp = &emptypb.Empty{}
+					return
 				}
 				// check whitelist
 				pass, err = hasPermissionWhitelist(ctx, whitelist, v)
@@ -76,7 +82,7 @@ func hasPermissionWhitelist(ctx context.Context, whitelist *biz.WhitelistUseCase
 		return
 	}
 	// check if it is on the whitelist
-	ok, err = whitelist.Has(ctx, &biz.HasWhitelist{
+	ok = whitelist.Has(ctx, &biz.HasWhitelist{
 		Category:   biz.WhitelistPermissionCategory,
 		Permission: r,
 	})
@@ -85,7 +91,7 @@ func hasPermissionWhitelist(ctx context.Context, whitelist *biz.WhitelistUseCase
 
 func jwtWhitelist(whitelist *biz.WhitelistUseCase) selector.MatchFunc {
 	return func(ctx context.Context, operation string) bool {
-		pass, _ := whitelist.Has(ctx, &biz.HasWhitelist{
+		pass := whitelist.Has(ctx, &biz.HasWhitelist{
 			Category: biz.WhitelistJwtCategory,
 			Permission: biz.CheckPermission{
 				Resource: operation,
@@ -98,7 +104,7 @@ func jwtWhitelist(whitelist *biz.WhitelistUseCase) selector.MatchFunc {
 
 func idempotentBlacklist(whitelist *biz.WhitelistUseCase) selector.MatchFunc {
 	return func(ctx context.Context, operation string) bool {
-		pass, _ := whitelist.Has(ctx, &biz.HasWhitelist{
+		pass := whitelist.Has(ctx, &biz.HasWhitelist{
 			Category: biz.WhitelistIdempotentCategory,
 			Permission: biz.CheckPermission{
 				Resource: operation,

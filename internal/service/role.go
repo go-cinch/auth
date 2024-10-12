@@ -21,6 +21,7 @@ func (s *AuthService) CreateRole(ctx context.Context, req *auth.CreateRoleReques
 	r := &biz.Role{}
 	copierx.Copy(&r, req)
 	err = s.role.Create(ctx, r)
+	s.flushCache(ctx)
 	return
 }
 
@@ -54,7 +55,7 @@ func (s *AuthService) UpdateRole(ctx context.Context, req *auth.UpdateRoleReques
 	if err != nil {
 		return
 	}
-	s.permission.FlushCache(ctx)
+	s.flushCache(ctx)
 	return
 }
 
@@ -67,6 +68,6 @@ func (s *AuthService) DeleteRole(ctx context.Context, req *params.IdsRequest) (r
 	if err != nil {
 		return
 	}
-	s.permission.FlushCache(ctx)
+	s.flushCache(ctx)
 	return
 }

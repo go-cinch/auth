@@ -65,30 +65,6 @@ func (ro userGroupRepo) Create(ctx context.Context, item *biz.UserGroup) (err er
 	return
 }
 
-func (ro userGroupRepo) FindGroupByUserCode(ctx context.Context, code string) (list []biz.UserGroup) {
-	list = make([]biz.UserGroup, 0)
-	user, err := ro.user.GetByCode(ctx, code)
-	if err != nil {
-		return
-	}
-	p := query.Use(ro.data.DB(ctx)).UserUserGroupRelation
-	db := p.WithContext(ctx)
-	groupIds := make([]uint64, 0)
-	db.
-		Where(p.UserID.Eq(user.Id)).
-		Pluck(p.UserGroupID, &groupIds)
-	if len(groupIds) == 0 {
-		return
-	}
-	pUserGroup := query.Use(ro.data.DB(ctx)).UserGroup
-	dbUserGroup := pUserGroup.WithContext(ctx)
-	groups, _ := dbUserGroup.
-		Where(pUserGroup.ID.In(groupIds...)).
-		Find()
-	copierx.Copy(&list, groups)
-	return
-}
-
 func (ro userGroupRepo) Find(ctx context.Context, condition *biz.FindUserGroup) (rp []biz.UserGroup) {
 	p := query.Use(ro.data.DB(ctx)).UserGroup
 	db := p.WithContext(ctx)

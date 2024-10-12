@@ -122,18 +122,6 @@ paths:
                 "200":
                     description: OK
                     content: {}
-    /captcha:
-        get:
-            tags:
-                - Auth
-            operationId: Auth_Captcha
-            responses:
-                "200":
-                    description: OK
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/auth.v1.CaptchaReply'
     /idempotent:
         get:
             tags:
@@ -158,24 +146,6 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/auth.v1.InfoReply'
-    /login:
-        post:
-            tags:
-                - Auth
-            operationId: Auth_Login
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/auth.v1.LoginRequest'
-                required: true
-            responses:
-                "200":
-                    description: OK
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/auth.v1.LoginReply'
     /logout:
         post:
             tags:
@@ -211,6 +181,68 @@ paths:
                 "200":
                     description: OK
                     content: {}
+    /pub/captcha:
+        get:
+            tags:
+                - Auth
+            operationId: Auth_Captcha
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/auth.v1.CaptchaReply'
+    /pub/login:
+        post:
+            tags:
+                - Auth
+            operationId: Auth_Login
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/auth.v1.LoginRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/auth.v1.LoginReply'
+    /pub/register:
+        post:
+            tags:
+                - Auth
+            operationId: Auth_Register
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/auth.v1.RegisterRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+    /pub/status:
+        get:
+            tags:
+                - Auth
+            operationId: Auth_Status
+            parameters:
+                - name: username
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/auth.v1.StatusReply'
     /pwd:
         post:
             tags:
@@ -244,21 +276,6 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/auth.v1.LoginReply'
-    /register:
-        post:
-            tags:
-                - Auth
-            operationId: Auth_Register
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/auth.v1.RegisterRequest'
-                required: true
-            responses:
-                "200":
-                    description: OK
-                    content: {}
     /role:
         get:
             tags:
@@ -370,23 +387,6 @@ paths:
                 "200":
                     description: OK
                     content: {}
-    /status:
-        get:
-            tags:
-                - Auth
-            operationId: Auth_Status
-            parameters:
-                - name: username
-                  in: query
-                  schema:
-                    type: string
-            responses:
-                "200":
-                    description: OK
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/auth.v1.StatusReply'
     /user:
         get:
             tags:

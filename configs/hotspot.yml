@@ -1,0 +1,5 @@
+hotspot:
+  # cache name prefix
+  name: 'hotspot'
+  # cache expire time for each key
+  expire: 86400s

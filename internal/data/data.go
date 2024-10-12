@@ -32,6 +32,7 @@ var ProviderSet = wire.NewSet(
 	NewUserGroupRepo,
 	NewPermissionRepo,
 	NewWhitelistRepo,
+	NewHotspotRepo,
 )
 
 // Data .

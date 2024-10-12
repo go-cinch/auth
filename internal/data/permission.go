@@ -5,33 +5,28 @@ import (
 	"strings"
 
 	"auth/internal/biz"
-	"github.com/go-cinch/common/utils"
+	"github.com/samber/lo"
 )
 
 type permissionRepo struct {
-	data      *Data
-	action    biz.ActionRepo
-	user      biz.UserRepo
-	userGroup biz.UserGroupRepo
+	data    *Data
+	action  biz.ActionRepo
+	hotspot biz.HotspotRepo
 }
 
 // NewPermissionRepo .
-func NewPermissionRepo(data *Data, action biz.ActionRepo, user biz.UserRepo, userGroup biz.UserGroupRepo) biz.PermissionRepo {
+func NewPermissionRepo(data *Data, action biz.ActionRepo, hotspot biz.HotspotRepo) biz.PermissionRepo {
 	return &permissionRepo{
-		data:      data,
-		action:    action,
-		user:      user,
-		userGroup: userGroup,
+		data:    data,
+		action:  action,
+		hotspot: hotspot,
 	}
 }
 
 func (ro permissionRepo) Check(ctx context.Context, item biz.CheckPermission) (pass bool) {
-	user, err := ro.user.GetByCode(ctx, item.UserCode)
-	if err != nil {
-		return
-	}
+	user := ro.hotspot.GetUserByCode(ctx, item.UserCode)
 	// 1. check default permission
-	defaultAction := ro.action.GetDefault(ctx)
+	defaultAction := ro.hotspot.GetActionByWord(ctx, "default")
 	pass = ro.action.Permission(ctx, defaultAction.Code, item)
 	if pass {
 		return
@@ -47,10 +42,7 @@ func (ro permissionRepo) Check(ctx context.Context, item biz.CheckPermission) (p
 		return
 	}
 	// 4. check user group permission
-	groups := ro.userGroup.FindGroupByUserCode(ctx, user.Code)
-	if err != nil {
-		return
-	}
+	groups := ro.hotspot.FindUserGroupByUserCode(ctx, user.Code)
 	for _, group := range groups {
 		pass = ro.action.Permission(ctx, group.Action, item)
 		if pass {
@@ -60,15 +52,14 @@ func (ro permissionRepo) Check(ctx context.Context, item biz.CheckPermission) (p
 	return
 }
 
-func (ro permissionRepo) GetByUserCode(ctx context.Context, code string) (rp *biz.Permission, err error) {
+func (ro permissionRepo) GetByUserCode(ctx context.Context, code string) (rp *biz.Permission) {
 	rp = &biz.Permission{}
 	rp.Resources = make([]string, 0)
-	user, err := ro.user.GetByCode(ctx, code)
-	if err != nil {
-		return
-	}
+	user := ro.hotspot.GetUserByCode(ctx, code)
 	// 1. user action
 	actions := make([]string, 0)
+	defaultAction := ro.hotspot.GetActionByWord(ctx, "default")
+	actions = append(actions, defaultAction.Code)
 	if user.Action != "" {
 		arr := strings.Split(user.Action, ",")
 		actions = append(actions, arr...)
@@ -79,16 +70,16 @@ func (ro permissionRepo) GetByUserCode(ctx context.Context, code string) (rp *bi
 		actions = append(actions, arr...)
 	}
 	// 3. user group action
-	groups := ro.userGroup.FindGroupByUserCode(ctx, user.Code)
+	groups := ro.hotspot.FindUserGroupByUserCode(ctx, user.Code)
 	for _, group := range groups {
 		if group.Action != "" {
 			arr := strings.Split(group.Action, ",")
 			actions = append(actions, arr...)
 		}
 	}
-	actions = utils.RemoveRepeat(actions)
+	actions = lo.Uniq(actions)
 	if len(actions) > 0 {
-		list := ro.action.FindByCode(ctx, strings.Join(actions, ","))
+		list := ro.hotspot.FindActionByCode(ctx, actions...)
 		for _, item := range list {
 			if item.Resource != "" {
 				rp.Resources = append(rp.Resources, strings.Split(item.Resource, "\n")...)
@@ -101,8 +92,8 @@ func (ro permissionRepo) GetByUserCode(ctx context.Context, code string) (rp *bi
 			}
 		}
 	}
-	rp.Resources = utils.RemoveRepeat(rp.Resources)
-	rp.Menus = utils.RemoveRepeat(rp.Menus)
-	rp.Btns = utils.RemoveRepeat(rp.Btns)
+	rp.Resources = lo.Uniq(rp.Resources)
+	rp.Menus = lo.Uniq(rp.Menus)
+	rp.Btns = lo.Uniq(rp.Btns)
 	return
 }

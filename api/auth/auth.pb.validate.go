@@ -1123,16 +1123,7 @@ func (m *LoginRequest) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetUsername()); l < 5 || l > 50 {
-		err := LoginRequestValidationError{
-			field:  "Username",
-			reason: "value length must be between 5 and 50 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for Username
 
 	// no validation rules for Password
 

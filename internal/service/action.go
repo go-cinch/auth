@@ -21,7 +21,7 @@ func (s *AuthService) CreateAction(ctx context.Context, req *auth.CreateActionRe
 	r := &biz.Action{}
 	copierx.Copy(&r, req)
 	err = s.action.Create(ctx, r)
-	s.flushUserAndPermissionCache(ctx)
+	s.flushCache(ctx)
 	return
 }
 
@@ -52,7 +52,7 @@ func (s *AuthService) UpdateAction(ctx context.Context, req *auth.UpdateActionRe
 	r := &biz.UpdateAction{}
 	copierx.Copy(&r, req)
 	err = s.action.Update(ctx, r)
-	s.flushUserAndPermissionCache(ctx)
+	s.flushCache(ctx)
 	return
 }
 
@@ -62,13 +62,6 @@ func (s *AuthService) DeleteAction(ctx context.Context, req *params.IdsRequest) 
 	defer span.End()
 	rp = &emptypb.Empty{}
 	err = s.action.Delete(ctx, utils.Str2Uint64Arr(req.Ids)...)
-	s.flushUserAndPermissionCache(ctx)
+	s.flushCache(ctx)
 	return
-}
-
-func (s *AuthService) flushUserAndPermissionCache(ctx context.Context) {
-	// clear user info cache
-	s.user.FlushCache(ctx)
-	// clear permission cache
-	s.permission.FlushCache(ctx)
 }

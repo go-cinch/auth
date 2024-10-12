@@ -301,23 +301,3 @@ func (ro userRepo) IdExists(ctx context.Context, id uint64) (err error) {
 	}
 	return
 }
-
-func (ro userRepo) GetByCode(ctx context.Context, code string) (item *biz.User, err error) {
-	item = &biz.User{}
-	p := query.Use(ro.data.DB(ctx)).User
-	db := p.WithContext(ctx)
-	m, err := db.
-		Preload(p.Role).
-		Where(p.Code.Eq(code)).
-		First()
-	if err != nil || m.ID == constant.UI0 {
-		err = biz.ErrRecordNotFound(ctx)
-		log.
-			WithContext(ctx).
-			WithError(err).
-			Error("invalid code: %s", code)
-		return
-	}
-	copierx.Copy(&item, m)
-	return
-}

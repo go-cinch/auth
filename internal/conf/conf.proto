@@ -11,9 +11,10 @@ message Bootstrap {
   Server server = 3;
   Data data = 4;
   Tracer tracer = 5;
-  map<string, Task> task = 6;
+  Task task = 6;
   Client client = 7;
   Log log = 8;
+  Hotspot hotspot = 9;
 }
 
 message Server {
@@ -88,9 +89,25 @@ message Client {
   string auth = 3;
 }
 
-message Task {
+message CronTask {
   string name = 1;
   string expr = 2;
   int64 timeout = 3;
   int64 retry = 4;
+}
+
+message Task {
+  map<string, CronTask> cron = 1;
+  message Group {
+    string loginFailed = 1;
+    string loginLast = 2;
+    string refreshHotspot = 3;
+    string refreshHotspotManual = 4;
+  }
+  Group group = 2;
+}
+
+message Hotspot {
+  string name = 1;
+  google.protobuf.Duration expire = 2;
 }

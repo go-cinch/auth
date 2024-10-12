@@ -29,6 +29,7 @@ func (s *AuthService) Register(ctx context.Context, req *auth.RegisterRequest) (
 		return
 	}
 	err = s.user.Create(ctx, r)
+	s.flushCache(ctx)
 	return
 }
 
@@ -40,6 +41,7 @@ func (s *AuthService) Pwd(ctx context.Context, req *auth.PwdRequest) (rp *emptyp
 	r := &biz.User{}
 	copierx.Copy(&r, req)
 	err = s.user.Pwd(ctx, r)
+	s.flushCache(ctx)
 	return
 }
 
@@ -57,10 +59,10 @@ func (s *AuthService) Login(ctx context.Context, req *auth.LoginRequest) (rp *au
 	ctx, _ = context.WithTimeout(ctx, time.Second)
 	if err != nil {
 		if loginFailed {
-			s.task.Once(
+			_ = s.task.Once(
 				worker.WithRunCtx(ctx),
-				worker.WithRunUUID(strings.Join([]string{"login.failed", req.Username}, ".")),
-				worker.WithRunGroup("login.failed"),
+				worker.WithRunUUID(strings.Join([]string{s.c.Task.Group.LoginFailed, req.Username}, ".")),
+				worker.WithRunGroup(s.c.Task.Group.LoginFailed),
 				worker.WithRunNow(true),
 				worker.WithRunTimeout(10),
 				worker.WithRunReplace(true),
@@ -72,6 +74,8 @@ func (s *AuthService) Login(ctx context.Context, req *auth.LoginRequest) (rp *au
 					Wrong: res.Wrong,
 				})),
 			)
+			// need refresh hotspot
+			s.flushCache(ctx)
 			return
 		}
 		if notFound {
@@ -82,10 +86,10 @@ func (s *AuthService) Login(ctx context.Context, req *auth.LoginRequest) (rp *au
 		return
 	}
 	copierx.Copy(&rp, res)
-	s.task.Once(
+	_ = s.task.Once(
 		worker.WithRunCtx(ctx),
-		worker.WithRunUUID(strings.Join([]string{"login.last", req.Username}, ".")),
-		worker.WithRunGroup("login.last"),
+		worker.WithRunUUID(strings.Join([]string{s.c.Task.Group.LoginLast, req.Username}, ".")),
+		worker.WithRunGroup(s.c.Task.Group.LoginLast),
 		worker.WithRunIn(time.Duration(10)*time.Second),
 		worker.WithRunTimeout(10),
 		worker.WithRunReplace(true),
@@ -93,6 +97,15 @@ func (s *AuthService) Login(ctx context.Context, req *auth.LoginRequest) (rp *au
 			Username: req.Username,
 		})),
 	)
+	s.flushCache(ctx)
+	return
+}
+
+func (*AuthService) Logout(ctx context.Context, _ *emptypb.Empty) (rp *emptypb.Empty, err error) {
+	tr := otel.Tracer("api")
+	ctx, span := tr.Start(ctx, "Logout")
+	defer span.End()
+	rp = &emptypb.Empty{}
 	return
 }
 
@@ -138,18 +151,12 @@ func (s *AuthService) Permission(ctx context.Context, req *auth.PermissionReques
 	if req.Uri != nil {
 		r.URI = *req.Uri
 	}
-	pass, err := s.permission.Check(ctx, r)
-	if err != nil {
-		return
-	}
+	pass := s.permission.Check(ctx, r)
 	if !pass {
 		err = biz.ErrNoPermission(ctx)
 		return
 	}
-	info, err := s.user.Info(ctx, user.Code)
-	if err != nil {
-		return
-	}
+	info := s.user.Info(ctx, user.Code)
 	jwt.AppendToReplyHeader(ctx, jwt.User{
 		Code:     info.Code,
 		Platform: info.Platform,
@@ -164,14 +171,8 @@ func (s *AuthService) Info(ctx context.Context, _ *emptypb.Empty) (rp *auth.Info
 	rp = &auth.InfoReply{}
 	rp.Permission = &auth.Permission{}
 	user := jwt.FromServerContext(ctx)
-	res, err := s.user.Info(ctx, user.Code)
-	if err != nil {
-		return
-	}
-	permission, err := s.permission.GetByUserCode(ctx, user.Code)
-	if err != nil {
-		return
-	}
+	res := s.user.Info(ctx, user.Code)
+	permission := s.permission.GetByUserCode(ctx, user.Code)
 	copierx.Copy(&rp.Permission, permission)
 	copierx.Copy(&rp, res)
 	return
