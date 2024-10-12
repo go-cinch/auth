@@ -12,6 +12,8 @@ import (
 	"github.com/go-cinch/common/utils"
 	"github.com/go-kratos/kratos/v2/middleware"
 	"github.com/go-kratos/kratos/v2/middleware/selector"
+	"github.com/go-kratos/kratos/v2/transport"
+	kratosHttp "github.com/go-kratos/kratos/v2/transport/http"
 	jwtV4 "github.com/golang-jwt/jwt/v4"
 	"github.com/redis/go-redis/v9"
 )
@@ -27,6 +29,25 @@ const jwtTokenUserKey = "jwt_token_"
 func jwtHandler(c *conf.Bootstrap, client redis.UniversalClient) func(handler middleware.Handler) middleware.Handler {
 	return func(handler middleware.Handler) middleware.Handler {
 		return func(ctx context.Context, req interface{}) (rp interface{}, err error) {
+			tr, ok := transport.FromServerContext(ctx)
+			if !ok {
+				err = biz.ErrJwtMissingToken(ctx)
+				return
+			}
+			var path string
+			switch tr.Kind() {
+			case transport.KindHTTP:
+				if ht, ok3 := tr.(kratosHttp.Transporter); ok3 {
+					path = ht.Request().URL.Path
+				}
+			case transport.KindGRPC:
+				// grpc api for internal no need check
+				return handler(ctx, req)
+			}
+			// public api no need check
+			if strings.Contains(path, "/pub/") {
+				return handler(ctx, req)
+			}
 			user := jwtLocal.FromServerContext(ctx)
 			if user.Token == "" && user.Code == "" {
 				err = biz.ErrJwtMissingToken(ctx)
