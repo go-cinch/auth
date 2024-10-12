@@ -85,11 +85,11 @@ type AuthHTTPServer interface {
 
 func RegisterAuthHTTPServer(s *http.Server, srv AuthHTTPServer) {
 	r := s.Route("/")
-	r.POST("/register", _Auth_Register0_HTTP_Handler(srv))
+	r.POST("/pub/register", _Auth_Register0_HTTP_Handler(srv))
 	r.POST("/pwd", _Auth_Pwd0_HTTP_Handler(srv))
-	r.POST("/login", _Auth_Login0_HTTP_Handler(srv))
-	r.GET("/status", _Auth_Status0_HTTP_Handler(srv))
-	r.GET("/captcha", _Auth_Captcha0_HTTP_Handler(srv))
+	r.POST("/pub/login", _Auth_Login0_HTTP_Handler(srv))
+	r.GET("/pub/status", _Auth_Status0_HTTP_Handler(srv))
+	r.GET("/pub/captcha", _Auth_Captcha0_HTTP_Handler(srv))
 	r.POST("/refresh", _Auth_Refresh0_HTTP_Handler(srv))
 	r.POST("/logout", _Auth_Logout0_HTTP_Handler(srv))
 	r.GET("/info", _Auth_Info0_HTTP_Handler(srv))
@@ -911,7 +911,7 @@ func NewAuthHTTPClient(client *http.Client) AuthHTTPClient {
 
 func (c *AuthHTTPClientImpl) Captcha(ctx context.Context, in *emptypb.Empty, opts ...http.CallOption) (*CaptchaReply, error) {
 	var out CaptchaReply
-	pattern := "/captcha"
+	pattern := "/pub/captcha"
 	path := binding.EncodeURL(pattern, in, true)
 	opts = append(opts, http.Operation(OperationAuthCaptcha))
 	opts = append(opts, http.PathTemplate(pattern))
@@ -1132,7 +1132,7 @@ func (c *AuthHTTPClientImpl) Info(ctx context.Context, in *emptypb.Empty, opts .
 
 func (c *AuthHTTPClientImpl) Login(ctx context.Context, in *LoginRequest, opts ...http.CallOption) (*LoginReply, error) {
 	var out LoginReply
-	pattern := "/login"
+	pattern := "/pub/login"
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationAuthLogin))
 	opts = append(opts, http.PathTemplate(pattern))
@@ -1197,7 +1197,7 @@ func (c *AuthHTTPClientImpl) Refresh(ctx context.Context, in *RefreshRequest, op
 
 func (c *AuthHTTPClientImpl) Register(ctx context.Context, in *RegisterRequest, opts ...http.CallOption) (*emptypb.Empty, error) {
 	var out emptypb.Empty
-	pattern := "/register"
+	pattern := "/pub/register"
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationAuthRegister))
 	opts = append(opts, http.PathTemplate(pattern))
@@ -1210,7 +1210,7 @@ func (c *AuthHTTPClientImpl) Register(ctx context.Context, in *RegisterRequest, 
 
 func (c *AuthHTTPClientImpl) Status(ctx context.Context, in *StatusRequest, opts ...http.CallOption) (*StatusReply, error) {
 	var out StatusReply
-	pattern := "/status"
+	pattern := "/pub/status"
 	path := binding.EncodeURL(pattern, in, true)
 	opts = append(opts, http.Operation(OperationAuthStatus))
 	opts = append(opts, http.PathTemplate(pattern))
