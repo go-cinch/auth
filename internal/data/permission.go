@@ -23,7 +23,7 @@ func NewPermissionRepo(data *Data, action biz.ActionRepo, hotspot biz.HotspotRep
 	}
 }
 
-func (ro permissionRepo) Check(ctx context.Context, item biz.CheckPermission) (pass bool) {
+func (ro permissionRepo) Check(ctx context.Context, item *biz.CheckPermission) (pass bool) {
 	user := ro.hotspot.GetUserByCode(ctx, item.UserCode)
 	// 1. check default permission
 	defaultAction := ro.hotspot.GetActionByWord(ctx, "default")

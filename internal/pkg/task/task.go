@@ -83,7 +83,7 @@ func process(t task) (err error) {
 	case t.c.Task.Group.LoginFailed:
 		var req biz.LoginTime
 		utils.Json2Struct(&req, t.payload.Payload)
-		err = t.user.WrongPwd(ctx, req)
+		err = t.user.WrongPwd(ctx, &req)
 	case t.c.Task.Group.LoginLast:
 		var req biz.LoginTime
 		utils.Json2Struct(&req, t.payload.Payload)

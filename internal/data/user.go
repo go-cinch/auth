@@ -234,7 +234,7 @@ func (ro userRepo) LastLogin(ctx context.Context, username string) (err error) {
 	return
 }
 
-func (ro userRepo) WrongPwd(ctx context.Context, req biz.LoginTime) (err error) {
+func (ro userRepo) WrongPwd(ctx context.Context, req *biz.LoginTime) (err error) {
 	oldItem, err := ro.GetByUsername(ctx, req.Username)
 	if err != nil {
 		return

@@ -20,7 +20,7 @@ type CheckPermission struct {
 }
 
 type PermissionRepo interface {
-	Check(ctx context.Context, item CheckPermission) bool
+	Check(ctx context.Context, item *CheckPermission) bool
 	GetByUserCode(ctx context.Context, code string) *Permission
 }
 
@@ -36,7 +36,7 @@ func NewPermissionUseCase(c *conf.Bootstrap, repo PermissionRepo) *PermissionUse
 	}
 }
 
-func (uc *PermissionUseCase) Check(ctx context.Context, item CheckPermission) (rp bool) {
+func (uc *PermissionUseCase) Check(ctx context.Context, item *CheckPermission) (rp bool) {
 	rp = uc.repo.Check(ctx, item)
 	return
 }

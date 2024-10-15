@@ -124,7 +124,7 @@ type UserRepo interface {
 	Update(ctx context.Context, item *UpdateUser) error
 	Delete(ctx context.Context, ids ...uint64) error
 	LastLogin(ctx context.Context, username string) error
-	WrongPwd(ctx context.Context, req LoginTime) error
+	WrongPwd(ctx context.Context, req *LoginTime) error
 	UpdatePassword(ctx context.Context, item *User) error
 	IdExists(ctx context.Context, id uint64) error
 }
@@ -211,7 +211,7 @@ func (uc *UserUseCase) find(ctx context.Context, action string, condition *FindU
 
 func (uc *UserUseCase) InfoFromCtx(ctx context.Context) (rp *UserInfo) {
 	user := jwt.FromServerContext(ctx)
-	return uc.Info(ctx, user.Code)
+	return uc.Info(ctx, user.Attrs["code"])
 }
 
 func (uc *UserUseCase) Info(ctx context.Context, code string) (rp *UserInfo) {
@@ -259,8 +259,10 @@ func (uc *UserUseCase) Login(ctx context.Context, item *Login) (rp *LoginToken, 
 		return
 	}
 	authUser := jwt.User{
-		Code:     status.Code,
-		Platform: status.Platform,
+		Attrs: map[string]string{
+			"code":     status.Code,
+			"platform": status.Platform,
+		},
 	}
 	token, expireTime := authUser.CreateToken(uc.c.Server.Jwt.Key, uc.c.Server.Jwt.Expires)
 	rp.Token = token
@@ -279,7 +281,7 @@ func (uc *UserUseCase) LastLogin(ctx context.Context, username string) error {
 	})
 }
 
-func (uc *UserUseCase) WrongPwd(ctx context.Context, req LoginTime) error {
+func (uc *UserUseCase) WrongPwd(ctx context.Context, req *LoginTime) error {
 	return uc.tx.Tx(ctx, func(ctx context.Context) (err error) {
 		err = uc.repo.WrongPwd(ctx, req)
 		if err != nil {

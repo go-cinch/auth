@@ -43,8 +43,8 @@ github.com/go-cinch/common/id v1.0.4 h1:bMjcxMq5lL19o2a/ty6OnS8tIn7kc98FznAq2vyp
 github.com/go-cinch/common/id v1.0.4/go.mod h1:ZeuOCZyx1ZKuCexzLRW0gBCnwDUKH8XDs1S0dNv4Z+k=
 github.com/go-cinch/common/idempotent v1.0.4 h1:E/Ab+FHWjs1ym0U0mips6MyHEzucEdedmVWA22U3du8=
 github.com/go-cinch/common/idempotent v1.0.4/go.mod h1:t4rBikz+RhpmF0tdGx+rm0Z1FzDy/6GtelgFB7RlaiY=
-github.com/go-cinch/common/jwt v1.0.3 h1:/jznvjevW+2KsmWm666O1NxkHLSfVmrjoWwkuWAqewk=
-github.com/go-cinch/common/jwt v1.0.3/go.mod h1:++p7kddWh9SyCYIYWEb5mfiR+ljKC3I5puiyjz7oGNs=
+github.com/go-cinch/common/jwt v1.0.4 h1:PWLIQ/HaMhQSkyUafBCjQDNXwz1mzeCzsTCbgeKEeRI=
+github.com/go-cinch/common/jwt v1.0.4/go.mod h1:++p7kddWh9SyCYIYWEb5mfiR+ljKC3I5puiyjz7oGNs=
 github.com/go-cinch/common/log v1.1.1 h1:9ot3Qw4BKDfOZ7IC/3ZreuYJb953YD7pmM6ev6xT9FY=
 github.com/go-cinch/common/log v1.1.1/go.mod h1:O4k/ArEdZS6c+YPKdESWJnVfhQ0QlwtIQ6mYxJZt5po=
 github.com/go-cinch/common/middleware/i18n v1.0.5 h1:SmxEMljqYF8xraaaa3KZgvNbKIE06ShQAZ34w87wkvs=

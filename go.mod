@@ -10,7 +10,7 @@ require (
 	github.com/go-cinch/common/i18n v1.0.6
 	github.com/go-cinch/common/id v1.0.4
 	github.com/go-cinch/common/idempotent v1.0.4
-	github.com/go-cinch/common/jwt v1.0.3
+	github.com/go-cinch/common/jwt v1.0.4
 	github.com/go-cinch/common/log v1.1.1
 	github.com/go-cinch/common/middleware/i18n v1.0.5
 	github.com/go-cinch/common/middleware/logging v1.0.0
