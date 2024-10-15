@@ -139,7 +139,7 @@ func (s *AuthService) Permission(ctx context.Context, req *auth.PermissionReques
 	defer span.End()
 	rp = &emptypb.Empty{}
 	user := jwt.FromServerContext(ctx)
-	r := biz.CheckPermission{
+	r := &biz.CheckPermission{
 		UserCode: user.Attrs["code"],
 	}
 	if req.Resource != nil {

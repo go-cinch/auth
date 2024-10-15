@@ -49,8 +49,8 @@ type ActionRepo interface {
 	Update(ctx context.Context, item *UpdateAction) error
 	Delete(ctx context.Context, ids ...uint64) error
 	CodeExists(ctx context.Context, code string) error
-	Permission(ctx context.Context, code string, req CheckPermission) bool
-	MatchResource(ctx context.Context, resource string, req CheckPermission) bool
+	Permission(ctx context.Context, code string, req *CheckPermission) bool
+	MatchResource(ctx context.Context, resource string, req *CheckPermission) bool
 }
 
 type ActionUseCase struct {

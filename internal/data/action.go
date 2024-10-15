@@ -184,7 +184,7 @@ func (ro actionRepo) WordExists(ctx context.Context, word string) (ok bool) {
 	return
 }
 
-func (ro actionRepo) Permission(ctx context.Context, code string, req biz.CheckPermission) (pass bool) {
+func (ro actionRepo) Permission(ctx context.Context, code string, req *biz.CheckPermission) (pass bool) {
 	arr := strings.Split(code, ",")
 	for _, item := range arr {
 		pass = ro.permission(ctx, item, req)
@@ -195,7 +195,7 @@ func (ro actionRepo) Permission(ctx context.Context, code string, req biz.CheckP
 	return
 }
 
-func (ro actionRepo) permission(ctx context.Context, code string, req biz.CheckPermission) (pass bool) {
+func (ro actionRepo) permission(ctx context.Context, code string, req *biz.CheckPermission) (pass bool) {
 	if code == "" {
 		return
 	}
@@ -203,7 +203,7 @@ func (ro actionRepo) permission(ctx context.Context, code string, req biz.CheckP
 	return ro.MatchResource(ctx, action.Resource, req)
 }
 
-func (actionRepo) MatchResource(_ context.Context, resource string, req biz.CheckPermission) (pass bool) {
+func (actionRepo) MatchResource(_ context.Context, resource string, req *biz.CheckPermission) (pass bool) {
 	if resource == "" {
 		// empty resource no need match
 		return

@@ -12,7 +12,6 @@ import (
 const (
 	WhitelistPermissionCategory uint32 = iota
 	WhitelistJwtCategory
-	WhitelistIdempotentCategory
 )
 
 type Whitelist struct {
@@ -28,8 +27,8 @@ type FindWhitelist struct {
 }
 
 type HasWhitelist struct {
-	Category   uint32          `json:"category"`
-	Permission CheckPermission `json:"permission"`
+	Category   uint32           `json:"category"`
+	Permission *CheckPermission `json:"permission"`
 }
 
 type FindWhitelistCache struct {

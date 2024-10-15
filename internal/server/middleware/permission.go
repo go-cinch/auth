@@ -24,7 +24,7 @@ import (
 
 const (
 	pubURIPrefix           = "/pub/"
-	jwtTokenCachePrefix    = "jwt.token."
+	jwtTokenCachePrefix    = "jwt.token"
 	jwtTokenCacheExpire    = 10 * time.Minute
 	permissionHeaderMethod = "x-original-method"
 	permissionHeaderURI    = "x-permission-uri"
@@ -96,7 +96,7 @@ func permissionWhitelist(ctx context.Context, whitelist *biz.WhitelistUseCase, r
 	// check if it is on the whitelist
 	ok = whitelist.Has(ctx, &biz.HasWhitelist{
 		Category:   biz.WhitelistPermissionCategory,
-		Permission: r,
+		Permission: &r,
 	})
 	// override params
 	v, ok2 := req.(*auth.PermissionRequest)
@@ -113,7 +113,7 @@ func jwtWhitelist(ctx context.Context, whitelist *biz.WhitelistUseCase) bool {
 	tr, _ := transport.FromServerContext(ctx)
 	return whitelist.Has(ctx, &biz.HasWhitelist{
 		Category: biz.WhitelistJwtCategory,
-		Permission: biz.CheckPermission{
+		Permission: &biz.CheckPermission{
 			Resource: tr.Operation(),
 		},
 	})
