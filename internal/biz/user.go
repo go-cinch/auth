@@ -211,7 +211,7 @@ func (uc *UserUseCase) find(ctx context.Context, action string, condition *FindU
 
 func (uc *UserUseCase) InfoFromCtx(ctx context.Context) (rp *UserInfo) {
 	user := jwt.FromServerContext(ctx)
-	return uc.Info(ctx, user.Code)
+	return uc.Info(ctx, user.Attrs["code"])
 }
 
 func (uc *UserUseCase) Info(ctx context.Context, code string) (rp *UserInfo) {
@@ -259,8 +259,10 @@ func (uc *UserUseCase) Login(ctx context.Context, item *Login) (rp *LoginToken, 
 		return
 	}
 	authUser := jwt.User{
-		Code:     status.Code,
-		Platform: status.Platform,
+		Attrs: map[string]string{
+			"code":     status.Code,
+			"platform": status.Platform,
+		},
 	}
 	token, expireTime := authUser.CreateToken(uc.c.Server.Jwt.Key, uc.c.Server.Jwt.Expires)
 	rp.Token = token

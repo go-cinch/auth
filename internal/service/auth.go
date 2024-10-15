@@ -140,7 +140,7 @@ func (s *AuthService) Permission(ctx context.Context, req *auth.PermissionReques
 	rp = &emptypb.Empty{}
 	user := jwt.FromServerContext(ctx)
 	r := biz.CheckPermission{
-		UserCode: user.Code,
+		UserCode: user.Attrs["code"],
 	}
 	if req.Resource != nil {
 		r.Resource = *req.Resource
@@ -156,10 +156,12 @@ func (s *AuthService) Permission(ctx context.Context, req *auth.PermissionReques
 		err = biz.ErrNoPermission(ctx)
 		return
 	}
-	info := s.user.Info(ctx, user.Code)
+	info := s.user.Info(ctx, user.Attrs["code"])
 	jwt.AppendToReplyHeader(ctx, jwt.User{
-		Code:     info.Code,
-		Platform: info.Platform,
+		Attrs: map[string]string{
+			"code":     info.Code,
+			"platform": info.Platform,
+		},
 	})
 	return
 }
@@ -171,8 +173,8 @@ func (s *AuthService) Info(ctx context.Context, _ *emptypb.Empty) (rp *auth.Info
 	rp = &auth.InfoReply{}
 	rp.Permission = &auth.Permission{}
 	user := jwt.FromServerContext(ctx)
-	res := s.user.Info(ctx, user.Code)
-	permission := s.permission.GetByUserCode(ctx, user.Code)
+	res := s.user.Info(ctx, user.Attrs["code"])
+	permission := s.permission.GetByUserCode(ctx, user.Attrs["code"])
 	copierx.Copy(&rp.Permission, permission)
 	copierx.Copy(&rp, res)
 	return

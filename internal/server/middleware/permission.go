@@ -138,7 +138,7 @@ func parseJwt(ctx context.Context, c *conf.Bootstrap, client redis.UniversalClie
 	if err != nil {
 		return
 	}
-	ctx = jwtLocal.NewServerContext(ctx, info.Claims)
+	ctx = jwtLocal.NewServerContext(ctx, info.Claims, "code", "platform")
 	user = jwtLocal.FromServerContext(ctx)
 	client.Set(ctx, key, utils.Struct2Json(user), jwtTokenCacheExpire)
 	return
