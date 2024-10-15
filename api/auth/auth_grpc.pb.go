@@ -30,8 +30,6 @@ const (
 	Auth_Logout_FullMethodName          = "/auth.v1.Auth/Logout"
 	Auth_Info_FullMethodName            = "/auth.v1.Auth/Info"
 	Auth_Idempotent_FullMethodName      = "/auth.v1.Auth/Idempotent"
-	Auth_CheckIdempotent_FullMethodName = "/auth.v1.Auth/CheckIdempotent"
-	Auth_GetUserByCode_FullMethodName   = "/auth.v1.Auth/GetUserByCode"
 	Auth_FindUser_FullMethodName        = "/auth.v1.Auth/FindUser"
 	Auth_UpdateUser_FullMethodName      = "/auth.v1.Auth/UpdateUser"
 	Auth_DeleteUser_FullMethodName      = "/auth.v1.Auth/DeleteUser"
@@ -49,7 +47,6 @@ const (
 	Auth_UpdateUserGroup_FullMethodName = "/auth.v1.Auth/UpdateUserGroup"
 	Auth_DeleteUserGroup_FullMethodName = "/auth.v1.Auth/DeleteUserGroup"
 	Auth_CreateWhitelist_FullMethodName = "/auth.v1.Auth/CreateWhitelist"
-	Auth_HasWhitelist_FullMethodName    = "/auth.v1.Auth/HasWhitelist"
 	Auth_FindWhitelist_FullMethodName   = "/auth.v1.Auth/FindWhitelist"
 	Auth_UpdateWhitelist_FullMethodName = "/auth.v1.Auth/UpdateWhitelist"
 	Auth_DeleteWhitelist_FullMethodName = "/auth.v1.Auth/DeleteWhitelist"
@@ -68,8 +65,6 @@ type AuthClient interface {
 	Logout(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	Info(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*InfoReply, error)
 	Idempotent(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*IdempotentReply, error)
-	CheckIdempotent(ctx context.Context, in *CheckIdempotentRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	GetUserByCode(ctx context.Context, in *GetUserByCodeRequest, opts ...grpc.CallOption) (*GetUserByCodeReply, error)
 	FindUser(ctx context.Context, in *FindUserRequest, opts ...grpc.CallOption) (*FindUserReply, error)
 	UpdateUser(ctx context.Context, in *UpdateUserRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	DeleteUser(ctx context.Context, in *params.IdsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
@@ -87,7 +82,6 @@ type AuthClient interface {
 	UpdateUserGroup(ctx context.Context, in *UpdateUserGroupRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	DeleteUserGroup(ctx context.Context, in *params.IdsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	CreateWhitelist(ctx context.Context, in *CreateWhitelistRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	HasWhitelist(ctx context.Context, in *HasWhitelistRequest, opts ...grpc.CallOption) (*HasWhitelistReply, error)
 	FindWhitelist(ctx context.Context, in *FindWhitelistRequest, opts ...grpc.CallOption) (*FindWhitelistReply, error)
 	UpdateWhitelist(ctx context.Context, in *UpdateWhitelistRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	DeleteWhitelist(ctx context.Context, in *params.IdsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
@@ -176,24 +170,6 @@ func (c *authClient) Info(ctx context.Context, in *emptypb.Empty, opts ...grpc.C
 func (c *authClient) Idempotent(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*IdempotentReply, error) {
 	out := new(IdempotentReply)
 	err := c.cc.Invoke(ctx, Auth_Idempotent_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authClient) CheckIdempotent(ctx context.Context, in *CheckIdempotentRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, Auth_CheckIdempotent_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authClient) GetUserByCode(ctx context.Context, in *GetUserByCodeRequest, opts ...grpc.CallOption) (*GetUserByCodeReply, error) {
-	out := new(GetUserByCodeReply)
-	err := c.cc.Invoke(ctx, Auth_GetUserByCode_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -353,15 +329,6 @@ func (c *authClient) CreateWhitelist(ctx context.Context, in *CreateWhitelistReq
 	return out, nil
 }
 
-func (c *authClient) HasWhitelist(ctx context.Context, in *HasWhitelistRequest, opts ...grpc.CallOption) (*HasWhitelistReply, error) {
-	out := new(HasWhitelistReply)
-	err := c.cc.Invoke(ctx, Auth_HasWhitelist_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *authClient) FindWhitelist(ctx context.Context, in *FindWhitelistRequest, opts ...grpc.CallOption) (*FindWhitelistReply, error) {
 	out := new(FindWhitelistReply)
 	err := c.cc.Invoke(ctx, Auth_FindWhitelist_FullMethodName, in, out, opts...)
@@ -402,8 +369,6 @@ type AuthServer interface {
 	Logout(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 	Info(context.Context, *emptypb.Empty) (*InfoReply, error)
 	Idempotent(context.Context, *emptypb.Empty) (*IdempotentReply, error)
-	CheckIdempotent(context.Context, *CheckIdempotentRequest) (*emptypb.Empty, error)
-	GetUserByCode(context.Context, *GetUserByCodeRequest) (*GetUserByCodeReply, error)
 	FindUser(context.Context, *FindUserRequest) (*FindUserReply, error)
 	UpdateUser(context.Context, *UpdateUserRequest) (*emptypb.Empty, error)
 	DeleteUser(context.Context, *params.IdsRequest) (*emptypb.Empty, error)
@@ -421,7 +386,6 @@ type AuthServer interface {
 	UpdateUserGroup(context.Context, *UpdateUserGroupRequest) (*emptypb.Empty, error)
 	DeleteUserGroup(context.Context, *params.IdsRequest) (*emptypb.Empty, error)
 	CreateWhitelist(context.Context, *CreateWhitelistRequest) (*emptypb.Empty, error)
-	HasWhitelist(context.Context, *HasWhitelistRequest) (*HasWhitelistReply, error)
 	FindWhitelist(context.Context, *FindWhitelistRequest) (*FindWhitelistReply, error)
 	UpdateWhitelist(context.Context, *UpdateWhitelistRequest) (*emptypb.Empty, error)
 	DeleteWhitelist(context.Context, *params.IdsRequest) (*emptypb.Empty, error)
@@ -458,12 +422,6 @@ func (UnimplementedAuthServer) Info(context.Context, *emptypb.Empty) (*InfoReply
 }
 func (UnimplementedAuthServer) Idempotent(context.Context, *emptypb.Empty) (*IdempotentReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Idempotent not implemented")
-}
-func (UnimplementedAuthServer) CheckIdempotent(context.Context, *CheckIdempotentRequest) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CheckIdempotent not implemented")
-}
-func (UnimplementedAuthServer) GetUserByCode(context.Context, *GetUserByCodeRequest) (*GetUserByCodeReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetUserByCode not implemented")
 }
 func (UnimplementedAuthServer) FindUser(context.Context, *FindUserRequest) (*FindUserReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FindUser not implemented")
@@ -515,9 +473,6 @@ func (UnimplementedAuthServer) DeleteUserGroup(context.Context, *params.IdsReque
 }
 func (UnimplementedAuthServer) CreateWhitelist(context.Context, *CreateWhitelistRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateWhitelist not implemented")
-}
-func (UnimplementedAuthServer) HasWhitelist(context.Context, *HasWhitelistRequest) (*HasWhitelistReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method HasWhitelist not implemented")
 }
 func (UnimplementedAuthServer) FindWhitelist(context.Context, *FindWhitelistRequest) (*FindWhitelistReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FindWhitelist not implemented")
@@ -699,42 +654,6 @@ func _Auth_Idempotent_Handler(srv interface{}, ctx context.Context, dec func(int
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AuthServer).Idempotent(ctx, req.(*emptypb.Empty))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Auth_CheckIdempotent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CheckIdempotentRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthServer).CheckIdempotent(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Auth_CheckIdempotent_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthServer).CheckIdempotent(ctx, req.(*CheckIdempotentRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Auth_GetUserByCode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetUserByCodeRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthServer).GetUserByCode(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Auth_GetUserByCode_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthServer).GetUserByCode(ctx, req.(*GetUserByCodeRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1045,24 +964,6 @@ func _Auth_CreateWhitelist_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Auth_HasWhitelist_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(HasWhitelistRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthServer).HasWhitelist(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Auth_HasWhitelist_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthServer).HasWhitelist(ctx, req.(*HasWhitelistRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Auth_FindWhitelist_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(FindWhitelistRequest)
 	if err := dec(in); err != nil {
@@ -1161,14 +1062,6 @@ var Auth_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Auth_Idempotent_Handler,
 		},
 		{
-			MethodName: "CheckIdempotent",
-			Handler:    _Auth_CheckIdempotent_Handler,
-		},
-		{
-			MethodName: "GetUserByCode",
-			Handler:    _Auth_GetUserByCode_Handler,
-		},
-		{
 			MethodName: "FindUser",
 			Handler:    _Auth_FindUser_Handler,
 		},
@@ -1235,10 +1128,6 @@ var Auth_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateWhitelist",
 			Handler:    _Auth_CreateWhitelist_Handler,
-		},
-		{
-			MethodName: "HasWhitelist",
-			Handler:    _Auth_HasWhitelist_Handler,
 		},
 		{
 			MethodName: "FindWhitelist",

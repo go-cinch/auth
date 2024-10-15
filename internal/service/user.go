@@ -14,17 +14,6 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func (s *AuthService) GetUserByCode(ctx context.Context, req *auth.GetUserByCodeRequest) (rp *auth.GetUserByCodeReply, err error) {
-	tr := otel.Tracer("api")
-	ctx, span := tr.Start(ctx, "GetUserByCode")
-	defer span.End()
-	rp = &auth.GetUserByCodeReply{}
-	user := s.user.GetUserByCode(ctx, req.Code)
-	rp.User = &auth.User{}
-	copierx.Copy(&rp.User, user)
-	return
-}
-
 func (s *AuthService) FindUser(ctx context.Context, req *auth.FindUserRequest) (rp *auth.FindUserReply, err error) {
 	tr := otel.Tracer("api")
 	ctx, span := tr.Start(ctx, "FindUser")

@@ -183,10 +183,6 @@ func (uc *UserUseCase) Delete(ctx context.Context, ids ...uint64) error {
 	})
 }
 
-func (uc *UserUseCase) GetUserByCode(ctx context.Context, code string) (rp *User) {
-	return uc.hotspot.GetUserByCode(ctx, code)
-}
-
 func (uc *UserUseCase) Find(ctx context.Context, condition *FindUser) (rp []User, err error) {
 	action := strings.Join([]string{"find", utils.StructMd5(condition)}, "_")
 	str, err := uc.cache.Get(ctx, action, func(ctx context.Context) (string, error) {

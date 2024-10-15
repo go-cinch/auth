@@ -7,7 +7,36 @@ info:
     description: The auth service definition.
     version: 0.0.1
 paths:
-    /action:
+    /action/create:
+        post:
+            tags:
+                - Auth
+            operationId: Auth_CreateAction
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/auth.v1.CreateActionRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+    /action/delete:
+        delete:
+            tags:
+                - Auth
+            operationId: Auth_DeleteAction
+            parameters:
+                - name: ids
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+    /action/list:
         get:
             tags:
                 - Auth
@@ -52,46 +81,11 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/auth.v1.FindActionReply'
-        post:
-            tags:
-                - Auth
-            operationId: Auth_CreateAction
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/auth.v1.CreateActionRequest'
-                required: true
-            responses:
-                "200":
-                    description: OK
-                    content: {}
-    /action/{ids}:
-        delete:
-            tags:
-                - Auth
-            operationId: Auth_DeleteAction
-            parameters:
-                - name: ids
-                  in: path
-                  required: true
-                  schema:
-                    type: string
-            responses:
-                "200":
-                    description: OK
-                    content: {}
-    /action/{id}:
+    /action/update:
         put:
             tags:
                 - Auth
             operationId: Auth_UpdateAction
-            parameters:
-                - name: id
-                  in: path
-                  required: true
-                  schema:
-                    type: string
             requestBody:
                 content:
                     application/json:
@@ -106,12 +100,6 @@ paths:
             tags:
                 - Auth
             operationId: Auth_UpdateAction
-            parameters:
-                - name: id
-                  in: path
-                  required: true
-                  schema:
-                    type: string
             requestBody:
                 content:
                     application/json:
@@ -243,8 +231,8 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/auth.v1.StatusReply'
-    /pwd:
-        post:
+    /pwd/update:
+        patch:
             tags:
                 - Auth
             operationId: Auth_Pwd
@@ -276,7 +264,36 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/auth.v1.LoginReply'
-    /role:
+    /role/create:
+        post:
+            tags:
+                - Auth
+            operationId: Auth_CreateRole
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/auth.v1.CreateRoleRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+    /role/delete:
+        delete:
+            tags:
+                - Auth
+            operationId: Auth_DeleteRole
+            parameters:
+                - name: ids
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+    /role/list:
         get:
             tags:
                 - Auth
@@ -317,46 +334,11 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/auth.v1.FindRoleReply'
-        post:
-            tags:
-                - Auth
-            operationId: Auth_CreateRole
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/auth.v1.CreateRoleRequest'
-                required: true
-            responses:
-                "200":
-                    description: OK
-                    content: {}
-    /role/{ids}:
-        delete:
-            tags:
-                - Auth
-            operationId: Auth_DeleteRole
-            parameters:
-                - name: ids
-                  in: path
-                  required: true
-                  schema:
-                    type: string
-            responses:
-                "200":
-                    description: OK
-                    content: {}
-    /role/{id}:
+    /role/update:
         put:
             tags:
                 - Auth
             operationId: Auth_UpdateRole
-            parameters:
-                - name: id
-                  in: path
-                  required: true
-                  schema:
-                    type: string
             requestBody:
                 content:
                     application/json:
@@ -371,12 +353,6 @@ paths:
             tags:
                 - Auth
             operationId: Auth_UpdateRole
-            parameters:
-                - name: id
-                  in: path
-                  required: true
-                  schema:
-                    type: string
             requestBody:
                 content:
                     application/json:
@@ -387,7 +363,120 @@ paths:
                 "200":
                     description: OK
                     content: {}
-    /user:
+    /user/delete:
+        delete:
+            tags:
+                - Auth
+            operationId: Auth_DeleteUser
+            parameters:
+                - name: ids
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+    /user/group/create:
+        post:
+            tags:
+                - Auth
+            operationId: Auth_CreateUserGroup
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/auth.v1.CreateUserGroupRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+    /user/group/delete:
+        delete:
+            tags:
+                - Auth
+            operationId: Auth_DeleteUserGroup
+            parameters:
+                - name: ids
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+    /user/group/list:
+        get:
+            tags:
+                - Auth
+            operationId: Auth_FindUserGroup
+            parameters:
+                - name: page.num
+                  in: query
+                  schema:
+                    type: string
+                - name: page.size
+                  in: query
+                  schema:
+                    type: string
+                - name: page.total
+                  in: query
+                  schema:
+                    type: string
+                - name: page.disable
+                  in: query
+                  schema:
+                    type: boolean
+                - name: name
+                  in: query
+                  schema:
+                    type: string
+                - name: word
+                  in: query
+                  schema:
+                    type: string
+                - name: action
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/auth.v1.FindUserGroupReply'
+    /user/group/update:
+        put:
+            tags:
+                - Auth
+            operationId: Auth_UpdateUserGroup
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/auth.v1.UpdateUserGroupRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+        patch:
+            tags:
+                - Auth
+            operationId: Auth_UpdateUserGroup
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/auth.v1.UpdateUserGroupRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+    /user/list:
         get:
             tags:
                 - Auth
@@ -448,174 +537,65 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/auth.v1.FindUserReply'
-    /user/group:
-        get:
+    /user/update:
+        put:
             tags:
                 - Auth
-            operationId: Auth_FindUserGroup
-            parameters:
-                - name: page.num
-                  in: query
-                  schema:
-                    type: string
-                - name: page.size
-                  in: query
-                  schema:
-                    type: string
-                - name: page.total
-                  in: query
-                  schema:
-                    type: string
-                - name: page.disable
-                  in: query
-                  schema:
-                    type: boolean
-                - name: name
-                  in: query
-                  schema:
-                    type: string
-                - name: word
-                  in: query
-                  schema:
-                    type: string
-                - name: action
-                  in: query
-                  schema:
-                    type: string
+            operationId: Auth_UpdateUser
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/auth.v1.UpdateUserRequest'
+                required: true
             responses:
                 "200":
                     description: OK
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/auth.v1.FindUserGroupReply'
+                    content: {}
+        patch:
+            tags:
+                - Auth
+            operationId: Auth_UpdateUser
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/auth.v1.UpdateUserRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+    /whitelist/create:
         post:
             tags:
                 - Auth
-            operationId: Auth_CreateUserGroup
+            operationId: Auth_CreateWhitelist
             requestBody:
                 content:
                     application/json:
                         schema:
-                            $ref: '#/components/schemas/auth.v1.CreateUserGroupRequest'
+                            $ref: '#/components/schemas/auth.v1.CreateWhitelistRequest'
                 required: true
             responses:
                 "200":
                     description: OK
                     content: {}
-    /user/group/{ids}:
+    /whitelist/delete:
         delete:
             tags:
                 - Auth
-            operationId: Auth_DeleteUserGroup
+            operationId: Auth_DeleteWhitelist
             parameters:
                 - name: ids
-                  in: path
-                  required: true
+                  in: query
                   schema:
                     type: string
             responses:
                 "200":
                     description: OK
                     content: {}
-    /user/group/{id}:
-        put:
-            tags:
-                - Auth
-            operationId: Auth_UpdateUserGroup
-            parameters:
-                - name: id
-                  in: path
-                  required: true
-                  schema:
-                    type: string
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/auth.v1.UpdateUserGroupRequest'
-                required: true
-            responses:
-                "200":
-                    description: OK
-                    content: {}
-        patch:
-            tags:
-                - Auth
-            operationId: Auth_UpdateUserGroup
-            parameters:
-                - name: id
-                  in: path
-                  required: true
-                  schema:
-                    type: string
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/auth.v1.UpdateUserGroupRequest'
-                required: true
-            responses:
-                "200":
-                    description: OK
-                    content: {}
-    /user/{ids}:
-        delete:
-            tags:
-                - Auth
-            operationId: Auth_DeleteUser
-            parameters:
-                - name: ids
-                  in: path
-                  required: true
-                  schema:
-                    type: string
-            responses:
-                "200":
-                    description: OK
-                    content: {}
-    /user/{id}:
-        put:
-            tags:
-                - Auth
-            operationId: Auth_UpdateUser
-            parameters:
-                - name: id
-                  in: path
-                  required: true
-                  schema:
-                    type: string
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/auth.v1.UpdateUserRequest'
-                required: true
-            responses:
-                "200":
-                    description: OK
-                    content: {}
-        patch:
-            tags:
-                - Auth
-            operationId: Auth_UpdateUser
-            parameters:
-                - name: id
-                  in: path
-                  required: true
-                  schema:
-                    type: string
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/auth.v1.UpdateUserRequest'
-                required: true
-            responses:
-                "200":
-                    description: OK
-                    content: {}
-    /whitelist:
+    /whitelist/list:
         get:
             tags:
                 - Auth
@@ -653,46 +633,11 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/auth.v1.FindWhitelistReply'
-        post:
-            tags:
-                - Auth
-            operationId: Auth_CreateWhitelist
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/auth.v1.CreateWhitelistRequest'
-                required: true
-            responses:
-                "200":
-                    description: OK
-                    content: {}
-    /whitelist/{ids}:
-        delete:
-            tags:
-                - Auth
-            operationId: Auth_DeleteWhitelist
-            parameters:
-                - name: ids
-                  in: path
-                  required: true
-                  schema:
-                    type: string
-            responses:
-                "200":
-                    description: OK
-                    content: {}
-    /whitelist/{id}:
+    /whitelist/update:
         put:
             tags:
                 - Auth
             operationId: Auth_UpdateWhitelist
-            parameters:
-                - name: id
-                  in: path
-                  required: true
-                  schema:
-                    type: string
             requestBody:
                 content:
                     application/json:
@@ -707,12 +652,6 @@ paths:
             tags:
                 - Auth
             operationId: Auth_UpdateWhitelist
-            parameters:
-                - name: id
-                  in: path
-                  required: true
-                  schema:
-                    type: string
             requestBody:
                 content:
                     application/json:
