@@ -576,7 +576,7 @@ func (ro hotspotRepo) refreshUser(ctx context.Context, pipe redis.Pipeliner) {
 			utils.CamelCase(p.Wrong.ColumnName().String()), strconv.FormatUint(item.Wrong, 10),
 			utils.CamelCase(p.Locked.ColumnName().String()), item.Locked,
 		)
-		pipe.Expire(ctx, codeKey, ro.randomExpire())
+		pipe.Expire(ctx, usernameKey, ro.randomExpire())
 	}
 	return
 }

@@ -13,7 +13,7 @@ import (
 	"github.com/go-cinch/common/utils"
 	"github.com/golang-module/carbon/v2"
 	"github.com/pkg/errors"
-	"github.com/thoas/go-funk"
+	"github.com/samber/lo"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -173,7 +173,7 @@ func (uc *UserUseCase) Delete(ctx context.Context, ids ...uint64) error {
 	return uc.tx.Tx(ctx, func(ctx context.Context) error {
 		return uc.cache.Flush(ctx, func(ctx context.Context) (err error) {
 			info := uc.InfoFromCtx(ctx)
-			if funk.ContainsUInt64(ids, info.Id) {
+			if lo.Contains(ids, info.Id) {
 				err = ErrDeleteYourself(ctx)
 				return
 			}
@@ -403,7 +403,7 @@ func (uc *UserUseCase) comparePwd(ctx context.Context, action string, condition 
 }
 
 func (uc *UserUseCase) FlushCache(ctx context.Context) {
-	uc.cache.Flush(ctx, func(ctx context.Context) (err error) {
+	_ = uc.cache.Flush(ctx, func(ctx context.Context) (err error) {
 		return
 	})
 }
