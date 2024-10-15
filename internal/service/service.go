@@ -4,7 +4,7 @@ import (
 	"auth/api/auth"
 	"auth/internal/biz"
 	"auth/internal/conf"
-	"auth/internal/pkg/idempotent"
+	"github.com/go-cinch/common/idempotent"
 	"github.com/go-cinch/common/worker"
 	"github.com/google/wire"
 )

@@ -25,18 +25,6 @@ func (s *AuthService) CreateWhitelist(ctx context.Context, req *auth.CreateWhite
 	return
 }
 
-func (s *AuthService) HasWhitelist(ctx context.Context, req *auth.HasWhitelistRequest) (rp *auth.HasWhitelistReply, err error) {
-	tr := otel.Tracer("api")
-	ctx, span := tr.Start(ctx, "HasWhitelist")
-	defer span.End()
-	rp = &auth.HasWhitelistReply{}
-	r := &biz.HasWhitelist{}
-	copierx.Copy(&r, req)
-	res := s.whitelist.Has(ctx, r)
-	rp.Ok = res
-	return
-}
-
 func (s *AuthService) FindWhitelist(ctx context.Context, req *auth.FindWhitelistRequest) (rp *auth.FindWhitelistReply, err error) {
 	tr := otel.Tracer("api")
 	ctx, span := tr.Start(ctx, "FindWhitelist")

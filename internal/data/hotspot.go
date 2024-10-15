@@ -285,6 +285,16 @@ func (ro hotspotRepo) refreshUserGroup(ctx context.Context, pipe redis.Pipeliner
 	db := p.WithContext(ctx)
 	name := p.TableName()
 	list, _ := db.Find()
+	matchKey := strings.Join([]string{
+		ro.c.Name,
+		ro.c.Hotspot.Name,
+		name,
+		"*",
+	}, ".")
+	matches := scanKeys(ctx, ro.data.redis, matchKey)
+	for _, key := range matches {
+		pipe.Del(ctx, key)
+	}
 	for _, item := range list {
 		idKey := strings.Join([]string{
 			ro.c.Name,
@@ -293,6 +303,7 @@ func (ro hotspotRepo) refreshUserGroup(ctx context.Context, pipe redis.Pipeliner
 			p.ID.ColumnName().String(),
 			strconv.FormatUint(item.ID, 10),
 		}, ".")
+		pipe.Del(ctx, idKey)
 		pipe.HSet(
 			ctx, idKey,
 			utils.CamelCase(p.ID.ColumnName().String()), item.ID,
@@ -308,6 +319,7 @@ func (ro hotspotRepo) refreshUserGroup(ctx context.Context, pipe redis.Pipeliner
 			p.Word.ColumnName().String(),
 			item.Word,
 		}, ".")
+		pipe.Del(ctx, wordKey)
 		pipe.HSet(
 			ctx, wordKey,
 			utils.CamelCase(p.ID.ColumnName().String()), item.ID,
@@ -325,6 +337,16 @@ func (ro hotspotRepo) refreshUserUserGroupRelation(ctx context.Context, pipe red
 	db := p.WithContext(ctx)
 	name := p.TableName()
 	list, _ := db.Find()
+	matchKey := strings.Join([]string{
+		ro.c.Name,
+		ro.c.Hotspot.Name,
+		name,
+		"*",
+	}, ".")
+	matches := scanKeys(ctx, ro.data.redis, matchKey)
+	for _, key := range matches {
+		pipe.Del(ctx, key)
+	}
 	// group id by user id
 	groupIDMap := lo.MapValues(
 		lo.GroupBy(list, func(item *model.UserUserGroupRelation) uint64 {
@@ -360,6 +382,16 @@ func (ro hotspotRepo) refreshRole(ctx context.Context, pipe redis.Pipeliner) {
 	db := p.WithContext(ctx)
 	name := p.TableName()
 	list, _ := db.Find()
+	matchKey := strings.Join([]string{
+		ro.c.Name,
+		ro.c.Hotspot.Name,
+		name,
+		"*",
+	}, ".")
+	matches := scanKeys(ctx, ro.data.redis, matchKey)
+	for _, key := range matches {
+		pipe.Del(ctx, key)
+	}
 	for _, item := range list {
 		idKey := strings.Join([]string{
 			ro.c.Name,
@@ -368,6 +400,7 @@ func (ro hotspotRepo) refreshRole(ctx context.Context, pipe redis.Pipeliner) {
 			p.ID.ColumnName().String(),
 			strconv.FormatUint(item.ID, 10),
 		}, ".")
+		pipe.Del(ctx, idKey)
 		pipe.HSet(
 			ctx, idKey,
 			utils.CamelCase(p.ID.ColumnName().String()), item.ID,
@@ -383,6 +416,7 @@ func (ro hotspotRepo) refreshRole(ctx context.Context, pipe redis.Pipeliner) {
 			p.Word.ColumnName().String(),
 			item.Word,
 		}, ".")
+		pipe.Del(ctx, wordKey)
 		pipe.HSet(
 			ctx, wordKey,
 			utils.CamelCase(p.ID.ColumnName().String()), item.ID,
@@ -400,6 +434,16 @@ func (ro hotspotRepo) refreshAction(ctx context.Context, pipe redis.Pipeliner) {
 	db := p.WithContext(ctx)
 	name := p.TableName()
 	list, _ := db.Find()
+	matchKey := strings.Join([]string{
+		ro.c.Name,
+		ro.c.Hotspot.Name,
+		name,
+		"*",
+	}, ".")
+	matches := scanKeys(ctx, ro.data.redis, matchKey)
+	for _, key := range matches {
+		pipe.Del(ctx, key)
+	}
 	for _, item := range list {
 		idKey := strings.Join([]string{
 			ro.c.Name,
@@ -408,6 +452,7 @@ func (ro hotspotRepo) refreshAction(ctx context.Context, pipe redis.Pipeliner) {
 			p.ID.ColumnName().String(),
 			strconv.FormatUint(item.ID, 10),
 		}, ".")
+		pipe.Del(ctx, idKey)
 		pipe.HSet(
 			ctx, idKey,
 			utils.CamelCase(p.ID.ColumnName().String()), item.ID,
@@ -426,6 +471,7 @@ func (ro hotspotRepo) refreshAction(ctx context.Context, pipe redis.Pipeliner) {
 			p.Code.ColumnName().String(),
 			item.Code,
 		}, ".")
+		pipe.Del(ctx, codeKey)
 		pipe.HSet(
 			ctx, codeKey,
 			utils.CamelCase(p.ID.ColumnName().String()), item.ID,
@@ -444,6 +490,7 @@ func (ro hotspotRepo) refreshAction(ctx context.Context, pipe redis.Pipeliner) {
 			p.Word.ColumnName().String(),
 			item.Word,
 		}, ".")
+		pipe.Del(ctx, wordKey)
 		pipe.HSet(
 			ctx, wordKey,
 			utils.CamelCase(p.ID.ColumnName().String()), item.ID,
@@ -464,6 +511,16 @@ func (ro hotspotRepo) refreshWhitelist(ctx context.Context, pipe redis.Pipeliner
 	db := p.WithContext(ctx)
 	name := p.TableName()
 	list, _ := db.Find()
+	matchKey := strings.Join([]string{
+		ro.c.Name,
+		ro.c.Hotspot.Name,
+		name,
+		"*",
+	}, ".")
+	matches := scanKeys(ctx, ro.data.redis, matchKey)
+	for _, key := range matches {
+		pipe.Del(ctx, key)
+	}
 	for _, item := range list {
 		idKey := strings.Join([]string{
 			ro.c.Name,
@@ -472,6 +529,7 @@ func (ro hotspotRepo) refreshWhitelist(ctx context.Context, pipe redis.Pipeliner
 			p.ID.ColumnName().String(),
 			strconv.FormatUint(item.ID, 10),
 		}, ".")
+		pipe.Del(ctx, idKey)
 		pipe.HSet(
 			ctx, idKey,
 			utils.CamelCase(p.ID.ColumnName().String()), item.ID,
@@ -516,6 +574,16 @@ func (ro hotspotRepo) refreshUser(ctx context.Context, pipe redis.Pipeliner) {
 	db := p.WithContext(ctx)
 	name := p.TableName()
 	list, _ := db.Find()
+	matchKey := strings.Join([]string{
+		ro.c.Name,
+		ro.c.Hotspot.Name,
+		name,
+		"*",
+	}, ".")
+	matches := scanKeys(ctx, ro.data.redis, matchKey)
+	for _, key := range matches {
+		pipe.Del(ctx, key)
+	}
 	for _, item := range list {
 		idKey := strings.Join([]string{
 			ro.c.Name,
@@ -524,6 +592,7 @@ func (ro hotspotRepo) refreshUser(ctx context.Context, pipe redis.Pipeliner) {
 			p.ID.ColumnName().String(),
 			strconv.FormatUint(item.ID, 10),
 		}, ".")
+		pipe.Del(ctx, idKey)
 		pipe.HSet(
 			ctx, idKey,
 			utils.CamelCase(p.ID.ColumnName().String()), item.ID,
@@ -544,6 +613,7 @@ func (ro hotspotRepo) refreshUser(ctx context.Context, pipe redis.Pipeliner) {
 			p.Code.ColumnName().String(),
 			item.Code,
 		}, ".")
+		pipe.Del(ctx, codeKey)
 		pipe.HSet(
 			ctx, codeKey,
 			utils.CamelCase(p.ID.ColumnName().String()), item.ID,
@@ -564,6 +634,7 @@ func (ro hotspotRepo) refreshUser(ctx context.Context, pipe redis.Pipeliner) {
 			p.Username.ColumnName().String(),
 			item.Username,
 		}, ".")
+		pipe.Del(ctx, usernameKey)
 		pipe.HSet(
 			ctx, usernameKey,
 			utils.CamelCase(p.ID.ColumnName().String()), item.ID,
@@ -576,7 +647,25 @@ func (ro hotspotRepo) refreshUser(ctx context.Context, pipe redis.Pipeliner) {
 			utils.CamelCase(p.Wrong.ColumnName().String()), strconv.FormatUint(item.Wrong, 10),
 			utils.CamelCase(p.Locked.ColumnName().String()), item.Locked,
 		)
-		pipe.Expire(ctx, codeKey, ro.randomExpire())
+		pipe.Expire(ctx, usernameKey, ro.randomExpire())
+	}
+	return
+}
+
+func scanKeys(ctx context.Context, rds redis.UniversalClient, pattern string) (list []string) {
+	var cursor uint64
+	for {
+		keys, cursorNew, err := rds.Scan(ctx, cursor, pattern, 100).Result()
+		if err != nil {
+			return
+		}
+
+		list = append(list, keys...)
+		cursor = cursorNew
+
+		if cursor == 0 {
+			break
+		}
 	}
 	return
 }
