@@ -4,10 +4,10 @@ import (
 	"auth/api/auth"
 	"auth/internal/biz"
 	"auth/internal/conf"
-	"auth/internal/pkg/idempotent"
 	localMiddleware "auth/internal/server/middleware"
 	"auth/internal/service"
 	"github.com/go-cinch/common/i18n"
+	"github.com/go-cinch/common/idempotent"
 	i18nMiddleware "github.com/go-cinch/common/middleware/i18n"
 	"github.com/go-cinch/common/middleware/logging"
 	tenantMiddleware "github.com/go-cinch/common/middleware/tenant"
@@ -44,13 +44,12 @@ func NewGRPCServer(
 		logging.Server(),
 		i18nMiddleware.Translator(i18n.WithLanguage(language.Make(c.Server.Language)), i18n.WithFs(locales)),
 		metadata.Server(),
-		localMiddleware.Whitelist(whitelist),
 	)
 	if c.Server.Jwt.Enable {
-		middlewares = append(middlewares, localMiddleware.Jwt(c, client, whitelist))
+		middlewares = append(middlewares, localMiddleware.Permission(c, client, whitelist))
 	}
 	if c.Server.Idempotent {
-		middlewares = append(middlewares, localMiddleware.Idempotent(idt, whitelist))
+		middlewares = append(middlewares, localMiddleware.Idempotent(idt))
 	}
 	if c.Server.Validate {
 		middlewares = append(middlewares, validate.Validator())
