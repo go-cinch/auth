@@ -106,6 +106,9 @@ func (ro hotspotRepo) GetUserByUsername(ctx context.Context, username string) *b
 	if v, ok := m[utils.CamelCase(p.Wrong.ColumnName().String())]; ok {
 		m[utils.CamelCase(p.Wrong.ColumnName().String())], _ = strconv.ParseUint(v.(string), 10, 64)
 	}
+	if v, ok := m[utils.CamelCase(p.LockExpire.ColumnName().String())]; ok {
+		m[utils.CamelCase(p.LockExpire.ColumnName().String())], _ = strconv.ParseInt(v.(string), 10, 64)
+	}
 	var item biz.User
 	utils.Struct2StructByJson(&item, m)
 	span.SetAttributes(
@@ -604,6 +607,7 @@ func (ro hotspotRepo) refreshUser(ctx context.Context, pipe redis.Pipeliner) {
 			utils.CamelCase(p.Platform.ColumnName().String()), item.Platform,
 			utils.CamelCase(p.Wrong.ColumnName().String()), strconv.FormatUint(item.Wrong, 10),
 			utils.CamelCase(p.Locked.ColumnName().String()), item.Locked,
+			utils.CamelCase(p.LockExpire.ColumnName().String()), item.LockExpire,
 		)
 		pipe.Expire(ctx, idKey, ro.randomExpire())
 		codeKey := strings.Join([]string{
@@ -625,6 +629,7 @@ func (ro hotspotRepo) refreshUser(ctx context.Context, pipe redis.Pipeliner) {
 			utils.CamelCase(p.Platform.ColumnName().String()), item.Platform,
 			utils.CamelCase(p.Wrong.ColumnName().String()), strconv.FormatUint(item.Wrong, 10),
 			utils.CamelCase(p.Locked.ColumnName().String()), item.Locked,
+			utils.CamelCase(p.LockExpire.ColumnName().String()), item.LockExpire,
 		)
 		pipe.Expire(ctx, codeKey, ro.randomExpire())
 		usernameKey := strings.Join([]string{
@@ -646,6 +651,7 @@ func (ro hotspotRepo) refreshUser(ctx context.Context, pipe redis.Pipeliner) {
 			utils.CamelCase(p.Platform.ColumnName().String()), item.Platform,
 			utils.CamelCase(p.Wrong.ColumnName().String()), strconv.FormatUint(item.Wrong, 10),
 			utils.CamelCase(p.Locked.ColumnName().String()), item.Locked,
+			utils.CamelCase(p.LockExpire.ColumnName().String()), item.LockExpire,
 		)
 		pipe.Expire(ctx, usernameKey, ro.randomExpire())
 	}

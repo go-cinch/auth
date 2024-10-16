@@ -48,12 +48,12 @@ Cinch是一套轻量级微服务脚手架, 基于[Kratos], 节省基础服务搭
 - `I18n` - 国际化支持, 简单切换多语言
 - `Minio` - 对象存储
 
-# 当前版本 <img src="https://img.shields.io/badge/Auth-v1.1.0-brightgreen" alt="Current version"/>
+# 当前版本 <img src="https://img.shields.io/badge/Auth-v1.1.1-brightgreen" alt="Current version"/>
 
 建议直接使用最后一个版本
 
 ```bash
-git clone -b v1.1.0 https://github.com/go-cinch/auth
+git clone -b v1.1.1 https://github.com/go-cinch/auth
 ```
 
 ## 在线演示

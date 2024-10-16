@@ -36,9 +36,9 @@ func NewUserGroupRepo(data *Data, action biz.ActionRepo, user biz.UserRepo) biz.
 func (ro userGroupRepo) Create(ctx context.Context, item *biz.UserGroup) (err error) {
 	p := query.Use(ro.data.DB(ctx)).UserGroup
 	db := p.WithContext(ctx)
-	m := db.GetByCol("word", item.Word)
+	m := db.GetByCol(p.Word.ColumnName().String(), item.Word)
 	if m.ID > constant.UI0 {
-		err = biz.ErrDuplicateField(ctx, "word", item.Word)
+		err = biz.ErrDuplicateField(ctx, p.Word.ColumnName().String(), item.Word)
 		return
 	}
 	copierx.Copy(&m, item)
@@ -80,7 +80,7 @@ func (ro userGroupRepo) Find(ctx context.Context, condition *biz.FindUserGroup) 
 	if condition.Action != nil {
 		conditions = append(conditions, p.Action.Like(strings.Join([]string{"%", *condition.Action, "%"}, "")))
 	}
-	condition.Page.Primary = "id"
+	condition.Page.Primary = p.ID.ColumnName().String()
 	condition.Page.
 		WithContext(ctx).
 		Query(
@@ -118,7 +118,7 @@ func (ro userGroupRepo) Update(ctx context.Context, item *biz.UpdateUserGroup) (
 	if item.Word != nil && *item.Word != m.Word {
 		ok := ro.WordExists(ctx, *item.Word)
 		if ok {
-			err = biz.ErrDuplicateField(ctx, "word", *item.Word)
+			err = biz.ErrDuplicateField(ctx, p.Word.ColumnName().String(), *item.Word)
 			return
 		}
 	}
@@ -160,7 +160,7 @@ func (ro userGroupRepo) WordExists(ctx context.Context, word string) (ok bool) {
 	db := p.WithContext(ctx)
 	arr := strings.Split(word, ",")
 	for _, item := range arr {
-		m := db.GetByCol("word", item)
+		m := db.GetByCol(p.Word.ColumnName().String(), item)
 		if m.ID == constant.UI0 {
 			log.
 				WithContext(ctx).

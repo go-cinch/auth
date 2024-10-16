@@ -49,7 +49,7 @@ func (ro whitelistRepo) Find(ctx context.Context, condition *biz.FindWhitelist) 
 	if condition.Resource != nil {
 		conditions = append(conditions, p.Resource.Like(strings.Join([]string{"%", *condition.Resource, "%"}, "")))
 	}
-	condition.Page.Primary = "id"
+	condition.Page.Primary = p.ID.ColumnName().String()
 	condition.Page.
 		WithContext(ctx).
 		Query(

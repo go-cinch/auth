@@ -27,15 +27,15 @@ func NewRoleRepo(data *Data, action biz.ActionRepo) biz.RoleRepo {
 }
 
 func (ro roleRepo) Create(ctx context.Context, item *biz.Role) (err error) {
+	p := query.Use(ro.data.DB(ctx)).Role
+	db := p.WithContext(ctx)
 	ok := ro.WordExists(ctx, item.Word)
 	if ok {
-		err = biz.ErrDuplicateField(ctx, "word", item.Word)
+		err = biz.ErrDuplicateField(ctx, p.Word.ColumnName().String(), item.Word)
 		return
 	}
 	var m model.Role
 	copierx.Copy(&m, item)
-	p := query.Use(ro.data.DB(ctx)).Role
-	db := p.WithContext(ctx)
 	m.ID = ro.data.ID(ctx)
 	if m.Action != "" {
 		err = ro.action.CodeExists(ctx, m.Action)
@@ -59,7 +59,7 @@ func (ro roleRepo) Find(ctx context.Context, condition *biz.FindRole) (rp []biz.
 	if condition.Word != nil {
 		conditions = append(conditions, p.Word.Like(strings.Join([]string{"%", *condition.Word, "%"}, "")))
 	}
-	condition.Page.Primary = "id"
+	condition.Page.Primary = p.ID.ColumnName().String()
 	condition.Page.
 		WithContext(ctx).
 		Query(
@@ -92,7 +92,7 @@ func (ro roleRepo) Update(ctx context.Context, item *biz.UpdateRole) (err error)
 		err = biz.ErrDataNotChange(ctx)
 		return
 	}
-	if a, ok1 := change["action"]; ok1 {
+	if a, ok1 := change[p.Action.ColumnName().String()]; ok1 {
 		if v, ok2 := a.(string); ok2 {
 			err = ro.action.CodeExists(ctx, v)
 			if err != nil {
@@ -103,7 +103,7 @@ func (ro roleRepo) Update(ctx context.Context, item *biz.UpdateRole) (err error)
 	if item.Word != nil && *item.Word != m.Word {
 		ok := ro.WordExists(ctx, *item.Word)
 		if ok {
-			err = biz.ErrDuplicateField(ctx, "word", *item.Word)
+			err = biz.ErrDuplicateField(ctx, p.Word.ColumnName().String(), *item.Word)
 			return
 		}
 	}
@@ -127,7 +127,7 @@ func (ro roleRepo) WordExists(ctx context.Context, word string) (ok bool) {
 	db := p.WithContext(ctx)
 	arr := strings.Split(word, ",")
 	for _, item := range arr {
-		m := db.GetByCol("word", item)
+		m := db.GetByCol(p.Word.ColumnName().String(), item)
 		if m.ID == constant.UI0 {
 			log.
 				WithContext(ctx).
