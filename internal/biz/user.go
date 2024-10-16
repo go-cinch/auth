@@ -221,8 +221,8 @@ func (uc *UserUseCase) Info(ctx context.Context, code string) (rp *UserInfo) {
 	return
 }
 
-func (uc *UserUseCase) Login(ctx context.Context, item *Login) (rp *LoginToken, err error) {
-	rp = &LoginToken{}
+func (uc *UserUseCase) Login(ctx context.Context, item *Login) (rp LoginToken, err error) {
+	rp = LoginToken{}
 	status, err := uc.Status(ctx, item.Username, false)
 	if err != nil {
 		return

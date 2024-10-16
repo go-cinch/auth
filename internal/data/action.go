@@ -53,7 +53,7 @@ func (ro actionRepo) Create(ctx context.Context, item *biz.Action) (err error) {
 func (ro actionRepo) GetDefault(ctx context.Context) (rp biz.Action) {
 	p := query.Use(ro.data.DB(ctx)).Action
 	db := p.WithContext(ctx)
-	m := db.GetByCol("word", "default")
+	m := db.GetByCol(p.Word.ColumnName().String(), "default")
 	copierx.Copy(&rp, m)
 	return
 }
@@ -76,7 +76,7 @@ func (ro actionRepo) Find(ctx context.Context, condition *biz.FindAction) (rp []
 	if condition.Resource != nil {
 		conditions = append(conditions, p.Resource.Like(strings.Join([]string{"%", *condition.Resource, "%"}, "")))
 	}
-	condition.Page.Primary = "id"
+	condition.Page.Primary = p.ID.ColumnName().String()
 	condition.Page.
 		WithContext(ctx).
 		Query(
@@ -123,7 +123,7 @@ func (ro actionRepo) Update(ctx context.Context, item *biz.UpdateAction) (err er
 	if item.Word != nil && *item.Word != m.Word {
 		ok := ro.WordExists(ctx, *item.Word)
 		if ok {
-			err = biz.ErrDuplicateField(ctx, "word", *item.Word)
+			err = biz.ErrDuplicateField(ctx, p.Word.ColumnName().String(), *item.Word)
 			return
 		}
 	}
@@ -154,7 +154,7 @@ func (ro actionRepo) CodeExists(ctx context.Context, code string) (err error) {
 	db := p.WithContext(ctx)
 	arr := strings.Split(code, ",")
 	for _, item := range arr {
-		m := db.GetByCol("code", item)
+		m := db.GetByCol(p.Code.ColumnName().String(), item)
 		if m.ID == constant.UI0 {
 			err = biz.ErrRecordNotFound(ctx)
 			log.
@@ -172,7 +172,7 @@ func (ro actionRepo) WordExists(ctx context.Context, word string) (ok bool) {
 	db := p.WithContext(ctx)
 	arr := strings.Split(word, ",")
 	for _, item := range arr {
-		m := db.GetByCol("word", item)
+		m := db.GetByCol(p.Word.ColumnName().String(), item)
 		if m.ID == constant.UI0 {
 			log.
 				WithContext(ctx).

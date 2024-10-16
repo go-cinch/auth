@@ -81,7 +81,7 @@ func (ro userRepo) Find(ctx context.Context, condition *biz.FindUser) (rp []biz.
 	if condition.Locked != nil {
 		conditions = append(conditions, p.Locked.Is(*condition.Locked))
 	}
-	condition.Page.Primary = "id"
+	condition.Page.Primary = p.ID.ColumnName().String()
 	condition.Page.
 		WithContext(ctx).
 		Query(
@@ -166,31 +166,31 @@ func (ro userRepo) Update(ctx context.Context, item *biz.UpdateUser) (err error)
 		return
 	}
 	// check lock or unlock
-	if locked, ok1 := change["locked"]; ok1 {
-		if v1, ok2 := locked.(uint64); ok2 {
+	if locked, ok1 := change[p.Locked.ColumnName().String()]; ok1 {
+		if v1, ok2 := locked.(bool); ok2 {
 			var lockExpire int64
-			if expire, ok3 := change["lock_expire"]; ok3 {
+			if expire, ok3 := change[p.LockExpire.ColumnName().String()]; ok3 {
 				if v2, ok4 := expire.(int64); ok4 {
 					lockExpire = v2
 				}
 			}
-			if m.Locked && v1 == constant.UI0 {
-				change["lock_expire"] = constant.I0
-			} else if !m.Locked && v1 == constant.UI1 {
-				change["lock_expire"] = lockExpire
+			if m.Locked && !v1 {
+				change[p.LockExpire.ColumnName().String()] = constant.I0
+			} else if !m.Locked && v1 {
+				change[p.LockExpire.ColumnName().String()] = lockExpire
 			}
 		}
 	}
-	if username, ok1 := change["username"]; ok1 {
+	if username, ok1 := change[p.Username.ColumnName().String()]; ok1 {
 		if v, ok2 := username.(string); ok2 {
 			_, err = ro.GetByUsername(ctx, v)
 			if err == nil {
-				err = biz.ErrDuplicateField(ctx, "username", v)
+				err = biz.ErrDuplicateField(ctx, p.Username.ColumnName().String(), v)
 				return
 			}
 		}
 	}
-	if roleId, ok1 := change["role_id"]; ok1 {
+	if roleId, ok1 := change[p.RoleID.ColumnName().String()]; ok1 {
 		if v, ok2 := roleId.(string); ok2 && v != "0" {
 			pRole := query.Use(ro.data.DB(ctx)).Role
 			dbRole := pRole.WithContext(ctx)
@@ -221,13 +221,13 @@ func (ro userRepo) Delete(ctx context.Context, ids ...uint64) (err error) {
 }
 
 func (ro userRepo) LastLogin(ctx context.Context, username string) (err error) {
-	fields := make(map[string]interface{})
-	fields["wrong"] = constant.I0
-	fields["last_login"] = carbon.Now()
-	fields["locked"] = constant.UI0
-	fields["lock_expire"] = constant.I0
 	p := query.Use(ro.data.DB(ctx)).User
 	db := p.WithContext(ctx)
+	fields := make(map[string]interface{})
+	fields[p.Wrong.ColumnName().String()] = constant.I0
+	fields[p.LastLogin.ColumnName().String()] = carbon.Now()
+	fields[p.Locked.ColumnName().String()] = constant.UI0
+	fields[p.LockExpire.ColumnName().String()] = constant.I0
 	_, err = db.
 		Where(p.Username.Eq(username)).
 		Updates(&fields)
@@ -235,6 +235,8 @@ func (ro userRepo) LastLogin(ctx context.Context, username string) (err error) {
 }
 
 func (ro userRepo) WrongPwd(ctx context.Context, req *biz.LoginTime) (err error) {
+	p := query.Use(ro.data.DB(ctx)).User
+	db := p.WithContext(ctx)
 	oldItem, err := ro.GetByUsername(ctx, req.Username)
 	if err != nil {
 		return
@@ -251,20 +253,18 @@ func (ro userRepo) WrongPwd(ctx context.Context, req *biz.LoginTime) (err error)
 	if newWrong >= 5 {
 		change["locked"] = constant.UI1
 		if newWrong == 5 {
-			change["lock_expire"] = carbon.Now().AddDuration("5m").StdTime().Unix()
+			change[p.LockExpire.ColumnName().String()] = carbon.Now().AddDuration("5m").StdTime().Unix()
 		} else if newWrong == 10 {
-			change["lock_expire"] = carbon.Now().AddDuration("30m").StdTime().Unix()
+			change[p.LockExpire.ColumnName().String()] = carbon.Now().AddDuration("30m").StdTime().Unix()
 		} else if newWrong == 20 {
-			change["lock_expire"] = carbon.Now().AddDuration("24h").StdTime().Unix()
+			change[p.LockExpire.ColumnName().String()] = carbon.Now().AddDuration("24h").StdTime().Unix()
 		} else if newWrong >= 30 {
 			// forever lock
-			change["lock_expire"] = 0
+			change[p.LockExpire.ColumnName().String()] = 0
 		}
 	}
-	change["wrong"] = newWrong
+	change[p.Wrong.ColumnName().String()] = newWrong
 
-	p := query.Use(ro.data.DB(ctx)).User
-	db := p.WithContext(ctx)
 	_, err = db.
 		Where(p.ID.Eq(oldItem.Id)).
 		Where(p.Wrong.Eq(oldItem.Wrong)).
@@ -275,16 +275,16 @@ func (ro userRepo) WrongPwd(ctx context.Context, req *biz.LoginTime) (err error)
 func (ro userRepo) UpdatePassword(ctx context.Context, item *biz.User) (err error) {
 	p := query.Use(ro.data.DB(ctx)).User
 	db := p.WithContext(ctx)
-	m := db.GetByCol("username", item.Username)
+	m := db.GetByCol(p.Username.ColumnName().String(), item.Username)
 	if m.ID == constant.UI0 {
 		err = biz.ErrRecordNotFound(ctx)
 		return
 	}
 	fields := make(map[string]interface{})
-	fields["password"] = item.Password
-	fields["wrong"] = constant.I0
-	fields["locked"] = constant.UI0
-	fields["lock_expire"] = constant.I0
+	fields[p.Password.ColumnName().String()] = item.Password
+	fields[p.Wrong.ColumnName().String()] = constant.I0
+	fields[p.Locked.ColumnName().String()] = constant.UI0
+	fields[p.LockExpire.ColumnName().String()] = constant.I0
 	_, err = db.
 		Where(p.ID.Eq(m.ID)).
 		Updates(&fields)

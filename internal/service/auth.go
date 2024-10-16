@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"errors"
 	"strings"
 	"time"
 
@@ -53,11 +52,19 @@ func (s *AuthService) Login(ctx context.Context, req *auth.LoginRequest) (rp *au
 	r := &biz.Login{}
 	copierx.Copy(&r, req)
 	res, err := s.user.Login(ctx, r)
-	loginFailedErr := biz.ErrLoginFailed(ctx)
-	loginFailed := errors.Is(err, loginFailedErr)
-	notFound := errors.Is(err, biz.ErrRecordNotFound(ctx))
-	ctx, _ = context.WithTimeout(ctx, time.Second)
 	if err != nil {
+		loginFailedErr := biz.ErrLoginFailed(ctx)
+		loginFailed := err.Error() == loginFailedErr.Error()
+		notFound := err.Error() == biz.ErrRecordNotFound(ctx).Error()
+		invalidCaptcha := err.Error() == biz.ErrInvalidCaptcha(ctx).Error()
+		if invalidCaptcha {
+			return 
+		}
+		if notFound {
+			// avoid guess username
+			err = loginFailedErr
+			return
+		}
 		if loginFailed {
 			_ = s.task.Once(
 				worker.WithRunCtx(ctx),
@@ -78,11 +85,6 @@ func (s *AuthService) Login(ctx context.Context, req *auth.LoginRequest) (rp *au
 			s.flushCache(ctx)
 			return
 		}
-		if notFound {
-			// avoid guess username
-			err = loginFailedErr
-			return
-		}
 		return
 	}
 	copierx.Copy(&rp, res)
@@ -91,7 +93,7 @@ func (s *AuthService) Login(ctx context.Context, req *auth.LoginRequest) (rp *au
 		worker.WithRunUUID(strings.Join([]string{s.c.Task.Group.LoginLast, req.Username}, ".")),
 		worker.WithRunGroup(s.c.Task.Group.LoginLast),
 		worker.WithRunIn(time.Duration(10)*time.Second),
-		worker.WithRunTimeout(10),
+		worker.WithRunTimeout(3),
 		worker.WithRunReplace(true),
 		worker.WithRunPayload(utils.Struct2Json(biz.LoginTime{
 			Username: req.Username,
