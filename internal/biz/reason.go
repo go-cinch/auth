@@ -24,9 +24,6 @@ var (
 	ErrJwtUnSupportSigningMethod = func(ctx context.Context) error {
 		return i18n.NewError(ctx, constant.JwtUnSupportSigningMethod, reason.ErrorUnauthorized)
 	}
-	ErrIdempotentMissingToken = func(ctx context.Context) error {
-		return i18n.NewError(ctx, constant.IdempotentMissingToken, reason.ErrorIllegalParameter)
-	}
 	ErrIdempotentTokenExpired = func(ctx context.Context) error {
 		return i18n.NewError(ctx, constant.IdempotentTokenExpired, reason.ErrorIllegalParameter)
 	}

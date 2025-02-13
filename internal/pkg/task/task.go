@@ -42,6 +42,7 @@ func New(c *conf.Bootstrap, user *biz.UserUseCase, hotspot *biz.HotspotUseCase) 
 
 	for id, item := range c.Task.Cron {
 		err = w.Cron(
+			context.Background(),
 			worker.WithRunUUID(id),
 			worker.WithRunGroup(item.Name),
 			worker.WithRunExpr(item.Expr),
@@ -58,6 +59,7 @@ func New(c *conf.Bootstrap, user *biz.UserUseCase, hotspot *biz.HotspotUseCase) 
 	log.Info("initialize worker success")
 	// when app restart, clear hotspot
 	_ = w.Once(
+		context.Background(),
 		worker.WithRunUUID(strings.Join([]string{c.Task.Group.RefreshHotspotManual}, ".")),
 		worker.WithRunGroup(c.Task.Group.RefreshHotspotManual),
 		worker.WithRunIn(10*time.Second),
@@ -82,11 +84,11 @@ func process(t task) (err error) {
 	switch t.payload.Group {
 	case t.c.Task.Group.LoginFailed:
 		var req biz.LoginTime
-		utils.Json2Struct(&req, t.payload.Payload)
+		utils.JSON2Struct(&req, t.payload.Payload)
 		err = t.user.WrongPwd(ctx, &req)
 	case t.c.Task.Group.LoginLast:
 		var req biz.LoginTime
-		utils.Json2Struct(&req, t.payload.Payload)
+		utils.JSON2Struct(&req, t.payload.Payload)
 		err = t.user.LastLogin(ctx, req.Username)
 	case t.c.Task.Group.RefreshHotspot:
 		err = t.hotspot.Refresh(ctx)

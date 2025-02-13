@@ -192,7 +192,7 @@ func (uc *UserUseCase) Find(ctx context.Context, condition *FindUser) (rp []User
 		return
 	}
 	var cache FindUserCache
-	utils.Json2Struct(&cache, str)
+	utils.JSON2Struct(&cache, str)
 	condition.Page = cache.Page
 	rp = cache.List
 	return
@@ -204,7 +204,7 @@ func (uc *UserUseCase) find(ctx context.Context, action string, condition *FindU
 	var cache FindUserCache
 	cache.List = list
 	cache.Page = condition.Page
-	res = utils.Struct2Json(cache)
+	res = utils.Struct2JSON(cache)
 	uc.cache.Set(ctx, action, res, len(list) == 0)
 	return
 }
@@ -217,7 +217,7 @@ func (uc *UserUseCase) InfoFromCtx(ctx context.Context) (rp *UserInfo) {
 func (uc *UserUseCase) Info(ctx context.Context, code string) (rp *UserInfo) {
 	rp = &UserInfo{}
 	user := uc.hotspot.GetUserByCode(ctx, code)
-	utils.Struct2StructByJson(rp, user)
+	utils.Struct2StructByJSON(rp, user)
 	return
 }
 
@@ -366,7 +366,7 @@ func (uc *UserUseCase) status(ctx context.Context, action string, username strin
 		return
 	}
 	copierx.Copy(&rp, user)
-	res = utils.Struct2Json(rp)
+	res = utils.Struct2JSON(rp)
 	uc.cache.Set(ctx, action, res, notFound)
 	return
 }
@@ -401,7 +401,7 @@ func (uc *UserUseCase) comparePwd(ctx context.Context, action string, condition 
 }
 
 func (uc *UserUseCase) FlushCache(ctx context.Context) {
-	_ = uc.cache.Flush(ctx, func(ctx context.Context) (err error) {
+	_ = uc.cache.Flush(ctx, func(_ context.Context) (err error) {
 		return
 	})
 }

@@ -88,7 +88,7 @@ func (uc *WhitelistUseCase) Find(ctx context.Context, condition *FindWhitelist) 
 		return
 	}
 	var cache FindWhitelistCache
-	utils.Json2Struct(&cache, str)
+	utils.JSON2Struct(&cache, str)
 	condition.Page = cache.Page
 	rp = cache.List
 	return
@@ -100,7 +100,7 @@ func (uc *WhitelistUseCase) find(ctx context.Context, action string, condition *
 	var cache FindWhitelistCache
 	cache.List = list
 	cache.Page = condition.Page
-	res = utils.Struct2Json(cache)
+	res = utils.Struct2JSON(cache)
 	uc.cache.Set(ctx, action, res, len(list) == 0)
 	return
 }

@@ -110,18 +110,6 @@ paths:
                 "200":
                     description: OK
                     content: {}
-    /idempotent:
-        get:
-            tags:
-                - Auth
-            operationId: Auth_Idempotent
-            responses:
-                "200":
-                    description: OK
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/auth.v1.IdempotentReply'
     /info:
         get:
             tags:
@@ -781,11 +769,6 @@ components:
                     type: array
                     items:
                         $ref: '#/components/schemas/auth.v1.Whitelist'
-        auth.v1.IdempotentReply:
-            type: object
-            properties:
-                token:
-                    type: string
         auth.v1.InfoReply:
             type: object
             properties:

@@ -13,7 +13,7 @@ func (s *AuthService) flushCache(ctx context.Context) {
 
 	// delay clear hotspot cache
 	_ = s.task.Once(
-		worker.WithRunCtx(ctx),
+		ctx,
 		worker.WithRunUUID(strings.Join([]string{s.c.Task.Group.RefreshHotspotManual}, ".")),
 		worker.WithRunGroup(s.c.Task.Group.RefreshHotspotManual),
 		worker.WithRunNow(true),

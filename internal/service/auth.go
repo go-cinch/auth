@@ -58,7 +58,7 @@ func (s *AuthService) Login(ctx context.Context, req *auth.LoginRequest) (rp *au
 		notFound := err.Error() == biz.ErrRecordNotFound(ctx).Error()
 		invalidCaptcha := err.Error() == biz.ErrInvalidCaptcha(ctx).Error()
 		if invalidCaptcha {
-			return 
+			return
 		}
 		if notFound {
 			// avoid guess username
@@ -67,13 +67,13 @@ func (s *AuthService) Login(ctx context.Context, req *auth.LoginRequest) (rp *au
 		}
 		if loginFailed {
 			_ = s.task.Once(
-				worker.WithRunCtx(ctx),
+				ctx,
 				worker.WithRunUUID(strings.Join([]string{s.c.Task.Group.LoginFailed, req.Username}, ".")),
 				worker.WithRunGroup(s.c.Task.Group.LoginFailed),
 				worker.WithRunNow(true),
 				worker.WithRunTimeout(10),
 				worker.WithRunReplace(true),
-				worker.WithRunPayload(utils.Struct2Json(biz.LoginTime{
+				worker.WithRunPayload(utils.Struct2JSON(biz.LoginTime{
 					Username: req.Username,
 					LastLogin: carbon.DateTime{
 						Carbon: carbon.Now(),
@@ -89,13 +89,13 @@ func (s *AuthService) Login(ctx context.Context, req *auth.LoginRequest) (rp *au
 	}
 	copierx.Copy(&rp, res)
 	_ = s.task.Once(
-		worker.WithRunCtx(ctx),
+		ctx,
 		worker.WithRunUUID(strings.Join([]string{s.c.Task.Group.LoginLast, req.Username}, ".")),
 		worker.WithRunGroup(s.c.Task.Group.LoginLast),
 		worker.WithRunIn(time.Duration(10)*time.Second),
 		worker.WithRunTimeout(3),
 		worker.WithRunReplace(true),
-		worker.WithRunPayload(utils.Struct2Json(biz.LoginTime{
+		worker.WithRunPayload(utils.Struct2JSON(biz.LoginTime{
 			Username: req.Username,
 		})),
 	)

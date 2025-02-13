@@ -3,7 +3,6 @@ jwt.token.invalid: 'jwt签名无效'
 jwt.token.expired: 'jwt签名过期'
 jwt.token.parse.failed: '无法解析jwt签名'
 jwt.wrong.signing.method: 'jwt签名算法不匹配'
-idempotent.token.missing: '缺少幂等性签名'
 idempotent.token.invalid: '幂等性签名无效'
 
 too.many.requests: '请求频繁, 请稍候重试'

@@ -86,7 +86,7 @@ func (uc *ActionUseCase) Find(ctx context.Context, condition *FindAction) (rp []
 		return
 	}
 	var cache FindActionCache
-	utils.Json2Struct(&cache, str)
+	utils.JSON2Struct(&cache, str)
 	condition.Page = cache.Page
 	rp = cache.List
 	return
@@ -98,7 +98,7 @@ func (uc *ActionUseCase) find(ctx context.Context, action string, condition *Fin
 	var cache FindActionCache
 	cache.List = list
 	cache.Page = condition.Page
-	res = utils.Struct2Json(cache)
+	res = utils.Struct2JSON(cache)
 	uc.cache.Set(ctx, action, res, len(list) == 0)
 	return
 }

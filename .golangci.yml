@@ -1,7 +1,9 @@
 run:
   go: '1.22'
   timeout: '5m'
-  skip-files:
+
+issues:
+  exclude-files:
   - 'internal/server/grpc.go'
   - 'internal/server/http.go'
   - 'internal/service/service.go'

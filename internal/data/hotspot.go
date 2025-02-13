@@ -73,7 +73,7 @@ func (ro hotspotRepo) GetUserByCode(ctx context.Context, code string) *biz.User 
 		m[utils.CamelCase(p.Wrong.ColumnName().String())], _ = strconv.ParseUint(v.(string), 10, 64)
 	}
 	var item biz.User
-	utils.Struct2StructByJson(&item, m)
+	utils.Struct2StructByJSON(&item, m)
 	if item.RoleId > constant.UI0 {
 		item.Role = *ro.GetRoleByID(ctx, item.RoleId)
 	}
@@ -110,7 +110,7 @@ func (ro hotspotRepo) GetUserByUsername(ctx context.Context, username string) *b
 		m[utils.CamelCase(p.LockExpire.ColumnName().String())], _ = strconv.ParseInt(v.(string), 10, 64)
 	}
 	var item biz.User
-	utils.Struct2StructByJson(&item, m)
+	utils.Struct2StructByJSON(&item, m)
 	span.SetAttributes(
 		attribute.String("id", strconv.FormatUint(item.Id, 10)),
 		attribute.String("username", item.Username),
@@ -133,7 +133,7 @@ func (ro hotspotRepo) GetRoleByID(ctx context.Context, id uint64) *biz.Role {
 	}, ".")
 	res, _ := rds.HGetAll(ctx, key).Result()
 	var item biz.Role
-	utils.Struct2StructByJson(&item, res)
+	utils.Struct2StructByJSON(&item, res)
 	span.SetAttributes(
 		attribute.String("id", strconv.FormatUint(item.Id, 10)),
 		attribute.String("word", item.Word),
@@ -156,7 +156,7 @@ func (ro hotspotRepo) GetActionByWord(ctx context.Context, word string) *biz.Act
 	}, ".")
 	res, _ := rds.HGetAll(ctx, key).Result()
 	var item biz.Action
-	utils.Struct2StructByJson(&item, res)
+	utils.Struct2StructByJSON(&item, res)
 	span.SetAttributes(
 		attribute.String("id", strconv.FormatUint(item.Id, 10)),
 		attribute.String("word", item.Word),
@@ -179,7 +179,7 @@ func (ro hotspotRepo) GetActionByCode(ctx context.Context, code string) *biz.Act
 	}, ".")
 	res, _ := rds.HGetAll(ctx, key).Result()
 	var item biz.Action
-	utils.Struct2StructByJson(&item, res)
+	utils.Struct2StructByJSON(&item, res)
 	span.SetAttributes(
 		attribute.String("id", strconv.FormatUint(item.Id, 10)),
 		attribute.String("code", item.Code),
@@ -221,7 +221,7 @@ func (ro hotspotRepo) FindUserGroupByUserID(ctx context.Context, id uint64) (lis
 	}, ".")
 	res, _ := rds.HGetAll(ctx, key).Result()
 	groupKeys := lo.Keys(res)
-	groupIDs := lo.Map(groupKeys, func(item string, index int) uint64 {
+	groupIDs := lo.Map(groupKeys, func(item string, _ int) uint64 {
 		num, _ := strconv.ParseUint(item, 10, 64)
 		return num
 	})
@@ -250,7 +250,7 @@ func (ro hotspotRepo) GetUserGroupByID(ctx context.Context, id uint64) *biz.User
 	}, ".")
 	res, _ := rds.HGetAll(ctx, key).Result()
 	var item biz.UserGroup
-	utils.Struct2StructByJson(&item, res)
+	utils.Struct2StructByJSON(&item, res)
 	span.SetAttributes(
 		attribute.String("id", strconv.FormatUint(id, 10)),
 		attribute.String("word", item.Word),
@@ -273,7 +273,7 @@ func (ro hotspotRepo) FindWhitelistResourceByCategory(ctx context.Context, categ
 	}, ".")
 	res, _ := rds.HGetAll(ctx, key).Result()
 	resourceKeys := lo.Keys(res)
-	resources := lo.Map(resourceKeys, func(item string, index int) string {
+	resources := lo.Map(resourceKeys, func(item string, _ int) string {
 		return item
 	})
 	span.SetAttributes(

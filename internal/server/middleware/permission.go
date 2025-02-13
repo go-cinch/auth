@@ -128,7 +128,7 @@ func parseJwt(ctx context.Context, c *conf.Bootstrap, client redis.UniversalClie
 	key := strings.Join([]string{c.Name, jwtTokenCachePrefix, utils.StructMd5(user.Token)}, ".")
 	res, _ := client.Get(ctx, key).Result()
 	if res != "" {
-		utils.Json2Struct(user, res)
+		utils.JSON2Struct(user, res)
 		return
 	}
 
@@ -140,12 +140,12 @@ func parseJwt(ctx context.Context, c *conf.Bootstrap, client redis.UniversalClie
 	}
 	ctx = jwtLocal.NewServerContext(ctx, info.Claims, "code", "platform")
 	user = jwtLocal.FromServerContext(ctx)
-	client.Set(ctx, key, utils.Struct2Json(user), jwtTokenCacheExpire)
+	client.Set(ctx, key, utils.Struct2JSON(user), jwtTokenCacheExpire)
 	return
 }
 
 func parseToken(ctx context.Context, key, jwtToken string) (info *jwtV4.Token, err error) {
-	info, err = jwtV4.Parse(jwtToken, func(token *jwtV4.Token) (rp interface{}, err error) {
+	info, err = jwtV4.Parse(jwtToken, func(_ *jwtV4.Token) (rp interface{}, err error) {
 		rp = []byte(key)
 		return
 	})

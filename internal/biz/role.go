@@ -76,7 +76,7 @@ func (uc *RoleUseCase) Find(ctx context.Context, condition *FindRole) (rp []Role
 		return
 	}
 	var cache FindRoleCache
-	utils.Json2Struct(&cache, str)
+	utils.JSON2Struct(&cache, str)
 	condition.Page = cache.Page
 	rp = cache.List
 	return
@@ -88,7 +88,7 @@ func (uc *RoleUseCase) find(ctx context.Context, action string, condition *FindR
 	var cache FindRoleCache
 	cache.List = list
 	cache.Page = condition.Page
-	res = utils.Struct2Json(cache)
+	res = utils.Struct2JSON(cache)
 	uc.cache.Set(ctx, action, res, len(list) == 0)
 	return
 }

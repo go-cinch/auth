@@ -78,7 +78,7 @@ func (uc *UserGroupUseCase) Find(ctx context.Context, condition *FindUserGroup) 
 		return
 	}
 	var cache FindUserGroupCache
-	utils.Json2Struct(&cache, str)
+	utils.JSON2Struct(&cache, str)
 	condition.Page = cache.Page
 	rp = cache.List
 	return
@@ -90,7 +90,7 @@ func (uc *UserGroupUseCase) find(ctx context.Context, action string, condition *
 	var cache FindUserGroupCache
 	cache.List = list
 	cache.Page = condition.Page
-	res = utils.Struct2Json(cache)
+	res = utils.Struct2JSON(cache)
 	uc.cache.Set(ctx, action, res, len(list) == 0)
 	return
 }

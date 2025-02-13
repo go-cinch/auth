@@ -4,7 +4,6 @@ import (
 	"auth/api/auth"
 	"auth/internal/biz"
 	"auth/internal/conf"
-	"github.com/go-cinch/common/idempotent"
 	"github.com/go-cinch/common/worker"
 	"github.com/google/wire"
 )
@@ -18,7 +17,6 @@ type AuthService struct {
 
 	c          *conf.Bootstrap
 	task       *worker.Worker
-	idempotent *idempotent.Idempotent
 	user       *biz.UserUseCase
 	action     *biz.ActionUseCase
 	role       *biz.RoleUseCase
@@ -31,7 +29,6 @@ type AuthService struct {
 func NewAuthService(
 	c *conf.Bootstrap,
 	task *worker.Worker,
-	idempotent *idempotent.Idempotent,
 	user *biz.UserUseCase,
 	action *biz.ActionUseCase,
 	role *biz.RoleUseCase,
@@ -42,7 +39,6 @@ func NewAuthService(
 	return &AuthService{
 		c:          c,
 		task:       task,
-		idempotent: idempotent,
 		user:       user,
 		action:     action,
 		role:       role,

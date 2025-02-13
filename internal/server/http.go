@@ -7,7 +7,6 @@ import (
 	localMiddleware "auth/internal/server/middleware"
 	"auth/internal/service"
 	"github.com/go-cinch/common/i18n"
-	"github.com/go-cinch/common/idempotent"
 	i18nMiddleware "github.com/go-cinch/common/middleware/i18n"
 	"github.com/go-cinch/common/middleware/logging"
 	tenantMiddleware "github.com/go-cinch/common/middleware/tenant"
@@ -27,14 +26,13 @@ import (
 // NewHTTPServer new a HTTP server.
 func NewHTTPServer(
 	c *conf.Bootstrap,
-	client redis.UniversalClient,
-	idt *idempotent.Idempotent,
 	svc *service.AuthService,
+	rds redis.UniversalClient,
 	whitelist *biz.WhitelistUseCase,
 ) *http.Server {
 	var middlewares []middleware.Middleware
 	if c.Tracer.Enable {
-		middlewares = append(middlewares, tracing.Server(), traceMiddleware.Id())
+		middlewares = append(middlewares, tracing.Server(), traceMiddleware.ID())
 	}
 	middlewares = append(
 		middlewares,
@@ -47,10 +45,10 @@ func NewHTTPServer(
 		metadata.Server(),
 	)
 	if c.Server.Jwt.Enable {
-		middlewares = append(middlewares, localMiddleware.Permission(c, client, whitelist))
+		middlewares = append(middlewares, localMiddleware.Permission(c, rds, whitelist))
 	}
 	if c.Server.Idempotent {
-		middlewares = append(middlewares, localMiddleware.Idempotent(idt))
+		middlewares = append(middlewares, localMiddleware.Idempotent(rds))
 	}
 	if c.Server.Validate {
 		middlewares = append(middlewares, validate.Validator())

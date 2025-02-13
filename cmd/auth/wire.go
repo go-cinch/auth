@@ -9,7 +9,6 @@ import (
 	"auth/internal/biz"
 	"auth/internal/conf"
 	"auth/internal/data"
-	"auth/internal/pkg/idempotent"
 	"auth/internal/pkg/task"
 	"auth/internal/server"
 	"auth/internal/service"
@@ -19,5 +18,5 @@ import (
 
 // wireApp init kratos application.
 func wireApp(c *conf.Bootstrap) (*kratos.App, func(), error) {
-	panic(wire.Build(server.ProviderSet, data.ProviderSet, biz.ProviderSet, task.ProviderSet, idempotent.ProviderSet, service.ProviderSet, newApp))
+	panic(wire.Build(server.ProviderSet, data.ProviderSet, biz.ProviderSet, task.ProviderSet, service.ProviderSet, newApp))
 }
