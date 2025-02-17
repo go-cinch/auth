@@ -2,7 +2,7 @@
 -- SQL in section 'Up' is executed when this migration is applied
 INSERT INTO `action` (`id`, `name`, `code`, `word`, `resource`, `menu`, `btn`) VALUES
 (8926844486248562689,'全部权限','SN2837AY','*','*','*','*'),
-(8926844486248579238,'默认权限','KHXK5JVL','default','POST|/auth/logout|/auth.v1.Auth/Logout\nGET|/auth/info|/auth.v1.Auth/Info\nPOST|/auth/pwd|/auth.v1.Auth/Pwd\nGET|/auth/idempotent|/auth.v1.Auth/Idempotent','/dashboard/base\n/user/index',''),
+(8926844486248579238,'默认权限','KHXK5JVL','default','POST|/auth/logout|/auth.v1.Auth/Logout\nGET|/auth/info|/auth.v1.Auth/Info\nPOST|/auth/pwd|/auth.v1.Auth/Pwd','/dashboard/base\n/user/index',''),
 (8929298412088590337,'首页','2QKHTYEE','dashboard','','/dashboard/base',''),
 (8929306305215070209,'用户查询','GRNA3NPV','user.read','GET|/auth/user/list|/auth.v1.Auth/FindUser','/system/user','system.user.read'),
 (8929306391416406017,'用户新增','2LV9MDWB','user.create','POST|/auth/register|/auth.v1.Auth/Register','/system/user','system.user.create'),

@@ -190,13 +190,13 @@ func (a userGroupManyToManyUsersTx) Count() int64 {
 
 type userGroupDo struct{ gen.DO }
 
-// SELECT * FROM `@@table` WHERE `id` = @id LIMIT 1
+// SELECT * FROM @@table WHERE id = @id LIMIT 1
 func (u userGroupDo) GetByID(id uint64) (result model.UserGroup) {
 	var params []interface{}
 
 	var generateSQL strings.Builder
 	params = append(params, id)
-	generateSQL.WriteString("SELECT * FROM `user_group` WHERE `id` = ? LIMIT 1 ")
+	generateSQL.WriteString("SELECT * FROM user_group WHERE id = ? LIMIT 1 ")
 
 	var executeSQL *gorm.DB
 	executeSQL = u.UnderlyingDB().Raw(generateSQL.String(), params...).Take(&result) // ignore_security_alert
@@ -205,19 +205,17 @@ func (u userGroupDo) GetByID(id uint64) (result model.UserGroup) {
 	return
 }
 
-// SELECT * FROM `@@table`
+// SELECT * FROM @@table
 // {{where}}
 //
-//	{{if val != ""}}
-//	  {{if strings.HasPrefix(val, "%") && strings.HasSuffix(val, "%")}}
-//	    @@col LIKE CONCAT('%', TRIM(BOTH '%' FROM @val), '%')
-//	  {{else if strings.HasPrefix(val, "%")}}
-//	    @@col LIKE CONCAT('%', TRIM(BOTH '%' FROM @val))
-//	  {{else if strings.HasSuffix(val, "%")}}
-//	    @@col LIKE CONCAT(TRIM(BOTH '%' FROM @val), '%')
-//	  {{else}}
-//	    @@col = @val
-//	  {{end}}
+//	{{if strings.HasPrefix(val, "%") && strings.HasSuffix(val, "%")}}
+//	  @@col LIKE concat('%', TRIM(BOTH '%' FROM @val), '%')
+//	{{else if strings.HasPrefix(val, "%")}}
+//	  @@col LIKE concat('%', TRIM(BOTH '%' FROM @val))
+//	{{else if strings.HasSuffix(val, "%")}}
+//	  @@col LIKE concat(TRIM(BOTH '%' FROM @val), '%')
+//	{{else}}
+//	  @@col = @val
 //	{{end}}
 //
 // {{end}}
@@ -226,22 +224,20 @@ func (u userGroupDo) GetByCol(col string, val string) (result model.UserGroup) {
 	var params []interface{}
 
 	var generateSQL strings.Builder
-	generateSQL.WriteString("SELECT * FROM `user_group` ")
+	generateSQL.WriteString("SELECT * FROM user_group ")
 	var whereSQL0 strings.Builder
-	if val != "" {
-		if strings.HasPrefix(val, "%") && strings.HasSuffix(val, "%") {
-			params = append(params, val)
-			whereSQL0.WriteString(u.Quote(col) + " LIKE CONCAT('%', TRIM(BOTH '%' FROM ?), '%') ")
-		} else if strings.HasPrefix(val, "%") {
-			params = append(params, val)
-			whereSQL0.WriteString(u.Quote(col) + " LIKE CONCAT('%', TRIM(BOTH '%' FROM ?)) ")
-		} else if strings.HasSuffix(val, "%") {
-			params = append(params, val)
-			whereSQL0.WriteString(u.Quote(col) + " LIKE CONCAT(TRIM(BOTH '%' FROM ?), '%') ")
-		} else {
-			params = append(params, val)
-			whereSQL0.WriteString(u.Quote(col) + " = ? ")
-		}
+	if strings.HasPrefix(val, "%") && strings.HasSuffix(val, "%") {
+		params = append(params, val)
+		whereSQL0.WriteString(u.Quote(col) + " LIKE concat('%', TRIM(BOTH '%' FROM ?), '%') ")
+	} else if strings.HasPrefix(val, "%") {
+		params = append(params, val)
+		whereSQL0.WriteString(u.Quote(col) + " LIKE concat('%', TRIM(BOTH '%' FROM ?)) ")
+	} else if strings.HasSuffix(val, "%") {
+		params = append(params, val)
+		whereSQL0.WriteString(u.Quote(col) + " LIKE concat(TRIM(BOTH '%' FROM ?), '%') ")
+	} else {
+		params = append(params, val)
+		whereSQL0.WriteString(u.Quote(col) + " = ? ")
 	}
 	helper.JoinWhereBuilder(&generateSQL, whereSQL0)
 	generateSQL.WriteString("LIMIT 1 ")
@@ -253,23 +249,21 @@ func (u userGroupDo) GetByCol(col string, val string) (result model.UserGroup) {
 	return
 }
 
-// SELECT * FROM `@@table`
+// SELECT * FROM @@table
 // {{if len(cols) == len(vals)}}
 // {{where}}
 //
-//	  {{for i, col := range cols}}
-//	    {{for j, val := range vals}}
-//	      {{if i == j}}
-//	        {{if val != ""}}
-//	          {{if strings.HasPrefix(val, "%") && strings.HasSuffix(val, "%")}}
-//	            @@col LIKE CONCAT('%', TRIM(BOTH '%' FROM @val), '%') AND
-//	          {{else if strings.HasPrefix(val, "%")}}
-//	            @@col LIKE CONCAT('%', TRIM(BOTH '%' FROM @val)) AND
-//	          {{else if strings.HasSuffix(val, "%")}}
-//	            @@col LIKE CONCAT(TRIM(BOTH '%' FROM @val), '%') AND
-//	          {{else}}
-//	            @@col = @val AND
-//	          {{end}}
+//	  {{for colIndex, col := range cols}}
+//	    {{for valIndex, val := range vals}}
+//	      {{if colIndex == valIndex}}
+//	        {{if strings.HasPrefix(val, "%") && strings.HasSuffix(val, "%")}}
+//	          @@col LIKE concat('%', TRIM(BOTH '%' FROM @val), '%') AND
+//	        {{else if strings.HasPrefix(val, "%")}}
+//	          @@col LIKE concat('%', TRIM(BOTH '%' FROM @val)) AND
+//	        {{else if strings.HasSuffix(val, "%")}}
+//	          @@col LIKE concat(TRIM(BOTH '%' FROM @val), '%') AND
+//	        {{else}}
+//	          @@col = @val AND
 //	        {{end}}
 //	      {{end}}
 //	    {{end}}
@@ -282,26 +276,24 @@ func (u userGroupDo) GetByCols(cols []string, vals []string) (result model.UserG
 	var params []interface{}
 
 	var generateSQL strings.Builder
-	generateSQL.WriteString("SELECT * FROM `user_group` ")
+	generateSQL.WriteString("SELECT * FROM user_group ")
 	if len(cols) == len(vals) {
 		var whereSQL0 strings.Builder
-		for i, col := range cols {
-			for j, val := range vals {
-				if i == j {
-					if val != "" {
-						if strings.HasPrefix(val, "%") && strings.HasSuffix(val, "%") {
-							params = append(params, val)
-							whereSQL0.WriteString(u.Quote(col) + " LIKE CONCAT('%', TRIM(BOTH '%' FROM ?), '%') AND ")
-						} else if strings.HasPrefix(val, "%") {
-							params = append(params, val)
-							whereSQL0.WriteString(u.Quote(col) + " LIKE CONCAT('%', TRIM(BOTH '%' FROM ?)) AND ")
-						} else if strings.HasSuffix(val, "%") {
-							params = append(params, val)
-							whereSQL0.WriteString(u.Quote(col) + " LIKE CONCAT(TRIM(BOTH '%' FROM ?), '%') AND ")
-						} else {
-							params = append(params, val)
-							whereSQL0.WriteString(u.Quote(col) + " = ? AND ")
-						}
+		for colIndex, col := range cols {
+			for valIndex, val := range vals {
+				if colIndex == valIndex {
+					if strings.HasPrefix(val, "%") && strings.HasSuffix(val, "%") {
+						params = append(params, val)
+						whereSQL0.WriteString(u.Quote(col) + " LIKE concat('%', TRIM(BOTH '%' FROM ?), '%') AND ")
+					} else if strings.HasPrefix(val, "%") {
+						params = append(params, val)
+						whereSQL0.WriteString(u.Quote(col) + " LIKE concat('%', TRIM(BOTH '%' FROM ?)) AND ")
+					} else if strings.HasSuffix(val, "%") {
+						params = append(params, val)
+						whereSQL0.WriteString(u.Quote(col) + " LIKE concat(TRIM(BOTH '%' FROM ?), '%') AND ")
+					} else {
+						params = append(params, val)
+						whereSQL0.WriteString(u.Quote(col) + " = ? AND ")
 					}
 				}
 			}
@@ -317,19 +309,17 @@ func (u userGroupDo) GetByCols(cols []string, vals []string) (result model.UserG
 	return
 }
 
-// SELECT * FROM `@@table`
+// SELECT * FROM @@table
 // {{where}}
 //
-//	{{if val != ""}}
-//	  {{if strings.HasPrefix(val, "%") && strings.HasSuffix(val, "%")}}
-//	    @@col LIKE CONCAT('%', TRIM(BOTH '%' FROM @val), '%')
-//	  {{else if strings.HasPrefix(val, "%")}}
-//	    @@col LIKE CONCAT('%', TRIM(BOTH '%' FROM @val))
-//	  {{else if strings.HasSuffix(val, "%")}}
-//	    @@col LIKE CONCAT(TRIM(BOTH '%' FROM @val), '%')
-//	  {{else}}
-//	    @@col = @val
-//	  {{end}}
+//	{{if strings.HasPrefix(val, "%") && strings.HasSuffix(val, "%")}}
+//	  @@col LIKE concat('%', TRIM(BOTH '%' FROM @val), '%')
+//	{{else if strings.HasPrefix(val, "%")}}
+//	  @@col LIKE concat('%', TRIM(BOTH '%' FROM @val))
+//	{{else if strings.HasSuffix(val, "%")}}
+//	  @@col LIKE concat(TRIM(BOTH '%' FROM @val), '%')
+//	{{else}}
+//	  @@col = @val
 //	{{end}}
 //
 // {{end}}
@@ -337,22 +327,20 @@ func (u userGroupDo) FindByCol(col string, val string) (result []model.UserGroup
 	var params []interface{}
 
 	var generateSQL strings.Builder
-	generateSQL.WriteString("SELECT * FROM `user_group` ")
+	generateSQL.WriteString("SELECT * FROM user_group ")
 	var whereSQL0 strings.Builder
-	if val != "" {
-		if strings.HasPrefix(val, "%") && strings.HasSuffix(val, "%") {
-			params = append(params, val)
-			whereSQL0.WriteString(u.Quote(col) + " LIKE CONCAT('%', TRIM(BOTH '%' FROM ?), '%') ")
-		} else if strings.HasPrefix(val, "%") {
-			params = append(params, val)
-			whereSQL0.WriteString(u.Quote(col) + " LIKE CONCAT('%', TRIM(BOTH '%' FROM ?)) ")
-		} else if strings.HasSuffix(val, "%") {
-			params = append(params, val)
-			whereSQL0.WriteString(u.Quote(col) + " LIKE CONCAT(TRIM(BOTH '%' FROM ?), '%') ")
-		} else {
-			params = append(params, val)
-			whereSQL0.WriteString(u.Quote(col) + " = ? ")
-		}
+	if strings.HasPrefix(val, "%") && strings.HasSuffix(val, "%") {
+		params = append(params, val)
+		whereSQL0.WriteString(u.Quote(col) + " LIKE concat('%', TRIM(BOTH '%' FROM ?), '%') ")
+	} else if strings.HasPrefix(val, "%") {
+		params = append(params, val)
+		whereSQL0.WriteString(u.Quote(col) + " LIKE concat('%', TRIM(BOTH '%' FROM ?)) ")
+	} else if strings.HasSuffix(val, "%") {
+		params = append(params, val)
+		whereSQL0.WriteString(u.Quote(col) + " LIKE concat(TRIM(BOTH '%' FROM ?), '%') ")
+	} else {
+		params = append(params, val)
+		whereSQL0.WriteString(u.Quote(col) + " = ? ")
 	}
 	helper.JoinWhereBuilder(&generateSQL, whereSQL0)
 
@@ -363,23 +351,21 @@ func (u userGroupDo) FindByCol(col string, val string) (result []model.UserGroup
 	return
 }
 
-// SELECT * FROM `@@table`
+// SELECT * FROM @@table
 // {{if len(cols) == len(vals)}}
 // {{where}}
 //
-//	  {{for i, col := range cols}}
-//	    {{for j, val := range vals}}
-//	      {{if i == j}}
-//	        {{if val != ""}}
-//	          {{if strings.HasPrefix(val, "%") && strings.HasSuffix(val, "%")}}
-//	            @@col LIKE CONCAT('%', TRIM(BOTH '%' FROM @val), '%') AND
-//	          {{else if strings.HasPrefix(val, "%")}}
-//	            @@col LIKE CONCAT('%', TRIM(BOTH '%' FROM @val)) AND
-//	          {{else if strings.HasSuffix(val, "%")}}
-//	            @@col LIKE CONCAT(TRIM(BOTH '%' FROM @val), '%') AND
-//	          {{else}}
-//	            @@col = @val AND
-//	          {{end}}
+//	  {{for colIndex, col := range cols}}
+//	    {{for valIndex, val := range vals}}
+//	      {{if colIndex == valIndex}}
+//	        {{if strings.HasPrefix(val, "%") && strings.HasSuffix(val, "%")}}
+//	          @@col LIKE concat('%', TRIM(BOTH '%' FROM @val), '%') AND
+//	        {{else if strings.HasPrefix(val, "%")}}
+//	          @@col LIKE concat('%', TRIM(BOTH '%' FROM @val)) AND
+//	        {{else if strings.HasSuffix(val, "%")}}
+//	          @@col LIKE concat(TRIM(BOTH '%' FROM @val), '%') AND
+//	        {{else}}
+//	          @@col = @val AND
 //	        {{end}}
 //	      {{end}}
 //	    {{end}}
@@ -391,26 +377,24 @@ func (u userGroupDo) FindByCols(cols []string, vals []string) (result []model.Us
 	var params []interface{}
 
 	var generateSQL strings.Builder
-	generateSQL.WriteString("SELECT * FROM `user_group` ")
+	generateSQL.WriteString("SELECT * FROM user_group ")
 	if len(cols) == len(vals) {
 		var whereSQL0 strings.Builder
-		for i, col := range cols {
-			for j, val := range vals {
-				if i == j {
-					if val != "" {
-						if strings.HasPrefix(val, "%") && strings.HasSuffix(val, "%") {
-							params = append(params, val)
-							whereSQL0.WriteString(u.Quote(col) + " LIKE CONCAT('%', TRIM(BOTH '%' FROM ?), '%') AND ")
-						} else if strings.HasPrefix(val, "%") {
-							params = append(params, val)
-							whereSQL0.WriteString(u.Quote(col) + " LIKE CONCAT('%', TRIM(BOTH '%' FROM ?)) AND ")
-						} else if strings.HasSuffix(val, "%") {
-							params = append(params, val)
-							whereSQL0.WriteString(u.Quote(col) + " LIKE CONCAT(TRIM(BOTH '%' FROM ?), '%') AND ")
-						} else {
-							params = append(params, val)
-							whereSQL0.WriteString(u.Quote(col) + " = ? AND ")
-						}
+		for colIndex, col := range cols {
+			for valIndex, val := range vals {
+				if colIndex == valIndex {
+					if strings.HasPrefix(val, "%") && strings.HasSuffix(val, "%") {
+						params = append(params, val)
+						whereSQL0.WriteString(u.Quote(col) + " LIKE concat('%', TRIM(BOTH '%' FROM ?), '%') AND ")
+					} else if strings.HasPrefix(val, "%") {
+						params = append(params, val)
+						whereSQL0.WriteString(u.Quote(col) + " LIKE concat('%', TRIM(BOTH '%' FROM ?)) AND ")
+					} else if strings.HasSuffix(val, "%") {
+						params = append(params, val)
+						whereSQL0.WriteString(u.Quote(col) + " LIKE concat(TRIM(BOTH '%' FROM ?), '%') AND ")
+					} else {
+						params = append(params, val)
+						whereSQL0.WriteString(u.Quote(col) + " = ? AND ")
 					}
 				}
 			}

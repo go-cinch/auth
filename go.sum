@@ -60,8 +60,8 @@ github.com/go-cinch/common/migrate v1.0.5 h1:WGhO2YmWIfH+eluEUS8hzNpUOWT9o6yDovA
 github.com/go-cinch/common/migrate v1.0.5/go.mod h1:zKLRy+NBf0IpM4/IGs7AibcznnZtSxkd0kLjwn6wLIE=
 github.com/go-cinch/common/page v1.0.5 h1:jjUhcEiJsTnCJJRlGv9JDQyp/4RMRk+IK8RwKF5Z76g=
 github.com/go-cinch/common/page v1.0.5/go.mod h1:y1u7y/8nl26Fd8Dn6dKirP7gfSiJjM9x64NcA9BsaYM=
-github.com/go-cinch/common/plugins/gorm/filter v1.0.2 h1:r0jw5s86tDaQBUv1LVl1P80lMtqJMNYkf8NB0XUqsCs=
-github.com/go-cinch/common/plugins/gorm/filter v1.0.2/go.mod h1:SRnJ6gdIaTff2QlU2orbjLE+Bn7kUbMT9znHXJylBH0=
+github.com/go-cinch/common/plugins/gorm/filter v1.0.3 h1:LATzktvNZG+RL9cXs7onbqK77dRpH3zdG1w8450oOqM=
+github.com/go-cinch/common/plugins/gorm/filter v1.0.3/go.mod h1:SRnJ6gdIaTff2QlU2orbjLE+Bn7kUbMT9znHXJylBH0=
 github.com/go-cinch/common/plugins/gorm/log v1.0.5 h1:EVjmhIZjnxDT/VWnHVR0vkg5xFIOISRkeKOMaaDAxyk=
 github.com/go-cinch/common/plugins/gorm/log v1.0.5/go.mod h1:PtGBzjqH+O5BPT00THewZc0Uf8CR4CDoBcYVBWrHLvI=
 github.com/go-cinch/common/plugins/gorm/tenant v1.0.3 h1:R8UpnFdomOb3qFrgvM0HAg4+YkW4pGJVB9Ad7Ohmrn4=

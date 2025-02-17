@@ -8,8 +8,8 @@ const TableNameWhitelist = "whitelist"
 
 // Whitelist mapped from table <whitelist>
 type Whitelist struct {
-	ID       uint64 `gorm:"column:id;primaryKey;autoIncrement:true;comment:auto increment id" json:"id,string"`           // auto increment id
-	Category uint32 `gorm:"column:category;not null;comment:category(0:permission, 1:jwt, 2:idempotent)" json:"category"` // category(0:permission, 1:jwt, 2:idempotent)
+	ID       uint64 `gorm:"column:id;primaryKey;autoIncrement:true;comment:auto increment id" json:"id,string"` // auto increment id
+	Category uint32 `gorm:"column:category;not null;comment:category(0:permission, 1:jwt)" json:"category"`     // category(0:permission, 1:jwt)
 	/*
 		resource array, split by break line str, example: GET|/user+
 		+PUT,PATCH|/role/*+

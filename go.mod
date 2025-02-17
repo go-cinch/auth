@@ -18,7 +18,7 @@ require (
 	github.com/go-cinch/common/middleware/tenant v1.0.2
 	github.com/go-cinch/common/middleware/trace v1.0.3
 	github.com/go-cinch/common/page v1.0.5
-	github.com/go-cinch/common/plugins/gorm/filter v1.0.2
+	github.com/go-cinch/common/plugins/gorm/filter v1.0.3
 	github.com/go-cinch/common/plugins/gorm/log v1.0.5
 	github.com/go-cinch/common/plugins/gorm/tenant v1.0.3
 	github.com/go-cinch/common/plugins/k8s/pod v1.0.1
