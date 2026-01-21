@@ -2,256 +2,207 @@ package data
 
 import (
 	"context"
+	"errors"
 	"strings"
 
-	"auth/internal/biz"
-	"auth/internal/conf"
-	"auth/internal/data/model"
-	"auth/internal/data/query"
-	"github.com/go-cinch/common/constant"
 	"github.com/go-cinch/common/copierx"
 	"github.com/go-cinch/common/id"
 	"github.com/go-cinch/common/log"
 	"github.com/go-cinch/common/utils"
-	"github.com/gobwas/glob"
-	"gorm.io/gen"
+	"go.opentelemetry.io/otel"
+	"gorm.io/gorm"
+
+	"auth/internal/biz"
+	"auth/internal/data/model"
 )
 
 type actionRepo struct {
-	c       *conf.Bootstrap
-	data    *Data
-	hotspot biz.HotspotRepo
+	data *Data
 }
 
-func NewActionRepo(c *conf.Bootstrap, data *Data, hotspot biz.HotspotRepo) biz.ActionRepo {
+func NewActionRepo(data *Data) biz.ActionRepo {
 	return &actionRepo{
-		c:       c,
-		data:    data,
-		hotspot: hotspot,
+		data: data,
 	}
 }
 
 func (ro actionRepo) Create(ctx context.Context, item *biz.Action) (err error) {
-	ok := ro.WordExists(ctx, item.Word)
-	if ok {
-		err = biz.ErrDuplicateField(ctx, "word", item.Word)
-		return
+	tr := otel.Tracer("data")
+	ctx, span := tr.Start(ctx, "Create")
+	defer span.End()
+
+	db := gorm.G[model.Action](ro.data.DB(ctx))
+
+	// Normalize and check if word exists (word is nullable).
+	if item.Word != nil {
+		word := strings.TrimSpace(*item.Word)
+		item.Word = &word
+		count, err := db.Where("word = ?", word).Count(ctx, "*")
+		if err != nil {
+			log.WithContext(ctx).WithError(err).Error("check action word exists failed")
+			return err
+		}
+		if count > 0 {
+			return biz.ErrDuplicateField(ctx, "word", word)
+		}
 	}
+
+	if item.ID == 0 {
+		item.ID = ro.data.ID(ctx)
+	}
+
 	var m model.Action
 	copierx.Copy(&m, item)
-	p := query.Use(ro.data.DB(ctx)).Action
-	db := p.WithContext(ctx)
-	m.ID = ro.data.ID(ctx)
-	m.Code = id.NewCode(m.ID)
-	if m.Resource == "" {
-		m.Resource = "*"
+	m.ID = item.ID
+	if m.Word != nil {
+		word := strings.TrimSpace(*m.Word)
+		m.Word = &word
 	}
-	err = db.Create(&m)
-	return
+
+	// Always generate code from ID for uniqueness/consistency.
+	code := id.NewCode(uint64(m.ID))
+	m.Code = code
+
+	// Default resource is "*" when empty.
+	if m.Resource == nil || strings.TrimSpace(*m.Resource) == "" {
+		res := "*"
+		m.Resource = &res
+	}
+
+	err = db.Create(ctx, &m)
+	if err != nil {
+		log.WithContext(ctx).WithError(err).Error("create action failed")
+		return err
+	}
+
+	// Best-effort: propagate generated code back to caller.
+	item.Code = &code
+	return nil
 }
 
-func (ro actionRepo) GetDefault(ctx context.Context) (rp biz.Action) {
-	p := query.Use(ro.data.DB(ctx)).Action
-	db := p.WithContext(ctx)
-	m := db.GetByCol(p.Word.ColumnName().String(), "default")
-	copierx.Copy(&rp, m)
-	return
+func (ro actionRepo) Update(ctx context.Context, item *biz.Action) (err error) {
+	tr := otel.Tracer("data")
+	ctx, span := tr.Start(ctx, "Update")
+	defer span.End()
+
+	if item.Word != nil {
+		word := strings.TrimSpace(*item.Word)
+		item.Word = &word
+	}
+
+	db := gorm.G[model.Action](ro.data.DB(ctx))
+
+	m, err := db.Where("id = ?", item.ID).First(ctx)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return biz.ErrRecordNotFound(ctx)
+	}
+	if err != nil {
+		log.WithContext(ctx).WithError(err).Error("get action failed")
+		return err
+	}
+
+	change := make(map[string]interface{})
+	utils.CompareDiff(m, item, &change)
+	delete(change, "id")
+	delete(change, "code") // code is derived from id; don't allow updating it here
+
+	if len(change) == 0 {
+		return biz.ErrDataNotChange(ctx)
+	}
+
+	// Check word uniqueness if word is being updated.
+	if item.Word != nil {
+		word := strings.TrimSpace(*item.Word)
+		oldWord := ""
+		if m.Word != nil {
+			oldWord = strings.TrimSpace(*m.Word)
+		}
+		if word != oldWord {
+			count, err := db.Where("word = ? AND id <> ?", word, item.ID).Count(ctx, "*")
+			if err != nil {
+				log.WithContext(ctx).WithError(err).Error("check action word uniqueness failed")
+				return err
+			}
+			if count > 0 {
+				return biz.ErrDuplicateField(ctx, "word", word)
+			}
+		}
+	}
+
+	err = ro.data.DB(ctx).
+		Model(&model.Action{}).
+		Where("id = ?", item.ID).
+		Updates(change).
+		Error
+	if err != nil {
+		log.WithContext(ctx).WithError(err).Error("update action failed")
+	}
+	return err
+}
+
+func (ro actionRepo) Delete(ctx context.Context, ids []int64) (err error) {
+	tr := otel.Tracer("data")
+	ctx, span := tr.Start(ctx, "Delete")
+	defer span.End()
+
+	if len(ids) == 0 {
+		return nil
+	}
+
+	db := gorm.G[model.Action](ro.data.DB(ctx))
+	_, err = db.Where("id IN ?", ids).Delete(ctx)
+	if err != nil {
+		log.WithContext(ctx).WithError(err).Error("delete action failed")
+	}
+	return err
 }
 
 func (ro actionRepo) Find(ctx context.Context, condition *biz.FindAction) (rp []biz.Action) {
-	p := query.Use(ro.data.DB(ctx)).Action
-	db := p.WithContext(ctx)
-	rp = make([]biz.Action, 0)
-	list := make([]model.Action, 0)
-	conditions := make([]gen.Condition, 0, 2)
-	if condition.Name != nil {
-		conditions = append(conditions, p.Name.Like(strings.Join([]string{"%", *condition.Name, "%"}, "")))
-	}
-	if condition.Code != nil {
-		conditions = append(conditions, p.Code.Like(strings.Join([]string{"%", *condition.Code, "%"}, "")))
-	}
-	if condition.Word != nil {
-		conditions = append(conditions, p.Word.Like(strings.Join([]string{"%", *condition.Word, "%"}, "")))
-	}
-	if condition.Resource != nil {
-		conditions = append(conditions, p.Resource.Like(strings.Join([]string{"%", *condition.Resource, "%"}, "")))
-	}
-	condition.Page.Primary = p.ID.ColumnName().String()
-	condition.Page.
-		WithContext(ctx).
-		Query(
-			db.
-				Order(p.ID.Desc()).
-				Where(conditions...).
-				UnderlyingDB(),
-		).
-		Find(&list)
-	copierx.Copy(&rp, list)
-	return
-}
+	tr := otel.Tracer("data")
+	ctx, span := tr.Start(ctx, "Find")
+	defer span.End()
 
-func (ro actionRepo) FindByCode(ctx context.Context, code string) (rp []biz.Action) {
 	rp = make([]biz.Action, 0)
-	if code == "" {
-		return
-	}
-	list := make([]*model.Action, 0)
-	p := query.Use(ro.data.DB(ctx)).Action
-	db := p.WithContext(ctx)
-	arr := strings.Split(code, ",")
-	list, _ = db.
-		Where(p.Code.In(arr...)).
-		Find()
-	copierx.Copy(&rp, list)
-	return
-}
+	db := gorm.G[model.Action](ro.data.DB(ctx))
+	q := db.Where("1 = 1")
 
-func (ro actionRepo) Update(ctx context.Context, item *biz.UpdateAction) (err error) {
-	p := query.Use(ro.data.DB(ctx)).Action
-	db := p.WithContext(ctx)
-	m := db.GetByID(item.Id)
-	if m.ID == constant.UI0 {
-		err = biz.ErrRecordNotFound(ctx)
-		return
+	if condition.Code != nil && strings.TrimSpace(*condition.Code) != "" {
+		q = q.Where("code LIKE ?", "%"+strings.TrimSpace(*condition.Code)+"%")
 	}
-	change := make(map[string]interface{})
-	utils.CompareDiff(m, item, &change)
-	if len(change) == 0 {
-		err = biz.ErrDataNotChange(ctx)
-		return
+	if condition.Name != nil && strings.TrimSpace(*condition.Name) != "" {
+		q = q.Where("name LIKE ?", "%"+strings.TrimSpace(*condition.Name)+"%")
 	}
-	if item.Word != nil && *item.Word != m.Word {
-		ok := ro.WordExists(ctx, *item.Word)
-		if ok {
-			err = biz.ErrDuplicateField(ctx, p.Word.ColumnName().String(), *item.Word)
-			return
+	if condition.Word != nil && strings.TrimSpace(*condition.Word) != "" {
+		q = q.Where("word LIKE ?", "%"+strings.TrimSpace(*condition.Word)+"%")
+	}
+	if condition.Resource != nil && strings.TrimSpace(*condition.Resource) != "" {
+		q = q.Where("resource LIKE ?", "%"+strings.TrimSpace(*condition.Resource)+"%")
+	}
+
+	if !condition.Page.Disable {
+		count, err := q.Count(ctx, "*")
+		if err != nil {
+			log.WithContext(ctx).WithError(err).Error("count action failed")
+			return rp
+		}
+		condition.Page.Total = count
+		if count == 0 {
+			return rp
 		}
 	}
-	_, err = db.
-		Where(p.ID.Eq(item.Id)).
-		Updates(&change)
-	return
-}
 
-func (ro actionRepo) Delete(ctx context.Context, ids ...uint64) (err error) {
-	p := query.Use(ro.data.DB(ctx)).Action
-	db := p.WithContext(ctx)
-	_, err = db.
-		Where(p.ID.In(ids...)).
-		Delete()
+	q = q.Order("id DESC")
+	if !condition.Page.Disable {
+		limit, offset := condition.Page.Limit()
+		q = q.Limit(limit).Offset(offset)
+	}
+
+	list, err := q.Find(ctx)
 	if err != nil {
-		return
+		log.WithContext(ctx).WithError(err).Error("find action failed")
+		return rp
 	}
-	count, _ := db.Count()
-	if count == 0 {
-		err = biz.ErrKeepLeastOneAction(ctx)
-	}
-	return
-}
 
-func (ro actionRepo) CodeExists(ctx context.Context, code string) (err error) {
-	p := query.Use(ro.data.DB(ctx)).Action
-	db := p.WithContext(ctx)
-	arr := strings.Split(code, ",")
-	for _, item := range arr {
-		m := db.GetByCol(p.Code.ColumnName().String(), item)
-		if m.ID == constant.UI0 {
-			err = biz.ErrRecordNotFound(ctx)
-			log.
-				WithContext(ctx).
-				WithError(err).
-				Error("invalid code: %s", code)
-			return
-		}
-	}
-	return
-}
-
-func (ro actionRepo) WordExists(ctx context.Context, word string) (ok bool) {
-	p := query.Use(ro.data.DB(ctx)).Action
-	db := p.WithContext(ctx)
-	arr := strings.Split(word, ",")
-	for _, item := range arr {
-		m := db.GetByCol(p.Word.ColumnName().String(), item)
-		if m.ID == constant.UI0 {
-			log.
-				WithContext(ctx).
-				Error("invalid word: %s", item)
-			return
-		}
-	}
-	ok = true
-	return
-}
-
-func (ro actionRepo) Permission(ctx context.Context, code string, req *biz.CheckPermission) (pass bool) {
-	arr := strings.Split(code, ",")
-	for _, item := range arr {
-		pass = ro.permission(ctx, item, req)
-		if pass {
-			return
-		}
-	}
-	return
-}
-
-func (ro actionRepo) permission(ctx context.Context, code string, req *biz.CheckPermission) (pass bool) {
-	if code == "" {
-		return
-	}
-	action := ro.hotspot.GetActionByCode(ctx, code)
-	return ro.MatchResource(ctx, action.Resource, req)
-}
-
-func (actionRepo) MatchResource(_ context.Context, resource string, req *biz.CheckPermission) (pass bool) {
-	if resource == "" {
-		// empty resource no need match
-		return
-	}
-	arr1 := strings.Split(resource, "\n")
-	for _, v1 := range arr1 {
-		if v1 == "*" {
-			pass = true
-			return
-		}
-		arr2 := strings.Split(v1, "|")
-		switch len(arr2) {
-		case 1:
-			// only grpc resource
-			if req.Resource == arr2[0] {
-				pass = true
-				return
-			}
-		case 2:
-			// only http method / http uri
-			methods := strings.Split(arr2[0], ",")
-			g, err := glob.Compile(arr2[1])
-			if err != nil {
-				return
-			}
-			matched := g.Match(req.URI)
-			if matched && utils.Contains[string](methods, req.Method) {
-				pass = true
-				return
-			}
-		case 3:
-			// grpc resource / http method / http uri
-			// match one means has permission
-			if req.Resource == arr2[2] {
-				pass = true
-				return
-			}
-			methods := strings.Split(arr2[0], ",")
-			g, err := glob.Compile(arr2[1])
-			if err != nil {
-				return
-			}
-			matched := g.Match(req.URI)
-			if matched && utils.Contains[string](methods, req.Method) {
-				pass = true
-				return
-			}
-		}
-	}
-	return
+	copierx.Copy(&rp, list)
+	return rp
 }

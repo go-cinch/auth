@@ -2,682 +2,336 @@ package data
 
 import (
 	"context"
-	"math/rand"
 	"strconv"
 	"strings"
 	"time"
 
-	"auth/internal/biz"
-	"auth/internal/conf"
-	"auth/internal/data/model"
-	"auth/internal/data/query"
-	"github.com/go-cinch/common/constant"
 	"github.com/go-cinch/common/copierx"
 	"github.com/go-cinch/common/log"
-	"github.com/go-cinch/common/utils"
-	"github.com/redis/go-redis/v9"
-	"github.com/samber/lo"
+	gocache "github.com/patrickmn/go-cache"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/attribute"
+	"gorm.io/gorm"
+
+	"auth/internal/biz"
+	"auth/internal/data/model"
+)
+
+// In-memory hotspot cache (per-process).
+//
+// Notes:
+// - Keep user status cache TTL short to avoid stale wrong/lock values affecting login flow.
+// - Use Refresh (triggered by task/service) to clear caches after mutating operations.
+const (
+	hotspotUserByCodeTTL     = 10 * time.Minute
+	hotspotUserByUsernameTTL = 3 * time.Second
+	hotspotActionTTL         = 30 * time.Minute
+	hotspotPermissionTTL     = 10 * time.Minute
+
+	hotspotCleanupInterval = 5 * time.Minute
 )
 
 type hotspotRepo struct {
-	c    *conf.Bootstrap
 	data *Data
+
+	userByCode     *gocache.Cache // key: user.code
+	userByUsername *gocache.Cache // key: user.username
+
+	actionByCode    *gocache.Cache // key: action.code
+	userActionCodes *gocache.Cache // key: userID(string) -> []string
+	userPermissions *gocache.Cache // key: userID(string) -> []biz.Action
 }
 
-func NewHotspotRepo(c *conf.Bootstrap, data *Data) biz.HotspotRepo {
+func NewHotspotRepo(data *Data) biz.HotspotRepo {
 	return &hotspotRepo{
-		c:    c,
 		data: data,
+
+		userByCode:     gocache.New(hotspotUserByCodeTTL, hotspotCleanupInterval),
+		userByUsername: gocache.New(hotspotUserByUsernameTTL, hotspotCleanupInterval),
+
+		actionByCode:    gocache.New(hotspotActionTTL, hotspotCleanupInterval),
+		userActionCodes: gocache.New(hotspotPermissionTTL, hotspotCleanupInterval),
+		userPermissions: gocache.New(hotspotPermissionTTL, hotspotCleanupInterval),
 	}
 }
 
-func (ro hotspotRepo) Refresh(ctx context.Context) (err error) {
-	pipe := ro.data.redis.Pipeline()
-	ro.refreshUserGroup(ctx, pipe)
-	ro.refreshUserUserGroupRelation(ctx, pipe)
-	ro.refreshRole(ctx, pipe)
-	ro.refreshAction(ctx, pipe)
-	ro.refreshWhitelist(ctx, pipe)
-	ro.refreshUser(ctx, pipe)
-	_, err = pipe.Exec(ctx)
+func (ro *hotspotRepo) Refresh(ctx context.Context) error {
+	tr := otel.Tracer("data")
+	ctx, span := tr.Start(ctx, "Refresh")
+	defer span.End()
+
+	// Clear all in-memory caches (best-effort warmup happens below).
+	ro.userByCode.Flush()
+	ro.userByUsername.Flush()
+	ro.actionByCode.Flush()
+	ro.userActionCodes.Flush()
+	ro.userPermissions.Flush()
+
+	// Warm action cache since it is usually small and heavily used by permission checks.
+	list, err := gorm.G[model.Action](ro.data.DB(ctx)).Find(ctx)
 	if err != nil {
-		log.
-			WithContext(ctx).
-			Warn("refresh failed: %v", err)
+		log.WithContext(ctx).WithError(err).Error("refresh hotspot: load actions failed")
+		return err
 	}
-	return
+	for _, m := range list {
+		code := strings.TrimSpace(m.Code)
+		if code == "" {
+			continue
+		}
+
+		var a biz.Action
+		if err := copierx.Copy(&a, m); err != nil {
+			log.WithContext(ctx).WithError(err).Error("refresh hotspot: copy action failed")
+			continue
+		}
+		ro.actionByCode.Set(code, a, hotspotActionTTL)
+	}
+	return nil
 }
 
-func (ro hotspotRepo) GetUserByCode(ctx context.Context, code string) *biz.User {
+// getUserByField is a helper to fetch user by a specific field (code or username).
+func (ro *hotspotRepo) getUserByField(
+	ctx context.Context,
+	field, value string,
+	primaryCache *gocache.Cache,
+	primaryTTL time.Duration,
+	secondaryCache *gocache.Cache,
+	secondaryTTL time.Duration,
+	getSecondaryKey func(*biz.User) string,
+) *biz.User {
+	item := &biz.User{}
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return item
+	}
+
+	// Check primary cache
+	if v, ok := primaryCache.Get(value); ok {
+		if u, ok := v.(biz.User); ok {
+			uc := u
+			return &uc
+		}
+	}
+
+	// Query database
+	db := gorm.G[model.User](ro.data.DB(ctx))
+	m, err := db.Where(field+" = ?", value).First(ctx)
+	if err != nil {
+		return item
+	}
+
+	copierx.Copy(item, m)
+	item.Id = m.ID
+	item.Locked = m.Locked != nil && *m.Locked != 0
+
+	// Update both caches
+	primaryCache.Set(value, *item, primaryTTL)
+	if secondaryKey := getSecondaryKey(item); strings.TrimSpace(secondaryKey) != "" {
+		secondaryCache.Set(secondaryKey, *item, secondaryTTL)
+	}
+	return item
+}
+
+func (ro *hotspotRepo) GetUserByCode(ctx context.Context, code string) *biz.User {
 	tr := otel.Tracer("data")
 	ctx, span := tr.Start(ctx, "GetUserByCode")
 	defer span.End()
-	rds := ro.data.redis
-	p := query.Use(ro.data.DB(ctx)).User
-	key := strings.Join([]string{
-		ro.c.Name,
-		ro.c.Hotspot.Name,
-		p.TableName(),
-		p.Code.ColumnName().String(),
-		code,
-	}, ".")
-	res, _ := rds.HGetAll(ctx, key).Result()
-	m := make(map[string]interface{}, len(res))
-	copierx.Copy(&m, res)
-	if v, ok := m[utils.CamelCase(p.Locked.ColumnName().String())]; ok {
-		m[utils.CamelCase(p.Locked.ColumnName().String())], _ = strconv.ParseBool(v.(string))
-	}
-	if v, ok := m[utils.CamelCase(p.Wrong.ColumnName().String())]; ok {
-		m[utils.CamelCase(p.Wrong.ColumnName().String())], _ = strconv.ParseUint(v.(string), 10, 64)
-	}
-	var item biz.User
-	utils.Struct2StructByJSON(&item, m)
-	if item.RoleId > constant.UI0 {
-		item.Role = *ro.GetRoleByID(ctx, item.RoleId)
-	}
-	span.SetAttributes(
-		attribute.String("code", code),
-		attribute.String("id", strconv.FormatUint(item.Id, 10)),
+
+	return ro.getUserByField(
+		ctx, "code", code,
+		ro.userByCode, hotspotUserByCodeTTL,
+		ro.userByUsername, hotspotUserByUsernameTTL,
+		func(u *biz.User) string { return u.Username },
 	)
-	return &item
 }
 
-func (ro hotspotRepo) GetUserByUsername(ctx context.Context, username string) *biz.User {
+func (ro *hotspotRepo) GetUserByUsername(ctx context.Context, username string) *biz.User {
 	tr := otel.Tracer("data")
 	ctx, span := tr.Start(ctx, "GetUserByUsername")
 	defer span.End()
-	rds := ro.data.redis
-	p := query.Use(ro.data.DB(ctx)).User
-	key := strings.Join([]string{
-		ro.c.Name,
-		ro.c.Hotspot.Name,
-		p.TableName(),
-		p.Username.ColumnName().String(),
-		username,
-	}, ".")
-	res, _ := rds.HGetAll(ctx, key).Result()
-	m := make(map[string]interface{}, len(res))
-	copierx.Copy(&m, res)
-	if v, ok := m[utils.CamelCase(p.Locked.ColumnName().String())]; ok {
-		m[utils.CamelCase(p.Locked.ColumnName().String())], _ = strconv.ParseBool(v.(string))
-	}
-	if v, ok := m[utils.CamelCase(p.Wrong.ColumnName().String())]; ok {
-		m[utils.CamelCase(p.Wrong.ColumnName().String())], _ = strconv.ParseUint(v.(string), 10, 64)
-	}
-	if v, ok := m[utils.CamelCase(p.LockExpire.ColumnName().String())]; ok {
-		m[utils.CamelCase(p.LockExpire.ColumnName().String())], _ = strconv.ParseInt(v.(string), 10, 64)
-	}
-	var item biz.User
-	utils.Struct2StructByJSON(&item, m)
-	span.SetAttributes(
-		attribute.String("id", strconv.FormatUint(item.Id, 10)),
-		attribute.String("username", item.Username),
+
+	return ro.getUserByField(
+		ctx, "username", username,
+		ro.userByUsername, hotspotUserByUsernameTTL,
+		ro.userByCode, hotspotUserByCodeTTL,
+		func(u *biz.User) string { return u.Code },
 	)
-	return &item
 }
 
-func (ro hotspotRepo) GetRoleByID(ctx context.Context, id uint64) *biz.Role {
-	tr := otel.Tracer("data")
-	ctx, span := tr.Start(ctx, "GetRoleByID")
-	defer span.End()
-	rds := ro.data.redis
-	p := query.Use(ro.data.DB(ctx)).Role
-	key := strings.Join([]string{
-		ro.c.Name,
-		ro.c.Hotspot.Name,
-		p.TableName(),
-		p.ID.ColumnName().String(),
-		strconv.FormatUint(id, 10),
-	}, ".")
-	res, _ := rds.HGetAll(ctx, key).Result()
-	var item biz.Role
-	utils.Struct2StructByJSON(&item, res)
-	span.SetAttributes(
-		attribute.String("id", strconv.FormatUint(item.Id, 10)),
-		attribute.String("word", item.Word),
-	)
-	return &item
-}
-
-func (ro hotspotRepo) GetActionByWord(ctx context.Context, word string) *biz.Action {
-	tr := otel.Tracer("data")
-	ctx, span := tr.Start(ctx, "GetActionByWord")
-	defer span.End()
-	rds := ro.data.redis
-	p := query.Use(ro.data.DB(ctx)).Action
-	key := strings.Join([]string{
-		ro.c.Name,
-		ro.c.Hotspot.Name,
-		p.TableName(),
-		p.Word.ColumnName().String(),
-		word,
-	}, ".")
-	res, _ := rds.HGetAll(ctx, key).Result()
-	var item biz.Action
-	utils.Struct2StructByJSON(&item, res)
-	span.SetAttributes(
-		attribute.String("id", strconv.FormatUint(item.Id, 10)),
-		attribute.String("word", item.Word),
-	)
-	return &item
-}
-
-func (ro hotspotRepo) GetActionByCode(ctx context.Context, code string) *biz.Action {
+func (ro *hotspotRepo) GetActionByCode(ctx context.Context, code string) *biz.Action {
 	tr := otel.Tracer("data")
 	ctx, span := tr.Start(ctx, "GetActionByCode")
 	defer span.End()
-	rds := ro.data.redis
-	p := query.Use(ro.data.DB(ctx)).Action
-	key := strings.Join([]string{
-		ro.c.Name,
-		ro.c.Hotspot.Name,
-		p.TableName(),
-		p.Code.ColumnName().String(),
-		code,
-	}, ".")
-	res, _ := rds.HGetAll(ctx, key).Result()
-	var item biz.Action
-	utils.Struct2StructByJSON(&item, res)
-	span.SetAttributes(
-		attribute.String("id", strconv.FormatUint(item.Id, 10)),
-		attribute.String("code", item.Code),
-	)
-	return &item
-}
 
-func (ro hotspotRepo) FindActionByCode(ctx context.Context, codes ...string) (list []biz.Action) {
-	tr := otel.Tracer("data")
-	ctx, span := tr.Start(ctx, "FindActionByCode")
-	defer span.End()
-	for _, code := range codes {
-		list = append(list, *ro.GetActionByCode(ctx, code))
-	}
-	return
-}
-
-func (ro hotspotRepo) FindUserGroupByUserCode(ctx context.Context, code string) (list []biz.UserGroup) {
-	tr := otel.Tracer("data")
-	ctx, span := tr.Start(ctx, "FindUserGroupByUserCode")
-	defer span.End()
-	list = make([]biz.UserGroup, 0)
-	user := ro.GetUserByCode(ctx, code)
-	return ro.FindUserGroupByUserID(ctx, user.Id)
-}
-
-func (ro hotspotRepo) FindUserGroupByUserID(ctx context.Context, id uint64) (list []biz.UserGroup) {
-	tr := otel.Tracer("data")
-	ctx, span := tr.Start(ctx, "FindUserGroupIDByUserID")
-	defer span.End()
-	rds := ro.data.redis
-	p := query.Use(ro.data.DB(ctx)).UserUserGroupRelation
-	key := strings.Join([]string{
-		ro.c.Name,
-		ro.c.Hotspot.Name,
-		p.TableName(),
-		p.UserID.ColumnName().String(),
-		strconv.FormatUint(id, 10),
-	}, ".")
-	res, _ := rds.HGetAll(ctx, key).Result()
-	groupKeys := lo.Keys(res)
-	groupIDs := lo.Map(groupKeys, func(item string, _ int) uint64 {
-		num, _ := strconv.ParseUint(item, 10, 64)
-		return num
-	})
-	for _, groupID := range groupIDs {
-		list = append(list, *ro.GetUserGroupByID(ctx, groupID))
-	}
-	span.SetAttributes(
-		attribute.String("userID", strconv.FormatUint(id, 10)),
-		attribute.StringSlice("groups", groupKeys),
-	)
-	return
-}
-
-func (ro hotspotRepo) GetUserGroupByID(ctx context.Context, id uint64) *biz.UserGroup {
-	tr := otel.Tracer("data")
-	ctx, span := tr.Start(ctx, "GetUserGroupByID")
-	defer span.End()
-	rds := ro.data.redis
-	p := query.Use(ro.data.DB(ctx)).UserGroup
-	key := strings.Join([]string{
-		ro.c.Name,
-		ro.c.Hotspot.Name,
-		p.TableName(),
-		p.ID.ColumnName().String(),
-		strconv.FormatUint(id, 10),
-	}, ".")
-	res, _ := rds.HGetAll(ctx, key).Result()
-	var item biz.UserGroup
-	utils.Struct2StructByJSON(&item, res)
-	span.SetAttributes(
-		attribute.String("id", strconv.FormatUint(id, 10)),
-		attribute.String("word", item.Word),
-	)
-	return &item
-}
-
-func (ro hotspotRepo) FindWhitelistResourceByCategory(ctx context.Context, category uint32) []string {
-	tr := otel.Tracer("data")
-	ctx, span := tr.Start(ctx, "FindUserGroupIDByUserID")
-	defer span.End()
-	rds := ro.data.redis
-	p := query.Use(ro.data.DB(ctx)).Whitelist
-	key := strings.Join([]string{
-		ro.c.Name,
-		ro.c.Hotspot.Name,
-		p.TableName(),
-		p.Category.ColumnName().String(),
-		strconv.FormatUint(uint64(category), 10),
-	}, ".")
-	res, _ := rds.HGetAll(ctx, key).Result()
-	resourceKeys := lo.Keys(res)
-	resources := lo.Map(resourceKeys, func(item string, _ int) string {
+	item := &biz.Action{}
+	code = strings.TrimSpace(code)
+	if code == "" {
 		return item
-	})
-	span.SetAttributes(
-		attribute.String("category", strconv.FormatUint(uint64(category), 10)),
-		attribute.StringSlice("resources", resourceKeys),
-	)
-	return resources
-}
-
-func (ro hotspotRepo) refreshUserGroup(ctx context.Context, pipe redis.Pipeliner) {
-	p := query.Use(ro.data.DB(ctx)).UserGroup
-	db := p.WithContext(ctx)
-	name := p.TableName()
-	list, _ := db.Find()
-	matchKey := strings.Join([]string{
-		ro.c.Name,
-		ro.c.Hotspot.Name,
-		name,
-		"*",
-	}, ".")
-	matches := scanKeys(ctx, ro.data.redis, matchKey)
-	for _, key := range matches {
-		pipe.Del(ctx, key)
-	}
-	for _, item := range list {
-		idKey := strings.Join([]string{
-			ro.c.Name,
-			ro.c.Hotspot.Name,
-			name,
-			p.ID.ColumnName().String(),
-			strconv.FormatUint(item.ID, 10),
-		}, ".")
-		pipe.Del(ctx, idKey)
-		pipe.HSet(
-			ctx, idKey,
-			utils.CamelCase(p.ID.ColumnName().String()), item.ID,
-			utils.CamelCase(p.Name.ColumnName().String()), item.Name,
-			utils.CamelCase(p.Word.ColumnName().String()), item.Word,
-			utils.CamelCase(p.Action.ColumnName().String()), item.Action,
-		)
-		pipe.Expire(ctx, idKey, ro.randomExpire())
-		wordKey := strings.Join([]string{
-			ro.c.Name,
-			ro.c.Hotspot.Name,
-			name,
-			p.Word.ColumnName().String(),
-			item.Word,
-		}, ".")
-		pipe.Del(ctx, wordKey)
-		pipe.HSet(
-			ctx, wordKey,
-			utils.CamelCase(p.ID.ColumnName().String()), item.ID,
-			utils.CamelCase(p.Name.ColumnName().String()), item.Name,
-			utils.CamelCase(p.Word.ColumnName().String()), item.Word,
-			utils.CamelCase(p.Action.ColumnName().String()), item.Action,
-		)
-		pipe.Expire(ctx, wordKey, ro.randomExpire())
-	}
-	return
-}
-
-func (ro hotspotRepo) refreshUserUserGroupRelation(ctx context.Context, pipe redis.Pipeliner) {
-	p := query.Use(ro.data.DB(ctx)).UserUserGroupRelation
-	db := p.WithContext(ctx)
-	name := p.TableName()
-	list, _ := db.Find()
-	matchKey := strings.Join([]string{
-		ro.c.Name,
-		ro.c.Hotspot.Name,
-		name,
-		"*",
-	}, ".")
-	matches := scanKeys(ctx, ro.data.redis, matchKey)
-	for _, key := range matches {
-		pipe.Del(ctx, key)
-	}
-	// group id by user id
-	groupIDMap := lo.MapValues(
-		lo.GroupBy(list, func(item *model.UserUserGroupRelation) uint64 {
-			return item.UserID
-		}),
-		func(items []*model.UserUserGroupRelation, _ uint64) []uint64 {
-			return lo.Map(items, func(item *model.UserUserGroupRelation, _ int) uint64 {
-				return item.UserGroupID
-			})
-		})
-	for userID, groupIDs := range groupIDMap {
-		userIDKey := strings.Join([]string{
-			ro.c.Name,
-			ro.c.Hotspot.Name,
-			name,
-			p.UserID.ColumnName().String(),
-			strconv.FormatUint(userID, 10),
-		}, ".")
-		pipe.Del(ctx, userIDKey)
-		for _, id := range groupIDs {
-			pipe.HSet(
-				ctx, userIDKey,
-				strconv.FormatUint(id, 10), "",
-			)
-		}
-		pipe.Expire(ctx, userIDKey, ro.randomExpire())
-	}
-	return
-}
-
-func (ro hotspotRepo) refreshRole(ctx context.Context, pipe redis.Pipeliner) {
-	p := query.Use(ro.data.DB(ctx)).Role
-	db := p.WithContext(ctx)
-	name := p.TableName()
-	list, _ := db.Find()
-	matchKey := strings.Join([]string{
-		ro.c.Name,
-		ro.c.Hotspot.Name,
-		name,
-		"*",
-	}, ".")
-	matches := scanKeys(ctx, ro.data.redis, matchKey)
-	for _, key := range matches {
-		pipe.Del(ctx, key)
-	}
-	for _, item := range list {
-		idKey := strings.Join([]string{
-			ro.c.Name,
-			ro.c.Hotspot.Name,
-			name,
-			p.ID.ColumnName().String(),
-			strconv.FormatUint(item.ID, 10),
-		}, ".")
-		pipe.Del(ctx, idKey)
-		pipe.HSet(
-			ctx, idKey,
-			utils.CamelCase(p.ID.ColumnName().String()), item.ID,
-			utils.CamelCase(p.Name.ColumnName().String()), item.Name,
-			utils.CamelCase(p.Word.ColumnName().String()), item.Word,
-			utils.CamelCase(p.Action.ColumnName().String()), item.Action,
-		)
-		pipe.Expire(ctx, idKey, ro.randomExpire())
-		wordKey := strings.Join([]string{
-			ro.c.Name,
-			ro.c.Hotspot.Name,
-			name,
-			p.Word.ColumnName().String(),
-			item.Word,
-		}, ".")
-		pipe.Del(ctx, wordKey)
-		pipe.HSet(
-			ctx, wordKey,
-			utils.CamelCase(p.ID.ColumnName().String()), item.ID,
-			utils.CamelCase(p.Name.ColumnName().String()), item.Name,
-			utils.CamelCase(p.Word.ColumnName().String()), item.Word,
-			utils.CamelCase(p.Action.ColumnName().String()), item.Action,
-		)
-		pipe.Expire(ctx, wordKey, ro.randomExpire())
-	}
-	return
-}
-
-func (ro hotspotRepo) refreshAction(ctx context.Context, pipe redis.Pipeliner) {
-	p := query.Use(ro.data.DB(ctx)).Action
-	db := p.WithContext(ctx)
-	name := p.TableName()
-	list, _ := db.Find()
-	matchKey := strings.Join([]string{
-		ro.c.Name,
-		ro.c.Hotspot.Name,
-		name,
-		"*",
-	}, ".")
-	matches := scanKeys(ctx, ro.data.redis, matchKey)
-	for _, key := range matches {
-		pipe.Del(ctx, key)
-	}
-	for _, item := range list {
-		idKey := strings.Join([]string{
-			ro.c.Name,
-			ro.c.Hotspot.Name,
-			name,
-			p.ID.ColumnName().String(),
-			strconv.FormatUint(item.ID, 10),
-		}, ".")
-		pipe.Del(ctx, idKey)
-		pipe.HSet(
-			ctx, idKey,
-			utils.CamelCase(p.ID.ColumnName().String()), item.ID,
-			utils.CamelCase(p.Name.ColumnName().String()), item.Name,
-			utils.CamelCase(p.Code.ColumnName().String()), item.Code,
-			utils.CamelCase(p.Word.ColumnName().String()), item.Word,
-			utils.CamelCase(p.Resource.ColumnName().String()), item.Resource,
-			utils.CamelCase(p.Menu.ColumnName().String()), item.Menu,
-			utils.CamelCase(p.Btn.ColumnName().String()), item.Btn,
-		)
-		pipe.Expire(ctx, idKey, ro.randomExpire())
-		codeKey := strings.Join([]string{
-			ro.c.Name,
-			ro.c.Hotspot.Name,
-			name,
-			p.Code.ColumnName().String(),
-			item.Code,
-		}, ".")
-		pipe.Del(ctx, codeKey)
-		pipe.HSet(
-			ctx, codeKey,
-			utils.CamelCase(p.ID.ColumnName().String()), item.ID,
-			utils.CamelCase(p.Name.ColumnName().String()), item.Name,
-			utils.CamelCase(p.Code.ColumnName().String()), item.Code,
-			utils.CamelCase(p.Word.ColumnName().String()), item.Word,
-			utils.CamelCase(p.Resource.ColumnName().String()), item.Resource,
-			utils.CamelCase(p.Menu.ColumnName().String()), item.Menu,
-			utils.CamelCase(p.Btn.ColumnName().String()), item.Btn,
-		)
-		pipe.Expire(ctx, codeKey, ro.randomExpire())
-		wordKey := strings.Join([]string{
-			ro.c.Name,
-			ro.c.Hotspot.Name,
-			name,
-			p.Word.ColumnName().String(),
-			item.Word,
-		}, ".")
-		pipe.Del(ctx, wordKey)
-		pipe.HSet(
-			ctx, wordKey,
-			utils.CamelCase(p.ID.ColumnName().String()), item.ID,
-			utils.CamelCase(p.Name.ColumnName().String()), item.Name,
-			utils.CamelCase(p.Code.ColumnName().String()), item.Code,
-			utils.CamelCase(p.Word.ColumnName().String()), item.Word,
-			utils.CamelCase(p.Resource.ColumnName().String()), item.Resource,
-			utils.CamelCase(p.Menu.ColumnName().String()), item.Menu,
-			utils.CamelCase(p.Btn.ColumnName().String()), item.Btn,
-		)
-		pipe.Expire(ctx, wordKey, ro.randomExpire())
-	}
-	return
-}
-
-func (ro hotspotRepo) refreshWhitelist(ctx context.Context, pipe redis.Pipeliner) {
-	p := query.Use(ro.data.DB(ctx)).Whitelist
-	db := p.WithContext(ctx)
-	name := p.TableName()
-	list, _ := db.Find()
-	matchKey := strings.Join([]string{
-		ro.c.Name,
-		ro.c.Hotspot.Name,
-		name,
-		"*",
-	}, ".")
-	matches := scanKeys(ctx, ro.data.redis, matchKey)
-	for _, key := range matches {
-		pipe.Del(ctx, key)
-	}
-	for _, item := range list {
-		idKey := strings.Join([]string{
-			ro.c.Name,
-			ro.c.Hotspot.Name,
-			name,
-			p.ID.ColumnName().String(),
-			strconv.FormatUint(item.ID, 10),
-		}, ".")
-		pipe.Del(ctx, idKey)
-		pipe.HSet(
-			ctx, idKey,
-			utils.CamelCase(p.ID.ColumnName().String()), item.ID,
-			utils.CamelCase(p.Category.ColumnName().String()), strconv.FormatUint(uint64(item.Category), 10),
-			utils.CamelCase(p.Resource.ColumnName().String()), item.Resource,
-		)
-		pipe.Expire(ctx, idKey, ro.randomExpire())
 	}
 
-	// resource by category
-	resourceMap := lo.MapValues(
-		lo.GroupBy(list, func(item *model.Whitelist) uint32 {
-			return item.Category
-		}),
-		func(items []*model.Whitelist, _ uint32) []string {
-			return lo.Map(items, func(item *model.Whitelist, _ int) string {
-				return item.Resource
-			})
-		})
-	for category, resources := range resourceMap {
-		categoryKey := strings.Join([]string{
-			ro.c.Name,
-			ro.c.Hotspot.Name,
-			name,
-			p.Category.ColumnName().String(),
-			strconv.FormatUint(uint64(category), 10),
-		}, ".")
-		pipe.Del(ctx, categoryKey)
-		for _, resource := range resources {
-			pipe.HSet(
-				ctx, categoryKey,
-				resource, "",
-			)
-		}
-		pipe.Expire(ctx, categoryKey, ro.randomExpire())
-	}
-	return
-}
-
-func (ro hotspotRepo) refreshUser(ctx context.Context, pipe redis.Pipeliner) {
-	p := query.Use(ro.data.DB(ctx)).User
-	db := p.WithContext(ctx)
-	name := p.TableName()
-	list, _ := db.Find()
-	matchKey := strings.Join([]string{
-		ro.c.Name,
-		ro.c.Hotspot.Name,
-		name,
-		"*",
-	}, ".")
-	matches := scanKeys(ctx, ro.data.redis, matchKey)
-	for _, key := range matches {
-		pipe.Del(ctx, key)
-	}
-	for _, item := range list {
-		idKey := strings.Join([]string{
-			ro.c.Name,
-			ro.c.Hotspot.Name,
-			name,
-			p.ID.ColumnName().String(),
-			strconv.FormatUint(item.ID, 10),
-		}, ".")
-		pipe.Del(ctx, idKey)
-		pipe.HSet(
-			ctx, idKey,
-			utils.CamelCase(p.ID.ColumnName().String()), item.ID,
-			utils.CamelCase(p.Code.ColumnName().String()), item.Code,
-			utils.CamelCase(p.RoleID.ColumnName().String()), strconv.FormatUint(item.RoleID, 10),
-			utils.CamelCase(p.Action.ColumnName().String()), item.Action,
-			utils.CamelCase(p.Username.ColumnName().String()), item.Username,
-			utils.CamelCase(p.Password.ColumnName().String()), item.Password,
-			utils.CamelCase(p.Platform.ColumnName().String()), item.Platform,
-			utils.CamelCase(p.Wrong.ColumnName().String()), strconv.FormatUint(item.Wrong, 10),
-			utils.CamelCase(p.Locked.ColumnName().String()), item.Locked,
-			utils.CamelCase(p.LockExpire.ColumnName().String()), item.LockExpire,
-		)
-		pipe.Expire(ctx, idKey, ro.randomExpire())
-		codeKey := strings.Join([]string{
-			ro.c.Name,
-			ro.c.Hotspot.Name,
-			name,
-			p.Code.ColumnName().String(),
-			item.Code,
-		}, ".")
-		pipe.Del(ctx, codeKey)
-		pipe.HSet(
-			ctx, codeKey,
-			utils.CamelCase(p.ID.ColumnName().String()), item.ID,
-			utils.CamelCase(p.Code.ColumnName().String()), item.Code,
-			utils.CamelCase(p.RoleID.ColumnName().String()), strconv.FormatUint(item.RoleID, 10),
-			utils.CamelCase(p.Action.ColumnName().String()), item.Action,
-			utils.CamelCase(p.Username.ColumnName().String()), item.Username,
-			utils.CamelCase(p.Password.ColumnName().String()), item.Password,
-			utils.CamelCase(p.Platform.ColumnName().String()), item.Platform,
-			utils.CamelCase(p.Wrong.ColumnName().String()), strconv.FormatUint(item.Wrong, 10),
-			utils.CamelCase(p.Locked.ColumnName().String()), item.Locked,
-			utils.CamelCase(p.LockExpire.ColumnName().String()), item.LockExpire,
-		)
-		pipe.Expire(ctx, codeKey, ro.randomExpire())
-		usernameKey := strings.Join([]string{
-			ro.c.Name,
-			ro.c.Hotspot.Name,
-			name,
-			p.Username.ColumnName().String(),
-			item.Username,
-		}, ".")
-		pipe.Del(ctx, usernameKey)
-		pipe.HSet(
-			ctx, usernameKey,
-			utils.CamelCase(p.ID.ColumnName().String()), item.ID,
-			utils.CamelCase(p.Code.ColumnName().String()), item.Code,
-			utils.CamelCase(p.RoleID.ColumnName().String()), strconv.FormatUint(item.RoleID, 10),
-			utils.CamelCase(p.Action.ColumnName().String()), item.Action,
-			utils.CamelCase(p.Username.ColumnName().String()), item.Username,
-			utils.CamelCase(p.Password.ColumnName().String()), item.Password,
-			utils.CamelCase(p.Platform.ColumnName().String()), item.Platform,
-			utils.CamelCase(p.Wrong.ColumnName().String()), strconv.FormatUint(item.Wrong, 10),
-			utils.CamelCase(p.Locked.ColumnName().String()), item.Locked,
-			utils.CamelCase(p.LockExpire.ColumnName().String()), item.LockExpire,
-		)
-		pipe.Expire(ctx, usernameKey, ro.randomExpire())
-	}
-	return
-}
-
-func scanKeys(ctx context.Context, rds redis.UniversalClient, pattern string) (list []string) {
-	var cursor uint64
-	for {
-		keys, cursorNew, err := rds.Scan(ctx, cursor, pattern, 100).Result()
-		if err != nil {
-			return
-		}
-
-		list = append(list, keys...)
-		cursor = cursorNew
-
-		if cursor == 0 {
-			break
+	if v, ok := ro.actionByCode.Get(code); ok {
+		if a, ok := v.(biz.Action); ok {
+			ac := a
+			return &ac
 		}
 	}
-	return
+
+	db := gorm.G[model.Action](ro.data.DB(ctx))
+	m, err := db.Where("code = ?", code).First(ctx)
+	if err != nil {
+		return item
+	}
+
+	copierx.Copy(item, m)
+	ro.actionByCode.Set(code, *item, hotspotActionTTL)
+	return item
 }
 
-func (ro hotspotRepo) randomExpire() time.Duration {
-	expire := ro.c.Hotspot.Expire.AsDuration()
-	seconds := rand.New(rand.NewSource(time.Now().Unix())).Int63n(3600)
-	return expire + time.Duration(seconds)*time.Second
+func (ro *hotspotRepo) FindUserPermissions(ctx context.Context, userID int64) ([]*biz.Action, error) {
+	tr := otel.Tracer("data")
+	ctx, span := tr.Start(ctx, "FindUserPermissions")
+	defer span.End()
+
+	if userID == 0 {
+		return nil, biz.ErrIllegalParameter(ctx, "userID")
+	}
+	key := strconv.FormatInt(userID, 10)
+
+	if v, ok := ro.userPermissions.Get(key); ok {
+		if list, ok := v.([]biz.Action); ok {
+			return hotspotCloneActions(list), nil
+		}
+	}
+
+	codes, err := ro.getUserActionCodes(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	if len(codes) == 0 {
+		ro.userPermissions.Set(key, []biz.Action{}, hotspotPermissionTTL)
+		return []*biz.Action{}, nil
+	}
+
+	byCode := make(map[string]biz.Action, len(codes))
+	missing := make([]string, 0)
+	for _, c := range codes {
+		if v, ok := ro.actionByCode.Get(c); ok {
+			if a, ok := v.(biz.Action); ok {
+				byCode[c] = a
+				continue
+			}
+		}
+		missing = append(missing, c)
+	}
+
+	if len(missing) > 0 {
+		list, qErr := gorm.G[model.Action](ro.data.DB(ctx)).
+			Where("code IN ?", missing).
+			Find(ctx)
+		if qErr != nil {
+			log.WithContext(ctx).WithError(qErr).Error("load hotspot user permissions actions failed")
+			return nil, qErr
+		}
+		for _, m := range list {
+			c := strings.TrimSpace(m.Code)
+			if c == "" {
+				continue
+			}
+			var a biz.Action
+			if err := copierx.Copy(&a, m); err != nil {
+				log.WithContext(ctx).WithError(err).Error("copy hotspot action failed")
+				continue
+			}
+			ro.actionByCode.Set(c, a, hotspotActionTTL)
+			byCode[c] = a
+		}
+	}
+
+	// Preserve code order.
+	cachedList := make([]biz.Action, 0, len(codes))
+	res := make([]*biz.Action, 0, len(codes))
+	for _, c := range codes {
+		a, ok := byCode[c]
+		if !ok {
+			continue
+		}
+		cachedList = append(cachedList, a)
+		ac := a
+		res = append(res, &ac)
+	}
+
+	ro.userPermissions.Set(key, cachedList, hotspotPermissionTTL)
+	return res, nil
+}
+
+func (ro *hotspotRepo) CheckPermission(ctx context.Context, userID int64, resource, method string) (bool, error) {
+	tr := otel.Tracer("data")
+	ctx, span := tr.Start(ctx, "CheckPermission")
+	defer span.End()
+
+	resource = strings.TrimSpace(resource)
+	method = strings.TrimSpace(method)
+
+	if userID == 0 {
+		return false, biz.ErrIllegalParameter(ctx, "userID")
+	}
+	if resource == "" {
+		return false, nil
+	}
+
+	actions, err := ro.FindUserPermissions(ctx, userID)
+	if err != nil {
+		return false, err
+	}
+
+	req := permissionMatchReq{}
+	if method == "" {
+		req.Resource = resource
+	} else {
+		req.Method = method
+		req.URI = resource
+	}
+
+	for _, a := range actions {
+		if a == nil {
+			continue
+		}
+		patterns := strings.TrimSpace(permissionDerefString(a.Resource))
+		if patterns == "" {
+			continue
+		}
+		if permissionMatchResource(patterns, req) {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func (ro *hotspotRepo) getUserActionCodes(ctx context.Context, userID int64) ([]string, error) {
+	if userID == 0 {
+		return nil, biz.ErrIllegalParameter(ctx, "userID")
+	}
+	key := strconv.FormatInt(userID, 10)
+
+	if v, ok := ro.userActionCodes.Get(key); ok {
+		if codes, ok := v.([]string); ok {
+			return append([]string(nil), codes...), nil
+		}
+	}
+
+	// Reuse the canonical permission aggregation logic, then cache the result.
+	codes, err := (permissionRepo{data: ro.data}).getUserActionCodes(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	ro.userActionCodes.Set(key, append([]string(nil), codes...), hotspotPermissionTTL)
+	return codes, nil
+}
+
+func hotspotCloneActions(list []biz.Action) []*biz.Action {
+	rp := make([]*biz.Action, 0, len(list))
+	for i := range list {
+		a := list[i]
+		rp = append(rp, &a)
+	}
+	return rp
 }

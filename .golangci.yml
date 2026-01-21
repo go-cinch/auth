@@ -1,54 +1,35 @@
+version: "2"
+
 run:
-  go: '1.22'
-  timeout: '5m'
+  timeout: 3m
+  tests: true
 
 issues:
-  exclude-files:
-  - 'internal/server/grpc.go'
-  - 'internal/server/http.go'
-  - 'internal/service/service.go'
+  max-same-issues: 0
+  exclude:
+    - "too many lines above return"
+  exclude-rules:
+    - linters:
+        - wsl_v5
+      text: "too many lines above return"
 
 linters:
-  enable:
-  - gci
-  - revive
-  disable-all: true
-
-linters-settings:
-  revive:
-    rules:
-    - name: var-naming
-      arguments: [ [ "ID", "IDS" ] ]
-    - name: line-length-limit
-      arguments: [ 200 ]
-    - name: argument-limit
-      arguments: [ 10 ]
-    - name: function-result-limit
-      arguments: [ 10 ]
-    - name: blank-imports
-    - name: duplicated-imports
-    - name: bool-literal-in-expr
-    - name: constant-logical-expr
-    - name: context-as-argument
-    - name: error-return
-    - name: deep-exit
-    - name: defer
-    - name: early-return
-    - name: indent-error-flow
-    - name: if-return
-    - name: superfluous-else
-    - name: empty-block
-    - name: get-return
-    - name: increment-decrement
-    - name: modifies-value-receiver
-    - name: range
-    - name: range-val-in-closure
-    - name: receiver-naming
-    - name: string-of-int
-    - name: struct-tag
-    - name: unexported-naming
-    - name: unexported-return
-    - name: unreachable-code
-    - name: unused-parameter
-    - name: unused-receiver
-    - name: waitgroup-by-value
+  default: fast
+  disable:
+    - wsl
+    - wsl_v5
+    - depguard
+    - nlreturn
+    - funcorder
+    - mnd
+    - dupl        # Disabled: CRUD patterns naturally have similar structure
+    - cyclop      # Disabled: complexity metrics not useful for business logic
+    - gocyclo     # Disabled: cyclomatic complexity not useful for business logic
+    - gocognit    # Disabled: cognitive complexity often reflects actual business complexity
+    - nestif      # Disabled: nested conditions are often clearer than alternatives
+  settings:
+    funlen:
+      lines: 180
+      statements: 100
+    lll:
+      line-length: 200

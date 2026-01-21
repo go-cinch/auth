@@ -10,3 +10,4 @@ tracer:
     insecure: true
   stdout:
     prettyPrint: false
+

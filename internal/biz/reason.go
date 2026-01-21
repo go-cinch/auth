@@ -24,6 +24,7 @@ var (
 	ErrJwtUnSupportSigningMethod = func(ctx context.Context) error {
 		return i18n.NewError(ctx, constant.JwtUnSupportSigningMethod, reason.ErrorUnauthorized)
 	}
+
 	ErrIdempotentTokenExpired = func(ctx context.Context) error {
 		return i18n.NewError(ctx, constant.IdempotentTokenExpired, reason.ErrorIllegalParameter)
 	}
@@ -31,15 +32,19 @@ var (
 	ErrTooManyRequests = func(ctx context.Context) error {
 		return i18n.NewError(ctx, constant.TooManyRequests, reason.ErrorTooManyRequests)
 	}
+
 	ErrDataNotChange = func(ctx context.Context, args ...string) error {
 		return i18n.NewError(ctx, constant.DataNotChange, reason.ErrorIllegalParameter, args...)
 	}
+
 	ErrDuplicateField = func(ctx context.Context, args ...string) error {
 		return i18n.NewError(ctx, constant.DuplicateField, reason.ErrorIllegalParameter, args...)
 	}
+
 	ErrRecordNotFound = func(ctx context.Context, args ...string) error {
 		return i18n.NewError(ctx, constant.RecordNotFound, reason.ErrorNotFound, args...)
 	}
+
 	ErrNoPermission = func(ctx context.Context) error {
 		return i18n.NewError(ctx, constant.NoPermission, reason.ErrorForbidden)
 	}
@@ -64,5 +69,13 @@ var (
 	}
 	ErrDeleteYourself = func(ctx context.Context) error {
 		return i18n.NewError(ctx, constant.DeleteYourself, reason.ErrorIllegalParameter)
+	}
+
+	ErrInternal = func(ctx context.Context, args ...string) error {
+		return i18n.NewError(ctx, constant.InternalError, reason.ErrorInternal, args...)
+	}
+
+	ErrIllegalParameter = func(ctx context.Context, args ...string) error {
+		return i18n.NewError(ctx, constant.IllegalParameter, reason.ErrorIllegalParameter, args...)
 	}
 )

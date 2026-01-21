@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"auth/internal/conf"
 	"github.com/go-cinch/common/log"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel"
@@ -16,12 +15,15 @@ import (
 	"go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 	"google.golang.org/grpc"
+
+	"auth/internal/conf"
 )
 
+// NewTracer configures and returns an OTEL tracer provider.
 func NewTracer(c *conf.Bootstrap) (tp *trace.TracerProvider, err error) {
 	if !c.Tracer.Enable {
 		log.Info("skip initialize tracer")
-		return
+		return tp, err
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -53,7 +55,7 @@ func NewTracer(c *conf.Bootstrap) (tp *trace.TracerProvider, err error) {
 	if err != nil {
 		log.Error(err)
 		err = errors.New("initialize tracer failed")
-		return
+		return tp, err
 	}
 	providerOpts := []trace.TracerProviderOption{
 		trace.WithBatcher(exporter),
@@ -63,5 +65,5 @@ func NewTracer(c *conf.Bootstrap) (tp *trace.TracerProvider, err error) {
 	tp = trace.NewTracerProvider(providerOpts...)
 	otel.SetTracerProvider(tp)
 	log.Info("initialize tracer success, ratio: %v", c.Tracer.Ratio)
-	return
+	return tp, err
 }

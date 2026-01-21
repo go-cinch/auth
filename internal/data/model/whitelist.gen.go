@@ -8,14 +8,9 @@ const TableNameWhitelist = "whitelist"
 
 // Whitelist mapped from table <whitelist>
 type Whitelist struct {
-	ID       uint64 `gorm:"column:id;primaryKey;autoIncrement:true;comment:auto increment id" json:"id,string"` // auto increment id
-	Category uint32 `gorm:"column:category;not null;comment:category(0:permission, 1:jwt)" json:"category"`     // category(0:permission, 1:jwt)
-	/*
-		resource array, split by break line str, example: GET|/user+
-		+PUT,PATCH|/role/*+
-		+GET|/action
-	*/
-	Resource string `gorm:"column:resource;not null;comment:resource array, split by break line str, example: GET|/user+\n+PUT,PATCH|/role/*+\n+GET|/action" json:"resource"`
+	ID       int64  `gorm:"column:id;type:bigint;primaryKey;autoIncrement:true;comment:auto increment id" json:"id,string"`                                       // auto increment id
+	Category int16  `gorm:"column:category;type:smallint;not null;index:idx_whitelist_category,priority:1;comment:category(0:permission, 1:jwt)" json:"category"` // category(0:permission, 1:jwt)
+	Resource string `gorm:"column:resource;type:text;not null;comment:resource rules, split by newline" json:"resource"`                                          // resource rules, split by newline
 }
 
 // TableName Whitelist's table name

@@ -1,15 +1,10 @@
 package server
 
 import (
-	"auth/api/auth"
-	"auth/internal/biz"
-	"auth/internal/conf"
-	localMiddleware "auth/internal/server/middleware"
-	"auth/internal/service"
 	"github.com/go-cinch/common/i18n"
 	i18nMiddleware "github.com/go-cinch/common/middleware/i18n"
 	"github.com/go-cinch/common/middleware/logging"
-	tenantMiddleware "github.com/go-cinch/common/middleware/tenant"
+	tenantMiddleware "github.com/go-cinch/common/middleware/tenant/v2"
 	traceMiddleware "github.com/go-cinch/common/middleware/trace"
 	"github.com/go-kratos/kratos/v2/middleware"
 	"github.com/go-kratos/kratos/v2/middleware/metadata"
@@ -21,46 +16,44 @@ import (
 	"github.com/go-kratos/kratos/v2/transport/http/pprof"
 	"github.com/redis/go-redis/v9"
 	"golang.org/x/text/language"
+
+	v1 "auth/api/auth"
+	"auth/internal/biz"
+	"auth/internal/conf"
+	localMiddleware "auth/internal/server/middleware"
+	"auth/internal/service"
 )
 
-// NewHTTPServer new a HTTP server.
+// NewHTTPServer creates an HTTP server.
 func NewHTTPServer(
 	c *conf.Bootstrap,
 	svc *service.AuthService,
 	rds redis.UniversalClient,
+	permission *biz.PermissionUseCase,
+	user *biz.UserUseCase,
 	whitelist *biz.WhitelistUseCase,
 ) *http.Server {
-	var middlewares []middleware.Middleware
+	middlewares := []middleware.Middleware{
+		recovery.Recovery(),
+		tenantMiddleware.Tenant(), // Default required middleware for multi-tenancy
+		i18nMiddleware.Translator(i18n.WithLanguage(language.Make(c.Server.Language)), i18n.WithFs(locales)),
+		ratelimit.Server(),
+		localMiddleware.Header(),
+	}
 	if c.Tracer.Enable {
 		middlewares = append(middlewares, tracing.Server(), traceMiddleware.ID())
 	}
-	middlewares = append(
-		middlewares,
-		recovery.Recovery(),
-		tenantMiddleware.Tenant(),
-		ratelimit.Server(),
-		localMiddleware.Header(),
-		logging.Server(),
-		i18nMiddleware.Translator(i18n.WithLanguage(language.Make(c.Server.Language)), i18n.WithFs(locales)),
-		metadata.Server(),
-	)
-	if c.Server.Jwt.Enable {
-		middlewares = append(middlewares, localMiddleware.Permission(c, rds, whitelist))
-	}
-	if c.Server.Idempotent {
-		middlewares = append(middlewares, localMiddleware.Idempotent(rds))
-	}
+	middlewares = append(middlewares, logging.Server(), metadata.Server())
 	if c.Server.Validate {
 		middlewares = append(middlewares, validate.Validator())
 	}
+	// Add Permission middleware for JWT parsing when enabled
+	if c.Server.Jwt.Enable {
+		middlewares = append(middlewares, localMiddleware.Permission(c, rds, permission, user, whitelist))
+	}
+	middlewares = append(middlewares, localMiddleware.Idempotent(rds))
+
 	var opts = []http.ServerOption{
-		// already set cors header in nginx
-		// http.Filter(handlers.CORS(
-		// 	handlers.AllowedHeaders([]string{"Content-Type", "Authorization", "X-Idempotent"}),
-		// 	handlers.AllowedMethods([]string{"OPTIONS", "GET", "POST", "PUT", "PATCH", "DELETE"}),
-		// 	handlers.AllowedOrigins([]string{"*"}),
-		// 	handlers.AllowCredentials(),
-		// )),
 		http.Middleware(middlewares...),
 	}
 	if c.Server.Http.Network != "" {
@@ -72,9 +65,16 @@ func NewHTTPServer(
 	if c.Server.Http.Timeout != nil {
 		opts = append(opts, http.Timeout(c.Server.Http.Timeout.AsDuration()))
 	}
+
 	srv := http.NewServer(opts...)
-	auth.RegisterAuthHTTPServer(srv, svc)
-	srv.HandlePrefix("/debug/pprof", pprof.NewHandler())
-	srv.HandlePrefix("/pub/healthcheck", HealthHandler(svc))
+	v1.RegisterAuthHTTPServer(srv, svc)
+	srv.HandlePrefix("/healthz", HealthHandler(svc))
+	if c.Server.Http.Docs {
+		srv.HandlePrefix("/docs/", DocsHandler())
+	}
+	if c.Server.EnablePprof {
+		srv.HandlePrefix("/debug/pprof", pprof.NewHandler())
+	}
+
 	return srv
 }

@@ -3,13 +3,15 @@ package middleware
 import (
 	"context"
 
-	"auth/internal/biz"
 	"github.com/go-cinch/common/idempotent"
 	"github.com/go-kratos/kratos/v2/middleware"
 	"github.com/go-kratos/kratos/v2/transport"
 	"github.com/redis/go-redis/v9"
+
+	"auth/internal/biz"
 )
 
+// Idempotent validates idempotent tokens from incoming requests.
 func Idempotent(rds redis.UniversalClient) middleware.Middleware {
 	idt := idempotent.New(
 		idempotent.WithPrefix("idempotent"),

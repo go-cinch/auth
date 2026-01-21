@@ -10,62 +10,52 @@ import (
 	"auth/internal/biz"
 	"auth/internal/conf"
 	"auth/internal/data"
-	"auth/internal/pkg/task"
 	"auth/internal/server"
 	"auth/internal/service"
 	"github.com/go-kratos/kratos/v2"
 )
 
 import (
-	_ "github.com/go-cinch/common/plugins/gorm/filter"
 	_ "github.com/go-cinch/common/plugins/kratos/encoding/yml"
+	_ "github.com/go-cinch/common/proto/params"
+	_ "github.com/google/gnostic/openapiv3"
+	_ "google.golang.org/genproto/googleapis/api/annotations"
 )
 
 // Injectors from wire.go:
 
-// wireApp init kratos application.
-func wireApp(c *conf.Bootstrap) (*kratos.App, func(), error) {
-	universalClient, err := data.NewRedis(c)
+// wireApp initializes the Kratos application.
+func wireApp(bootstrap *conf.Bootstrap) (*kratos.App, func(), error) {
+	dataData, cleanup, err := data.NewData(bootstrap)
 	if err != nil {
 		return nil, nil, err
 	}
-	tenant, err := data.NewDB(c)
-	if err != nil {
-		return nil, nil, err
-	}
-	sonyflake, err := data.NewSonyflake(c)
-	if err != nil {
-		return nil, nil, err
-	}
-	tracerProvider, err := data.NewTracer(c)
-	if err != nil {
-		return nil, nil, err
-	}
-	dataData, cleanup := data.NewData(universalClient, tenant, sonyflake, tracerProvider)
-	hotspotRepo := data.NewHotspotRepo(c, dataData)
-	actionRepo := data.NewActionRepo(c, dataData, hotspotRepo)
-	userRepo := data.NewUserRepo(dataData, actionRepo)
+	authRepo := data.NewAuthRepo(dataData)
 	transaction := data.NewTransaction(dataData)
-	cache := data.NewCache(c, universalClient)
-	userUseCase := biz.NewUserUseCase(c, userRepo, hotspotRepo, transaction, cache)
-	hotspotUseCase := biz.NewHotspotUseCase(c, hotspotRepo)
-	worker, err := task.New(c, userUseCase, hotspotUseCase)
+	universalClient, err := data.NewRedis(bootstrap)
 	if err != nil {
 		cleanup()
 		return nil, nil, err
 	}
-	actionUseCase := biz.NewActionUseCase(c, actionRepo, transaction, cache)
-	roleRepo := data.NewRoleRepo(dataData, actionRepo)
-	roleUseCase := biz.NewRoleUseCase(c, roleRepo, transaction, cache)
-	userGroupRepo := data.NewUserGroupRepo(dataData, actionRepo, userRepo)
-	userGroupUseCase := biz.NewUserGroupUseCase(c, userGroupRepo, transaction, cache)
-	permissionRepo := data.NewPermissionRepo(dataData, actionRepo, hotspotRepo)
-	permissionUseCase := biz.NewPermissionUseCase(c, permissionRepo)
-	whitelistRepo := data.NewWhitelistRepo(dataData, actionRepo, hotspotRepo)
-	whitelistUseCase := biz.NewWhitelistUseCase(c, whitelistRepo, transaction, cache)
-	authService := service.NewAuthService(c, worker, userUseCase, actionUseCase, roleUseCase, userGroupUseCase, permissionUseCase, whitelistUseCase)
-	grpcServer := server.NewGRPCServer(c, authService, universalClient, whitelistUseCase)
-	httpServer := server.NewHTTPServer(c, authService, universalClient, whitelistUseCase)
+	cache := data.NewCache(bootstrap, universalClient)
+	authUseCase := biz.NewAuthUseCase(bootstrap, authRepo, transaction, cache)
+	userRepo := data.NewUserRepo(dataData)
+	hotspotRepo := data.NewHotspotRepo(dataData)
+	userUseCase := biz.NewUserUseCase(bootstrap, userRepo, hotspotRepo, transaction, cache)
+	roleRepo := data.NewRoleRepo(dataData)
+	roleUseCase := biz.NewRoleUseCase(bootstrap, roleRepo, transaction, cache)
+	permissionRepo := data.NewPermissionRepo(dataData)
+	permissionUseCase := biz.NewPermissionUseCase(bootstrap, permissionRepo)
+	actionRepo := data.NewActionRepo(dataData)
+	actionUseCase := biz.NewActionUseCase(bootstrap, actionRepo, transaction, cache)
+	userGroupRepo := data.NewUserGroupRepo(dataData)
+	userGroupUseCase := biz.NewUserGroupUseCase(bootstrap, userGroupRepo, transaction, cache)
+	whitelistRepo := data.NewWhitelistRepo(dataData)
+	whitelistUseCase := biz.NewWhitelistUseCase(bootstrap, whitelistRepo, transaction, cache)
+	healthRepo := data.NewHealthRepo(dataData, universalClient)
+	authService := service.NewAuthService(bootstrap, authUseCase, userUseCase, roleUseCase, permissionUseCase, actionUseCase, userGroupUseCase, whitelistUseCase, hotspotRepo, healthRepo)
+	grpcServer := server.NewGRPCServer(bootstrap, authService, universalClient)
+	httpServer := server.NewHTTPServer(bootstrap, authService, universalClient, permissionUseCase, userUseCase, whitelistUseCase)
 	app := newApp(grpcServer, httpServer)
 	return app, func() {
 		cleanup()

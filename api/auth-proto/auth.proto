@@ -1,0 +1,511 @@
+syntax = "proto3";
+
+package auth.v1;
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+// the validate rules:
+// https://github.com/envoyproxy/protoc-gen-validate
+import "validate/validate.proto";
+import "cinch/params/params.proto";
+
+option go_package = "api/auth;auth";
+option java_multiple_files = true;
+option java_package = "auth.v1";
+option java_outer_classname = "AuthProtoV1";
+option objc_class_prefix = "APIAuthV1";
+
+// The auth service definition.
+//
+// Notes on conditional blocks:
+// - This repo is a scaffold template; some RPCs/messages are gated by feature flags.
+// - Conditionals are expressed via Go template blocks and also annotated with comments.
+service Auth {
+  // ==================== Auth (Public) ====================
+  rpc Register (RegisterRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/pub/register"
+      body: "*"
+    };
+  }
+
+  rpc Login (LoginRequest) returns (LoginReply) {
+    option (google.api.http) = {
+      post: "/pub/login"
+      body: "*"
+    };
+  }
+
+  rpc Status (StatusRequest) returns (StatusReply) {
+    option (google.api.http) = {
+      get: "/pub/status"
+    };
+  }
+  // Conditional: enable_captcha
+  rpc Captcha (google.protobuf.Empty) returns (CaptchaReply) {
+    option (google.api.http) = {
+      get: "/pub/captcha"
+    };
+  }
+
+  // ==================== Auth (Private) ====================
+  rpc Pwd (PwdRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      patch: "/pwd/update"
+      body: "*"
+    };
+  }
+
+  rpc Refresh (RefreshRequest) returns (LoginReply) {
+    option (google.api.http) = {
+      post: "/refresh"
+      body: "*"
+    };
+  }
+
+  rpc Logout (google.protobuf.Empty) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/logout"
+      body: "*"
+    };
+  }
+
+  rpc Info (google.protobuf.Empty) returns (InfoReply) {
+    option (google.api.http) = {
+      get: "/info"
+    };
+  }
+
+  // Permission is used by nginx auth_request and the local permission middleware.
+  rpc Permission (PermissionRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      get: "/permission"
+    };
+  }
+
+  // ==================== User CRUD ====================
+  rpc FindUser (FindUserRequest) returns (FindUserReply) {
+    option (google.api.http) = {
+      get: "/user/list"
+    };
+  }
+
+  rpc UpdateUser (UpdateUserRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      put: "/user/update"
+      body: "*"
+      additional_bindings {
+        patch: "/user/update"
+        body: "*"
+      }
+    };
+  }
+
+  rpc DeleteUser (params.IdsRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/user/delete"
+    };
+  }
+
+  // ==================== Role CRUD ====================
+  rpc CreateRole (CreateRoleRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/role/create"
+      body: "*"
+    };
+  }
+
+  rpc FindRole (FindRoleRequest) returns (FindRoleReply) {
+    option (google.api.http) = {
+      get: "/role/list"
+    };
+  }
+
+  rpc UpdateRole (UpdateRoleRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      put: "/role/update"
+      body: "*"
+      additional_bindings {
+        patch: "/role/update"
+        body: "*"
+      }
+    };
+  }
+
+  rpc DeleteRole (params.IdsRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/role/delete"
+    };
+  }
+  // ==================== Action CRUD ====================
+  // Conditional: enable_action
+  rpc CreateAction (CreateActionRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/action/create"
+      body: "*"
+    };
+  }
+
+  rpc FindAction (FindActionRequest) returns (FindActionReply) {
+    option (google.api.http) = {
+      get: "/action/list"
+    };
+  }
+
+  rpc UpdateAction (UpdateActionRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      put: "/action/update"
+      body: "*"
+      additional_bindings {
+        patch: "/action/update"
+        body: "*"
+      }
+    };
+  }
+
+  rpc DeleteAction (params.IdsRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/action/delete"
+    };
+  }
+  // ==================== UserGroup CRUD ====================
+  // Conditional: enable_user_group
+  rpc CreateUserGroup (CreateUserGroupRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/user/group/create"
+      body: "*"
+    };
+  }
+
+  rpc FindUserGroup (FindUserGroupRequest) returns (FindUserGroupReply) {
+    option (google.api.http) = {
+      get: "/user/group/list"
+    };
+  }
+
+  rpc UpdateUserGroup (UpdateUserGroupRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      put: "/user/group/update"
+      body: "*"
+      additional_bindings {
+        patch: "/user/group/update"
+        body: "*"
+      }
+    };
+  }
+
+  rpc DeleteUserGroup (params.IdsRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/user/group/delete"
+    };
+  }
+  // ==================== Whitelist CRUD ====================
+  // Conditional: enable_whitelist
+  rpc CreateWhitelist (CreateWhitelistRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/whitelist/create"
+      body: "*"
+    };
+  }
+
+  rpc FindWhitelist (FindWhitelistRequest) returns (FindWhitelistReply) {
+    option (google.api.http) = {
+      get: "/whitelist/list"
+    };
+  }
+
+  rpc UpdateWhitelist (UpdateWhitelistRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      put: "/whitelist/update"
+      body: "*"
+      additional_bindings {
+        patch: "/whitelist/update"
+        body: "*"
+      }
+    };
+  }
+
+  rpc DeleteWhitelist (params.IdsRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/whitelist/delete"
+    };
+  }
+}
+// Conditional: enable_health_check
+service Health {
+  rpc Check (google.protobuf.Empty) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      get: "/healthz"
+    };
+  }
+}
+
+// ==================== Core Models ====================
+
+message Action {
+  int64 id = 1;
+  string code = 2;
+  string name = 3;
+  string word = 4;
+  string resource = 5;
+  string menu = 6;
+  string btn = 7;
+  // Optional: tree structure when actions are returned hierarchically.
+  repeated Action children = 8;
+}
+
+message Role {
+  int64 id = 1;
+  string name = 2;
+  string word = 3;
+  // Comma-separated action codes.
+  string action = 4;
+  repeated Action actions = 5;
+}
+
+message User {
+  int64 id = 1;
+  string created_at = 2;
+  string updated_at = 3;
+  string username = 4;
+  string code = 5;
+  string platform = 6;
+  bool locked = 7;
+  string last_login = 11;
+  int64 lock_expire = 12;
+  string lock_msg = 13;
+  repeated Action actions = 14;
+  int64 role_id = 15;
+  Role role = 16;
+  int64 wrong = 17;
+}
+
+message Permission {
+  repeated string resources = 1;
+  repeated string menus = 2;
+  repeated string btns = 3;
+}
+message UserGroup {
+  int64 id = 1;
+  string name = 2;
+  string word = 3;
+  // Comma-separated action codes.
+  string action = 4;
+  repeated Action actions = 5;
+  repeated User users = 6;
+}
+message Whitelist {
+  int64 id = 1;
+  int32 category = 2;
+  string resource = 3;
+}
+message Captcha {
+  string id = 1;
+  string img = 2;
+}
+
+// ==================== Auth Messages ====================
+
+message RegisterRequest {
+  string username = 1 [(validate.rules).string = {min_len: 5, max_len: 50}];
+  string password = 2 [(validate.rules).string = {min_len: 6, max_len: 50}];
+  string platform = 3 [(validate.rules).string = {min_len: 1}];
+  string captcha_id = 4;
+  string captcha_answer = 5;
+}
+
+message PwdRequest {
+  string username = 1;
+  string old_password = 2;
+  string new_password = 3 [(validate.rules).string = {min_len: 6, max_len: 50}];
+}
+
+message LoginRequest {
+  string username = 1;
+  string password = 2;
+  optional string platform = 3;
+  optional string captcha_id = 4;
+  optional string captcha_answer = 5;
+}
+
+message LoginReply {
+  string token = 1;
+  string expires = 2;
+}
+
+message StatusRequest {
+  string username = 1;
+}
+
+message StatusReply {
+  Captcha captcha = 1;
+  bool need_captcha = 2;
+  bool locked = 10;
+  int64 lock_expire = 11;
+}
+message CaptchaReply {
+  Captcha captcha = 1;
+}
+
+message RefreshRequest {
+  string token = 1;
+}
+
+message InfoReply {
+  int64 id = 1;
+  string username = 2;
+  string code = 3;
+  string platform = 4;
+  Permission permission = 5;
+}
+
+message PermissionRequest {
+  optional string resource = 1;
+  optional string method = 2;
+  optional string uri = 3;
+}
+
+// ==================== User CRUD Messages ====================
+
+message FindUserRequest {
+  params.Page page = 1;
+  optional string start_created_at = 2;
+  optional string end_created_at = 3;
+  optional string start_updated_at = 4;
+  optional string end_updated_at = 5;
+  optional string username = 6;
+  optional string code = 7;
+  optional string platform = 8;
+  optional bool locked = 9;
+}
+
+message FindUserReply {
+  params.Page page = 1;
+  repeated User list = 2;
+}
+
+message UpdateUserRequest {
+  int64 id = 1;
+  optional string username = 2;
+  optional string password = 3;
+  optional string platform = 4;
+  optional bool locked = 5;
+  optional int64 lock_expire = 6;
+  // lock_expire_time accepts datetime strings like "2026-01-31 00:00:00".
+  optional string lock_expire_time = 9;
+  // Comma-separated action codes.
+  optional string action = 7;
+  optional int64 role_id = 8;
+}
+
+// ==================== Role CRUD Messages ====================
+
+message CreateRoleRequest {
+  string name = 1 [(validate.rules).string = {max_len: 50}];
+  string word = 2 [(validate.rules).string = {max_len: 50}];
+  optional string action = 3;
+}
+
+message FindRoleRequest {
+  params.Page page = 1;
+  optional string name = 2;
+  optional string word = 3;
+  optional string action = 4;
+}
+
+message FindRoleReply {
+  params.Page page = 1;
+  repeated Role list = 2;
+}
+
+message UpdateRoleRequest {
+  int64 id = 1;
+  optional string name = 2;
+  optional string word = 3;
+  optional string action = 4;
+}
+// ==================== Action CRUD Messages ====================
+
+message CreateActionRequest {
+  string name = 1 [(validate.rules).string = {max_len: 50}];
+  string word = 2 [(validate.rules).string = {max_len: 50}];
+  optional string resource = 3;
+  optional string menu = 4;
+  optional string btn = 5;
+}
+
+message FindActionRequest {
+  params.Page page = 1;
+  optional string code = 2;
+  optional string name = 3;
+  optional string word = 4;
+  optional string resource = 5;
+  optional string menu = 6;
+  optional string btn = 7;
+}
+
+message FindActionReply {
+  params.Page page = 1;
+  repeated Action list = 2;
+}
+
+message UpdateActionRequest {
+  int64 id = 1;
+  optional string name = 2;
+  optional string word = 3;
+  optional string resource = 4;
+  optional string menu = 5;
+  optional string btn = 6;
+}
+// ==================== UserGroup CRUD Messages ====================
+
+message CreateUserGroupRequest {
+  repeated int64 users = 1;
+  string name = 2 [(validate.rules).string = {max_len: 50}];
+  string word = 3 [(validate.rules).string = {max_len: 50}];
+  optional string action = 4;
+}
+
+message FindUserGroupRequest {
+  params.Page page = 1;
+  optional string name = 2;
+  optional string word = 3;
+  optional string action = 4;
+}
+
+message FindUserGroupReply {
+  params.Page page = 1;
+  repeated UserGroup list = 2;
+}
+
+message UpdateUserGroupRequest {
+  int64 id = 1;
+  optional string name = 2;
+  optional string word = 3;
+  optional string action = 4;
+  // Comma-separated list of user IDs.
+  optional string users = 5;
+}
+// ==================== Whitelist CRUD Messages ====================
+
+message CreateWhitelistRequest {
+  int32 category = 1;
+  string resource = 2;
+}
+
+message FindWhitelistRequest {
+  params.Page page = 1;
+  optional int32 category = 2;
+  optional string resource = 3;
+}
+
+message FindWhitelistReply {
+  params.Page page = 1;
+  repeated Whitelist list = 2;
+}
+
+message UpdateWhitelistRequest {
+  int64 id = 1;
+  optional int32 category = 2;
+  optional string resource = 3;
+}

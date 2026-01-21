@@ -4,137 +4,239 @@ import (
 	"context"
 	"strings"
 
-	"auth/internal/biz"
-	"auth/internal/data/model"
-	"auth/internal/data/query"
-	"github.com/go-cinch/common/constant"
 	"github.com/go-cinch/common/copierx"
 	"github.com/go-cinch/common/log"
 	"github.com/go-cinch/common/utils"
-	"gorm.io/gen"
+	"go.opentelemetry.io/otel"
+	"gorm.io/gorm"
+
+	"auth/internal/biz"
+	"auth/internal/data/model"
 )
 
 type roleRepo struct {
-	data   *Data
-	action biz.ActionRepo
+	data *Data
 }
 
-func NewRoleRepo(data *Data, action biz.ActionRepo) biz.RoleRepo {
+func NewRoleRepo(data *Data) biz.RoleRepo {
 	return &roleRepo{
-		data:   data,
-		action: action,
+		data: data,
 	}
 }
 
 func (ro roleRepo) Create(ctx context.Context, item *biz.Role) (err error) {
-	p := query.Use(ro.data.DB(ctx)).Role
-	db := p.WithContext(ctx)
-	ok := ro.WordExists(ctx, item.Word)
-	if ok {
-		err = biz.ErrDuplicateField(ctx, p.Word.ColumnName().String(), item.Word)
-		return
+	tr := otel.Tracer("data")
+	ctx, span := tr.Start(ctx, "Create")
+	defer span.End()
+
+	// Check word uniqueness
+	count, err := gorm.G[model.Role](ro.data.DB(ctx)).
+		Where("word = ?", item.Word).
+		Count(ctx, "*")
+	if err != nil {
+		log.WithContext(ctx).WithError(err).Error("check role word exists failed")
+		return err
 	}
+	if count > 0 {
+		return biz.ErrDuplicateField(ctx, "word", item.Word)
+	}
+
+	if err = ro.validateActionCodes(ctx, item.Action); err != nil {
+		return err
+	}
+
+	if item.ID == 0 {
+		item.ID = ro.data.ID(ctx)
+	}
+
 	var m model.Role
 	copierx.Copy(&m, item)
-	m.ID = ro.data.ID(ctx)
-	if m.Action != "" {
-		err = ro.action.CodeExists(ctx, m.Action)
-		if err != nil {
-			return
-		}
+	err = gorm.G[model.Role](ro.data.DB(ctx)).Create(ctx, &m)
+	if err != nil {
+		log.WithContext(ctx).WithError(err).Error("create role failed")
 	}
-	err = db.Create(&m)
-	return
-}
-
-func (ro roleRepo) Find(ctx context.Context, condition *biz.FindRole) (rp []biz.Role) {
-	p := query.Use(ro.data.DB(ctx)).Role
-	db := p.WithContext(ctx)
-	rp = make([]biz.Role, 0)
-	list := make([]model.Role, 0)
-	conditions := make([]gen.Condition, 0, 2)
-	if condition.Name != nil {
-		conditions = append(conditions, p.Name.Like(strings.Join([]string{"%", *condition.Name, "%"}, "")))
-	}
-	if condition.Word != nil {
-		conditions = append(conditions, p.Word.Like(strings.Join([]string{"%", *condition.Word, "%"}, "")))
-	}
-	condition.Page.Primary = p.ID.ColumnName().String()
-	condition.Page.
-		WithContext(ctx).
-		Query(
-			db.
-				Order(p.ID.Desc()).
-				Where(conditions...).
-				UnderlyingDB(),
-		).
-		Find(&list)
-	copierx.Copy(&rp, list)
-	for i, item := range rp {
-		rp[i].Actions = make([]biz.Action, 0)
-		arr := ro.action.FindByCode(ctx, item.Action)
-		copierx.Copy(&rp[i].Actions, arr)
-	}
-	return
+	return err
 }
 
 func (ro roleRepo) Update(ctx context.Context, item *biz.UpdateRole) (err error) {
-	p := query.Use(ro.data.DB(ctx)).Role
-	db := p.WithContext(ctx)
-	m := db.GetByID(item.Id)
-	if m.ID == constant.UI0 {
-		err = biz.ErrRecordNotFound(ctx)
-		return
+	tr := otel.Tracer("data")
+	ctx, span := tr.Start(ctx, "Update")
+	defer span.End()
+
+	db := gorm.G[model.Role](ro.data.DB(ctx))
+
+	m, err := db.Where("id = ?", item.ID).First(ctx)
+	if err == gorm.ErrRecordNotFound {
+		return biz.ErrRecordNotFound(ctx)
 	}
+	if err != nil {
+		log.WithContext(ctx).WithError(err).Error("get role failed")
+		return err
+	}
+
 	change := make(map[string]interface{})
 	utils.CompareDiff(m, item, &change)
 	if len(change) == 0 {
-		err = biz.ErrDataNotChange(ctx)
-		return
+		return biz.ErrDataNotChange(ctx)
 	}
-	if a, ok1 := change[p.Action.ColumnName().String()]; ok1 {
-		if v, ok2 := a.(string); ok2 {
-			err = ro.action.CodeExists(ctx, v)
-			if err != nil {
-				return
-			}
+
+	// Check word uniqueness if word is being updated
+	if item.Word != nil && (m.Word == nil || *item.Word != *m.Word) {
+		count, err := db.Where("word = ? AND id != ?", *item.Word, item.ID).Count(ctx, "*")
+		if err != nil {
+			log.WithContext(ctx).WithError(err).Error("check role word uniqueness failed")
+			return err
+		}
+		if count > 0 {
+			return biz.ErrDuplicateField(ctx, "word", *item.Word)
 		}
 	}
-	if item.Word != nil && *item.Word != m.Word {
-		ok := ro.WordExists(ctx, *item.Word)
-		if ok {
-			err = biz.ErrDuplicateField(ctx, p.Word.ColumnName().String(), *item.Word)
-			return
+
+	// Validate action codes if action is being updated
+	if item.Action != nil && (m.Action == nil || *item.Action != *m.Action) {
+		if err = ro.validateActionCodes(ctx, *item.Action); err != nil {
+			return err
 		}
 	}
-	_, err = db.
-		Where(p.ID.Eq(item.Id)).
-		Updates(&change)
-	return
+
+	// Use native DB.Updates for map updates.
+	err = ro.data.DB(ctx).
+		Model(&model.Role{}).
+		Where("id = ?", item.ID).
+		Updates(change).
+		Error
+	if err != nil {
+		log.WithContext(ctx).WithError(err).Error("update role failed")
+	}
+	return err
 }
 
-func (ro roleRepo) Delete(ctx context.Context, ids ...uint64) (err error) {
-	p := query.Use(ro.data.DB(ctx)).Role
-	db := p.WithContext(ctx)
-	_, err = db.
-		Where(p.ID.In(ids...)).
-		Delete()
-	return
+func (ro roleRepo) Delete(ctx context.Context, ids ...int64) (err error) {
+	tr := otel.Tracer("data")
+	ctx, span := tr.Start(ctx, "Delete")
+	defer span.End()
+
+	_, err = gorm.G[model.Role](ro.data.DB(ctx)).
+		Where("id IN ?", ids).
+		Delete(ctx)
+	if err != nil {
+		log.WithContext(ctx).WithError(err).Error("delete role failed")
+	}
+	return err
 }
 
-func (ro roleRepo) WordExists(ctx context.Context, word string) (ok bool) {
-	p := query.Use(ro.data.DB(ctx)).Role
-	db := p.WithContext(ctx)
-	arr := strings.Split(word, ",")
-	for _, item := range arr {
-		m := db.GetByCol(p.Word.ColumnName().String(), item)
-		if m.ID == constant.UI0 {
-			log.
-				WithContext(ctx).
-				Error("invalid word: %s", item)
-			return
+func (ro roleRepo) Find(ctx context.Context, condition *biz.FindRole) (rp []biz.Role) {
+	tr := otel.Tracer("data")
+	ctx, span := tr.Start(ctx, "Find")
+	defer span.End()
+
+	rp = make([]biz.Role, 0)
+
+	q := gorm.G[model.Role](ro.data.DB(ctx)).Where("1 = 1")
+	if condition.Name != nil {
+		q = q.Where("name LIKE ?", "%"+*condition.Name+"%")
+	}
+	if condition.Word != nil {
+		q = q.Where("word LIKE ?", "%"+*condition.Word+"%")
+	}
+	if condition.Action != nil {
+		q = q.Where("action LIKE ?", "%"+*condition.Action+"%")
+	}
+
+	// Count total before pagination
+	if !condition.Page.Disable {
+		count, err := q.Count(ctx, "*")
+		if err != nil {
+			log.WithContext(ctx).WithError(err).Error("count role failed")
+			return rp
+		}
+		condition.Page.Total = count
+		if count == 0 {
+			return rp
 		}
 	}
-	ok = true
-	return
+
+	q = q.Order("id DESC")
+	if !condition.Page.Disable {
+		limit, offset := condition.Page.Limit()
+		q = q.Limit(int(limit)).Offset(int(offset))
+	}
+
+	list, err := q.Find(ctx)
+	if err != nil {
+		log.WithContext(ctx).WithError(err).Error("find role failed")
+		return rp
+	}
+	copierx.Copy(&rp, list)
+
+	for i := range rp {
+		actions, err := ro.getActionsByCode(ctx, rp[i].Action)
+		if err != nil {
+			log.WithContext(ctx).WithError(err).Error("get role actions failed")
+			continue
+		}
+		rp[i].Actions = actions
+	}
+	return rp
+}
+
+func (ro roleRepo) validateActionCodes(ctx context.Context, codes string) (err error) {
+	codes = strings.TrimSpace(codes)
+	if codes == "" {
+		return nil
+	}
+	arr := ro.splitCodes(codes)
+	if len(arr) == 0 {
+		return nil
+	}
+
+	db := gorm.G[model.Action](ro.data.DB(ctx))
+	for _, code := range arr {
+		count, err := db.Where("code = ?", code).Count(ctx, "*")
+		if err != nil {
+			log.WithContext(ctx).WithError(err).Error("check action code exists failed")
+			return err
+		}
+		if count == 0 {
+			err = biz.ErrRecordNotFound(ctx)
+			log.WithContext(ctx).WithError(err).Error("invalid code: %s", code)
+			return err
+		}
+	}
+	return nil
+}
+
+func (ro roleRepo) getActionsByCode(ctx context.Context, code string) (rp []biz.Action, err error) {
+	rp = make([]biz.Action, 0)
+	code = strings.TrimSpace(code)
+	if code == "" {
+		return rp, nil
+	}
+	codes := ro.splitCodes(code)
+	if len(codes) == 0 {
+		return rp, nil
+	}
+
+	list, err := gorm.G[model.Action](ro.data.DB(ctx)).
+		Where("code IN ?", codes).
+		Find(ctx)
+	if err != nil {
+		log.WithContext(ctx).WithError(err).Error("find actions by code failed")
+		return nil, err
+	}
+	copierx.Copy(&rp, list)
+	return rp, nil
+}
+
+func (roleRepo) splitCodes(code string) []string {
+	arr := strings.Split(code, ",")
+	out := make([]string, 0, len(arr))
+	for _, v := range arr {
+		v = strings.TrimSpace(v)
+		if v == "" {
+			continue
+		}
+		out = append(out, v)
+	}
+	return out
 }

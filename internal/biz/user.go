@@ -4,43 +4,47 @@ import (
 	"context"
 	"strings"
 
+	"go.opentelemetry.io/otel"
+
 	"auth/internal/conf"
 	"github.com/go-cinch/common/captcha"
 	"github.com/go-cinch/common/constant"
 	"github.com/go-cinch/common/copierx"
 	"github.com/go-cinch/common/jwt"
-	"github.com/go-cinch/common/page"
+	"github.com/go-cinch/common/page/v2"
 	"github.com/go-cinch/common/utils"
 	"github.com/golang-module/carbon/v2"
-	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
-	Id          uint64          `json:"id,string"`
-	CreatedAt   carbon.DateTime `json:"createdAt,string"`
-	UpdatedAt   carbon.DateTime `json:"updatedAt,string"`
-	RoleId      uint64          `json:"roleId,string"`
-	Role        Role            `json:"role"`
-	Action      string          `json:"action"`
-	Actions     []Action        `json:"actions"`
-	Username    string          `json:"username"`
-	Code        string          `json:"Code"`
-	Password    string          `json:"password"`
-	OldPassword string          `json:"-"`
-	NewPassword string          `json:"-"`
-	Platform    string          `json:"platform"`
-	LastLogin   carbon.DateTime `json:"lastLogin,string,omitempty"`
-	Locked      bool            `json:"locked"`
-	LockExpire  int64           `json:"lockExpire"`
-	LockMsg     string          `json:"lockMsg"`
-	Wrong       uint64          `json:"wrong"`
-	Captcha     Captcha         `json:"-"`
+	Id        int64           `json:"id,string"`
+	CreatedAt carbon.DateTime `json:"createdAt,string"`
+	UpdatedAt carbon.DateTime `json:"updatedAt,string"`
+	RoleId    int64           `json:"roleId,string"`
+	Role      Role            `json:"role"`
+	Action    string          `json:"action"`
+	Actions   []Action        `json:"actions"`
+	Username  string          `json:"username"`
+	Code      string          `json:"Code"`
+	Password  string          `json:"password"`
+
+	OldPassword string `json:"-"`
+	NewPassword string `json:"-"`
+
+	Platform  string          `json:"platform"`
+	LastLogin carbon.DateTime `json:"lastLogin,string,omitempty"`
+
+	Locked     bool    `json:"locked"`
+	LockExpire int64   `json:"lockExpire"`
+	LockMsg    string  `json:"lockMsg"`
+	Wrong      int64   `json:"wrong"`
+	Captcha    Captcha `json:"-"`
 }
 
 type UserInfo struct {
-	Id       uint64 `json:"id,string"`
+	Id       int64  `json:"id,string"`
 	Username string `json:"username"`
 	Code     string `json:"code"`
 	Platform string `json:"platform"`
@@ -64,14 +68,14 @@ type FindUserCache struct {
 }
 
 type UpdateUser struct {
-	Id         uint64  `json:"id,string"`
+	Id         int64   `json:"id,string"`
 	Action     *string `json:"action,omitempty"`
 	Username   *string `json:"username,omitempty"`
 	Password   *string `json:"password,omitempty"`
 	Platform   *string `json:"platform,omitempty"`
-	Locked     *bool   `json:"locked,omitempty"`
-	LockExpire *int64  `json:"lockExpire,omitempty"`
-	RoleId     *uint64 `json:"roleId,string,omitempty"`
+	Locked     *int16  `json:"locked,omitempty"`
+	LockExpire *int64  `json:"lockExpire,string,omitempty"`
+	RoleId     *int64  `json:"roleId,string,omitempty"`
 }
 
 type Login struct {
@@ -85,13 +89,13 @@ type Login struct {
 type LoginTime struct {
 	Username  string          `json:"username"`
 	LastLogin carbon.DateTime `json:"lastLogin"`
-	Wrong     uint64          `json:"wrong"`
+	Wrong     int64           `json:"wrong"`
 }
 
 type LoginToken struct {
 	Token   string `json:"token"`
 	Expires string `json:"expires"`
-	Wrong   uint64 `json:"wrong"`
+	Wrong   int64  `json:"wrong"`
 }
 
 type ComparePwd struct {
@@ -101,32 +105,19 @@ type ComparePwd struct {
 }
 
 type UserStatus struct {
-	Id          uint64  `json:"id,string"`
+	Id          int64   `json:"id,string"`
 	Code        string  `json:"code"`
 	Password    string  `json:"password"`
 	Platform    string  `json:"platform"`
-	Wrong       uint64  `json:"wrong"`
+	Wrong       int64   `json:"wrong"`
 	Locked      bool    `json:"locked"`
 	LockExpire  int64   `json:"lockExpire"`
 	NeedCaptcha bool    `json:"needCaptcha"`
 	Captcha     Captcha `json:"captcha"`
 }
-
 type Captcha struct {
 	Id  string `json:"id"`
 	Img string `json:"img"`
-}
-
-type UserRepo interface {
-	GetByUsername(ctx context.Context, username string) (*User, error)
-	Find(ctx context.Context, condition *FindUser) []User
-	Create(ctx context.Context, item *User) error
-	Update(ctx context.Context, item *UpdateUser) error
-	Delete(ctx context.Context, ids ...uint64) error
-	LastLogin(ctx context.Context, username string) error
-	WrongPwd(ctx context.Context, req *LoginTime) error
-	UpdatePassword(ctx context.Context, item *User) error
-	IdExists(ctx context.Context, id uint64) error
 }
 
 type UserUseCase struct {
@@ -143,11 +134,17 @@ func NewUserUseCase(c *conf.Bootstrap, repo UserRepo, hotspot HotspotRepo, tx Tr
 		repo:    repo,
 		hotspot: hotspot,
 		tx:      tx,
-		cache:   cache.WithPrefix("user"),
+		cache: cache.WithPrefix(strings.Join([]string{
+			c.Name, "user",
+		}, "_")),
 	}
 }
 
 func (uc *UserUseCase) Create(ctx context.Context, item *User) error {
+	tr := otel.Tracer("biz")
+	ctx, span := tr.Start(ctx, "Create")
+	defer span.End()
+
 	return uc.tx.Tx(ctx, func(ctx context.Context) error {
 		return uc.cache.Flush(ctx, func(ctx context.Context) error {
 			item.Password = genPwd(item.Password)
@@ -157,6 +154,10 @@ func (uc *UserUseCase) Create(ctx context.Context, item *User) error {
 }
 
 func (uc *UserUseCase) Update(ctx context.Context, item *UpdateUser) error {
+	tr := otel.Tracer("biz")
+	ctx, span := tr.Start(ctx, "Update")
+	defer span.End()
+
 	return uc.tx.Tx(ctx, func(ctx context.Context) error {
 		return uc.cache.Flush(ctx, func(ctx context.Context) (err error) {
 			if item.Password != nil {
@@ -169,7 +170,11 @@ func (uc *UserUseCase) Update(ctx context.Context, item *UpdateUser) error {
 	})
 }
 
-func (uc *UserUseCase) Delete(ctx context.Context, ids ...uint64) error {
+func (uc *UserUseCase) Delete(ctx context.Context, ids ...int64) error {
+	tr := otel.Tracer("biz")
+	ctx, span := tr.Start(ctx, "Delete")
+	defer span.End()
+
 	return uc.tx.Tx(ctx, func(ctx context.Context) error {
 		return uc.cache.Flush(ctx, func(ctx context.Context) (err error) {
 			info := uc.InfoFromCtx(ctx)
@@ -184,6 +189,10 @@ func (uc *UserUseCase) Delete(ctx context.Context, ids ...uint64) error {
 }
 
 func (uc *UserUseCase) Find(ctx context.Context, condition *FindUser) (rp []User, err error) {
+	tr := otel.Tracer("biz")
+	ctx, span := tr.Start(ctx, "Find")
+	defer span.End()
+
 	action := strings.Join([]string{"find", utils.StructMd5(condition)}, "_")
 	str, err := uc.cache.Get(ctx, action, func(ctx context.Context) (string, error) {
 		return uc.find(ctx, action, condition)
@@ -199,7 +208,6 @@ func (uc *UserUseCase) Find(ctx context.Context, condition *FindUser) (rp []User
 }
 
 func (uc *UserUseCase) find(ctx context.Context, action string, condition *FindUser) (res string, err error) {
-	// read data from db and write to cache
 	list := uc.repo.Find(ctx, condition)
 	var cache FindUserCache
 	cache.List = list
@@ -210,11 +218,19 @@ func (uc *UserUseCase) find(ctx context.Context, action string, condition *FindU
 }
 
 func (uc *UserUseCase) InfoFromCtx(ctx context.Context) (rp *UserInfo) {
+	tr := otel.Tracer("biz")
+	ctx, span := tr.Start(ctx, "InfoFromCtx")
+	defer span.End()
+
 	user := jwt.FromServerContext(ctx)
 	return uc.Info(ctx, user.Attrs["code"])
 }
 
 func (uc *UserUseCase) Info(ctx context.Context, code string) (rp *UserInfo) {
+	tr := otel.Tracer("biz")
+	ctx, span := tr.Start(ctx, "Info")
+	defer span.End()
+
 	rp = &UserInfo{}
 	user := uc.hotspot.GetUserByCode(ctx, code)
 	utils.Struct2StructByJSON(rp, user)
@@ -222,41 +238,45 @@ func (uc *UserUseCase) Info(ctx context.Context, code string) (rp *UserInfo) {
 }
 
 func (uc *UserUseCase) Login(ctx context.Context, item *Login) (rp LoginToken, err error) {
+	tr := otel.Tracer("biz")
+	ctx, span := tr.Start(ctx, "Login")
+	defer span.End()
+
 	rp = LoginToken{}
 	status, err := uc.Status(ctx, item.Username, false)
 	if err != nil {
-		return
+		return rp, err
 	}
-	if status.Id == constant.UI0 {
+	if status.Id == 0 {
 		err = ErrRecordNotFound(ctx)
-		return
+		return rp, err
 	}
 	// verify captcha
 	if status.NeedCaptcha && !uc.VerifyCaptcha(ctx, item.CaptchaId, item.CaptchaAnswer) {
 		err = ErrInvalidCaptcha(ctx)
-		return
+		return rp, err
 	}
 	// user is locked
 	if status.Locked {
 		err = ErrUserLocked(ctx)
-		return
+		return rp, err
 	}
 	// check password
 	var pass bool
 	pass, err = uc.ComparePwd(ctx, ComparePwd{Username: item.Username, Str: item.Password, Pwd: status.Password})
 	if err != nil {
-		return
+		return rp, err
 	}
 	if !pass {
 		err = ErrLoginFailed(ctx)
-		rp.Wrong = status.Wrong + constant.UI1
-		return
+		rp.Wrong = status.Wrong + constant.I1
+		return rp, err
 	}
 	// check platform
 	if item.Platform != "" && item.Platform != status.Platform {
 		err = ErrLoginFailed(ctx)
-		rp.Wrong = status.Wrong + constant.UI1
-		return
+		rp.Wrong = status.Wrong + constant.I1
+		return rp, err
 	}
 	authUser := jwt.User{
 		Attrs: map[string]string{
@@ -267,10 +287,14 @@ func (uc *UserUseCase) Login(ctx context.Context, item *Login) (rp LoginToken, e
 	token, expireTime := authUser.CreateToken(uc.c.Server.Jwt.Key, uc.c.Server.Jwt.Expires)
 	rp.Token = token
 	rp.Expires = expireTime.ToDateTimeString()
-	return
+	return rp, err
 }
 
 func (uc *UserUseCase) LastLogin(ctx context.Context, username string) error {
+	tr := otel.Tracer("biz")
+	ctx, span := tr.Start(ctx, "LastLogin")
+	defer span.End()
+
 	return uc.tx.Tx(ctx, func(ctx context.Context) (err error) {
 		err = uc.repo.LastLogin(ctx, username)
 		if err != nil {
@@ -282,6 +306,10 @@ func (uc *UserUseCase) LastLogin(ctx context.Context, username string) error {
 }
 
 func (uc *UserUseCase) WrongPwd(ctx context.Context, req *LoginTime) error {
+	tr := otel.Tracer("biz")
+	ctx, span := tr.Start(ctx, "WrongPwd")
+	defer span.End()
+
 	return uc.tx.Tx(ctx, func(ctx context.Context) (err error) {
 		err = uc.repo.WrongPwd(ctx, req)
 		if err != nil {
@@ -297,10 +325,13 @@ func (uc *UserUseCase) refresh(ctx context.Context, username string) {
 }
 
 func (uc *UserUseCase) Pwd(ctx context.Context, item *User) error {
+	tr := otel.Tracer("biz")
+	ctx, span := tr.Start(ctx, "Pwd")
+	defer span.End()
+
 	return uc.tx.Tx(ctx, func(ctx context.Context) error {
 		return uc.cache.Flush(ctx, func(ctx context.Context) (err error) {
-			oldItem := &User{}
-			oldItem, err = uc.repo.GetByUsername(ctx, item.Username)
+			oldItem, err := uc.repo.GetByUsername(ctx, item.Username)
 			if err != nil {
 				return
 			}
@@ -319,16 +350,22 @@ func (uc *UserUseCase) Pwd(ctx context.Context, item *User) error {
 }
 
 func (uc *UserUseCase) Status(ctx context.Context, username string, captcha bool) (rp *UserStatus, err error) {
+	tr := otel.Tracer("biz")
+	ctx, span := tr.Start(ctx, "Status")
+	defer span.End()
+
 	rp = &UserStatus{}
-	user := uc.hotspot.GetUserByUsername(ctx, username)
-	if user.Id == constant.UI0 {
+
+	var user *User
+	user = uc.hotspot.GetUserByUsername(ctx, username)
+	if user.Id == 0 {
 		err = ErrRecordNotFound(ctx)
 		return
 	}
+
 	copierx.Copy(&rp, user)
-	// TODO u can get max wrong count from env or dict
-	if rp.Wrong >= constant.UI3 {
-		// need captcha
+	// Require captcha after 3 failed attempts
+	if rp.Wrong >= constant.I3 {
 		rp.NeedCaptcha = true
 		if captcha {
 			rp.Captcha = uc.Captcha(ctx)
@@ -341,8 +378,11 @@ func (uc *UserUseCase) Status(ctx context.Context, username string, captcha bool
 	}
 	return
 }
-
 func (uc *UserUseCase) Captcha(ctx context.Context) (rp Captcha) {
+	tr := otel.Tracer("biz")
+	ctx, span := tr.Start(ctx, "Captcha")
+	defer span.End()
+
 	rp.Id, rp.Img = captcha.New(
 		captcha.WithRedis(uc.cache.Cache()),
 		captcha.WithCtx(ctx),
@@ -351,33 +391,27 @@ func (uc *UserUseCase) Captcha(ctx context.Context) (rp Captcha) {
 }
 
 func (uc *UserUseCase) VerifyCaptcha(ctx context.Context, id, answer string) bool {
+	tr := otel.Tracer("biz")
+	ctx, span := tr.Start(ctx, "VerifyCaptcha")
+	defer span.End()
+
 	return captcha.New(
 		captcha.WithRedis(uc.cache.Cache()),
 		captcha.WithCtx(ctx),
 	).Verify(id, answer)
 }
 
-func (uc *UserUseCase) status(ctx context.Context, action string, username string) (res string, err error) {
-	// read data from db and write to cache
-	rp := &UserStatus{}
-	user, err := uc.repo.GetByUsername(ctx, username)
-	notFound := errors.Is(err, ErrRecordNotFound(ctx))
-	if err != nil && !notFound {
-		return
-	}
-	copierx.Copy(&rp, user)
-	res = utils.Struct2JSON(rp)
-	uc.cache.Set(ctx, action, res, notFound)
-	return
-}
-
-// generate password is irreversible due to the use of adaptive hash algorithm
+// generate password is irreversible due to the use of adaptive hash algorithm.
 func genPwd(str string) string {
 	hash, _ := bcrypt.GenerateFromPassword([]byte(str), bcrypt.DefaultCost)
 	return string(hash)
 }
 
 func (uc *UserUseCase) ComparePwd(ctx context.Context, condition ComparePwd) (rp bool, err error) {
+	tr := otel.Tracer("biz")
+	ctx, span := tr.Start(ctx, "ComparePwd")
+	defer span.End()
+
 	action := strings.Join([]string{"compare_pwd", utils.StructMd5(condition)}, "_")
 	str, err := uc.cache.Get(ctx, action, func(ctx context.Context) (string, error) {
 		return uc.comparePwd(ctx, action, condition)
@@ -401,12 +435,16 @@ func (uc *UserUseCase) comparePwd(ctx context.Context, action string, condition 
 }
 
 func (uc *UserUseCase) FlushCache(ctx context.Context) {
-	_ = uc.cache.Flush(ctx, func(_ context.Context) (err error) {
+	tr := otel.Tracer("biz")
+	ctx, span := tr.Start(ctx, "FlushCache")
+	defer span.End()
+
+	uc.cache.Flush(ctx, func(_ context.Context) (err error) {
 		return
 	})
 }
 
-// by comparing two string hashes, judge whether they are from the same plaintext
+// by comparing two string hashes, judge whether they are from the same plaintext.
 func comparePwd(str string, pwd string) bool {
 	if err := bcrypt.CompareHashAndPassword([]byte(pwd), []byte(str)); err != nil {
 		return false

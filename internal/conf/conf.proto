@@ -1,5 +1,5 @@
 syntax = "proto3";
-package cinch.conf;
+package conf;
 
 option go_package = "auth/internal/conf;conf";
 
@@ -9,12 +9,23 @@ message Bootstrap {
   string name = 1;
   string version = 2;
   Server server = 3;
-  Data data = 4;
-  Tracer tracer = 5;
-  Task task = 6;
-  Client client = 7;
-  Log log = 8;
-  Hotspot hotspot = 9;
+  Tracer tracer = 4;
+  DB db = 5;
+  Log log = 6;
+  Redis redis = 7;
+  Task task = 8;
+}
+
+message DB {
+  string driver = 1;
+  string dsn = 2;
+  bool migrate = 3;
+}
+
+message Log {
+  string level = 1;
+  bool JSON = 2;
+  bool showSQL = 3;
 }
 
 message Server {
@@ -22,6 +33,7 @@ message Server {
     string network = 1;
     string addr = 2;
     google.protobuf.Duration timeout = 3;
+    bool docs = 4;
   }
   message GRPC {
     string network = 1;
@@ -33,40 +45,15 @@ message Server {
     string key = 2;
     string expires = 3;
   }
-  bool prod = 1;
-  string machineId = 2;
-  HTTP http = 3;
-  GRPC grpc = 4;
+  string machineId = 1;
+  HTTP http = 2;
+  GRPC grpc = 3;
+  bool enablePprof = 4;
   string language = 5;
-  Jwt jwt = 6;
-  bool permission = 7;
-  bool idempotent = 8;
-  bool validate = 9;
-  bool nocache = 10;
-}
-
-message Data {
-  message Database {
-    string dsn = 1;
-    string driver = 2;
-    string endpoint = 3;
-    string username = 4;
-    string password = 5;
-    string schema = 6;
-    string query = 7;
-    map<string, string> tenants = 8;
-  }
-  message Redis {
-    string dsn = 1;
-  }
-  Database database = 1;
-  Redis redis = 2;
-}
-
-message Log {
-  string level = 1;
-  bool JSON = 2;
-  bool showSQL = 3;
+  bool validate = 6;
+  bool nocache = 7;
+  Jwt jwt = 8;
+  bool skipCaptcha = 9;
 }
 
 message Tracer {
@@ -83,10 +70,8 @@ message Tracer {
   Stdout stdout = 4;
 }
 
-message Client {
-  bool health = 1;
-  google.protobuf.Duration timeout = 2;
-  string auth = 3;
+message Redis {
+  string dsn = 1;
 }
 
 message CronTask {
@@ -105,9 +90,4 @@ message Task {
     string refreshHotspotManual = 4;
   }
   Group group = 2;
-}
-
-message Hotspot {
-  string name = 1;
-  google.protobuf.Duration expire = 2;
 }

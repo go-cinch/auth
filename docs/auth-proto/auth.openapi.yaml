@@ -3,14 +3,16 @@
 
 openapi: 3.0.3
 info:
-    title: Auth API
-    description: The auth service definition.
+    title: ""
     version: 0.0.1
 paths:
     /action/create:
         post:
             tags:
                 - Auth
+            description: |-
+                ==================== Action CRUD ====================
+                 Conditional: enable_action
             operationId: Auth_CreateAction
             requestBody:
                 content:
@@ -74,6 +76,14 @@ paths:
                   in: query
                   schema:
                     type: string
+                - name: menu
+                  in: query
+                  schema:
+                    type: string
+                - name: btn
+                  in: query
+                  schema:
+                    type: string
             responses:
                 "200":
                     description: OK
@@ -110,6 +120,15 @@ paths:
                 "200":
                     description: OK
                     content: {}
+    /healthz:
+        get:
+            tags:
+                - Health
+            operationId: Health_Check
+            responses:
+                "200":
+                    description: OK
+                    content: {}
     /info:
         get:
             tags:
@@ -139,6 +158,7 @@ paths:
         get:
             tags:
                 - Auth
+            description: Permission is used by nginx auth_request and the local permission middleware.
             operationId: Auth_Permission
             parameters:
                 - name: resource
@@ -161,6 +181,7 @@ paths:
         get:
             tags:
                 - Auth
+            description: 'Conditional: enable_captcha'
             operationId: Auth_Captcha
             responses:
                 "200":
@@ -191,6 +212,7 @@ paths:
         post:
             tags:
                 - Auth
+            description: ==================== Auth (Public) ====================
             operationId: Auth_Register
             requestBody:
                 content:
@@ -223,6 +245,7 @@ paths:
         patch:
             tags:
                 - Auth
+            description: ==================== Auth (Private) ====================
             operationId: Auth_Pwd
             requestBody:
                 content:
@@ -256,6 +279,7 @@ paths:
         post:
             tags:
                 - Auth
+            description: ==================== Role CRUD ====================
             operationId: Auth_CreateRole
             requestBody:
                 content:
@@ -369,6 +393,9 @@ paths:
         post:
             tags:
                 - Auth
+            description: |-
+                ==================== UserGroup CRUD ====================
+                 Conditional: enable_user_group
             operationId: Auth_CreateUserGroup
             requestBody:
                 content:
@@ -468,6 +495,7 @@ paths:
         get:
             tags:
                 - Auth
+            description: ==================== User CRUD ====================
             operationId: Auth_FindUser
             parameters:
                 - name: page.num
@@ -558,6 +586,9 @@ paths:
         post:
             tags:
                 - Auth
+            description: |-
+                ==================== Whitelist CRUD ====================
+                 Conditional: enable_whitelist
             operationId: Auth_CreateWhitelist
             requestBody:
                 content:
@@ -609,7 +640,7 @@ paths:
                   in: query
                   schema:
                     type: integer
-                    format: uint32
+                    format: int32
                 - name: resource
                   in: query
                   schema:
@@ -669,6 +700,11 @@ components:
                     type: string
                 btn:
                     type: string
+                children:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/auth.v1.Action'
+                    description: 'Optional: tree structure when actions are returned hierarchically.'
         auth.v1.Captcha:
             type: object
             properties:
@@ -721,7 +757,7 @@ components:
             properties:
                 category:
                     type: integer
-                    format: uint32
+                    format: int32
                 resource:
                     type: string
         auth.v1.FindActionReply:
@@ -855,6 +891,7 @@ components:
                     type: string
                 action:
                     type: string
+                    description: Comma-separated action codes.
                 actions:
                     type: array
                     items:
@@ -864,6 +901,8 @@ components:
             properties:
                 captcha:
                     $ref: '#/components/schemas/auth.v1.Captcha'
+                needCaptcha:
+                    type: boolean
                 locked:
                     type: boolean
                 lockExpire:
@@ -907,6 +946,7 @@ components:
                     type: string
                 users:
                     type: string
+                    description: Comma-separated list of user IDs.
         auth.v1.UpdateUserRequest:
             type: object
             properties:
@@ -920,10 +960,14 @@ components:
                     type: string
                 locked:
                     type: boolean
+                lockExpire:
+                    type: string
                 lockExpireTime:
                     type: string
+                    description: lock_expire_time accepts datetime strings like "2026-01-31 00:00:00".
                 action:
                     type: string
+                    description: Comma-separated action codes.
                 roleId:
                     type: string
         auth.v1.UpdateWhitelistRequest:
@@ -933,7 +977,7 @@ components:
                     type: string
                 category:
                     type: integer
-                    format: uint32
+                    format: int32
                 resource:
                     type: string
         auth.v1.User:
@@ -967,6 +1011,8 @@ components:
                     type: string
                 role:
                     $ref: '#/components/schemas/auth.v1.Role'
+                wrong:
+                    type: string
         auth.v1.UserGroup:
             type: object
             properties:
@@ -976,6 +1022,9 @@ components:
                     type: string
                 word:
                     type: string
+                action:
+                    type: string
+                    description: Comma-separated action codes.
                 actions:
                     type: array
                     items:
@@ -991,7 +1040,7 @@ components:
                     type: string
                 category:
                     type: integer
-                    format: uint32
+                    format: int32
                 resource:
                     type: string
         params.Page:
@@ -1007,3 +1056,11 @@ components:
                     type: boolean
 tags:
     - name: Auth
+      description: |-
+        The auth service definition.
+
+         Notes on conditional blocks:
+         - This repo is a scaffold template; some RPCs/messages are gated by feature flags.
+         - Conditionals are expressed via Go template blocks and also annotated with comments.
+    - name: Health
+      description: 'Conditional: enable_health_check'

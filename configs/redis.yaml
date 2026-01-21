@@ -1,0 +1,13 @@
+# Redis configuration
+# Required by: cache, idempotent middleware, task scheduler
+redis:
+  # Redis DSN (Data Source Name)
+  # Format: redis://[username]:[password]@host:port/database
+  #
+  # Supported modes:
+  #   - Single:   redis://:password@localhost:6379/0
+  #   - TLS:      rediss://:password@localhost:6379/0
+  #   - Cluster:  redis-cluster://:password@host1:port1,host2:port2/0
+  #   - Sentinel: redis-sentinel://:password@host1:port1,host2:port2/mymaster/0
+  dsn: "redis://127.0.0.1:6379/0"
+

@@ -8,10 +8,10 @@ const TableNameRole = "role"
 
 // Role mapped from table <role>
 type Role struct {
-	ID     uint64 `gorm:"column:id;primaryKey;autoIncrement:true;comment:auto increment id" json:"id,string"` // auto increment id
-	Name   string `gorm:"column:name;comment:name" json:"name"`                                               // name
-	Word   string `gorm:"column:word;comment:keyword, must be unique, used as frontend display" json:"word"`  // keyword, must be unique, used as frontend display
-	Action string `gorm:"column:action;comment:role action code array" json:"action"`                         // role action code array
+	ID     int64   `gorm:"column:id;type:bigint;primaryKey;autoIncrement:true;comment:auto increment id" json:"id,string"`                                                    // auto increment id
+	Name   *string `gorm:"column:name;type:character varying(50);comment:name" json:"name"`                                                                                   // name
+	Word   *string `gorm:"column:word;type:character varying(50);uniqueIndex:idx_role_word,priority:1;comment:keyword, must be unique, used as frontend display" json:"word"` // keyword, must be unique, used as frontend display
+	Action *string `gorm:"column:action;type:text;comment:role permission/action code array" json:"action"`                                                                   // role permission/action code array
 }
 
 // TableName Role's table name

@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package reason.v1;
+import "errors/errors.proto";
+
+option go_package = "./api/reason;reason";
+option java_multiple_files = true;
+option java_package = "reason.v1";
+option objc_class_prefix = "APIReasonV1";
+
+enum ErrorReason {
+  INTERNAL = 0 [(errors.code) = 500];
+  TOO_MANY_REQUESTS = 1 [(errors.code) = 429];
+  ILLEGAL_PARAMETER = 2 [(errors.code) = 400];
+  NOT_FOUND = 3 [(errors.code) = 400];
+  UNAUTHORIZED = 4 [(errors.code) = 401];
+  FORBIDDEN = 5 [(errors.code) = 403];
+}

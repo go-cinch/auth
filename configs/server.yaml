@@ -1,0 +1,41 @@
+# Server configuration
+server:
+  # Machine ID for distributed ID generation (Sonyflake)
+  # Each instance should have a unique machineId (0-65535)
+  machineId: ""
+
+  # HTTP server
+  http:
+    addr: 0.0.0.0:8080
+    timeout: 20s
+    # Enable Swagger documentation endpoint
+    docs: true
+
+  # gRPC server
+  grpc:
+    addr: 0.0.0.0:8180
+    timeout: 20s
+
+  # Enable pprof endpoints for profiling (default: false)
+  enablePprof: false
+
+  # Default language for i18n (en, zh, etc.)
+  language: "en"
+
+  # Enable request validation middleware
+  validate: true
+
+  # Disable biz cache (for debugging, default: false)
+  nocache: false
+
+  # JWT configuration
+  jwt:
+    # Enable JWT parsing middleware for /permission endpoint
+    enable: true
+    # JWT signing key (HS512 algorithm, min 32 chars recommended)
+    key: "5A0532523A0D4B18A073B458ADCFE5B4"
+    # Token expiration duration (e.g., "2h", "24h", "7200s")
+    expires: "24h"
+
+  # Skip captcha verification (for testing, default: false)
+  skipCaptcha: false

@@ -8,11 +8,11 @@ const TableNameUserGroup = "user_group"
 
 // UserGroup mapped from table <user_group>
 type UserGroup struct {
-	ID     uint64 `gorm:"column:id;primaryKey;autoIncrement:true;comment:auto increment id" json:"id,string"` // auto increment id
-	Name   string `gorm:"column:name;comment:name" json:"name"`                                               // name
-	Word   string `gorm:"column:word;comment:keyword, must be unique, used as frontend display" json:"word"`  // keyword, must be unique, used as frontend display
-	Action string `gorm:"column:action;comment:user group action code array" json:"action"`                   // user group action code array
-	Users  []User `gorm:"many2many:user_user_group_relation" json:"users"`
+	ID     int64   `gorm:"column:id;type:bigint;primaryKey;autoIncrement:true;comment:auto increment id" json:"id,string"`                                                          // auto increment id
+	Name   *string `gorm:"column:name;type:character varying(50);comment:name" json:"name"`                                                                                         // name
+	Word   *string `gorm:"column:word;type:character varying(50);uniqueIndex:idx_user_group_word,priority:1;comment:keyword, must be unique, used as frontend display" json:"word"` // keyword, must be unique, used as frontend display
+	Action *string `gorm:"column:action;type:text;comment:user group permission/action code array" json:"action"`                                                                   // user group permission/action code array
+	Users  []User  `gorm:"many2many:user_user_group_relation" json:"users"`
 }
 
 // TableName UserGroup's table name

@@ -8,18 +8,13 @@ const TableNameAction = "action"
 
 // Action mapped from table <action>
 type Action struct {
-	ID   uint64 `gorm:"column:id;primaryKey;autoIncrement:true;comment:auto increment id" json:"id,string"` // auto increment id
-	Name string `gorm:"column:name;comment:name" json:"name"`                                               // name
-	Code string `gorm:"column:code;not null;comment:code" json:"code"`                                      // code
-	Word string `gorm:"column:word;comment:keyword, must be unique, used as frontend display" json:"word"`  // keyword, must be unique, used as frontend display
-	/*
-		resource array, split by break line str, example: GET|/user+
-		+PUT,PATCH|/role/*+
-		+GET|/action
-	*/
-	Resource string `gorm:"column:resource;comment:resource array, split by break line str, example: GET|/user+\n+PUT,PATCH|/role/*+\n+GET|/action" json:"resource"`
-	Menu     string `gorm:"column:menu;comment:menu array, split by break line str" json:"menu"` // menu array, split by break line str
-	Btn      string `gorm:"column:btn;comment:btn array, split by break line str" json:"btn"`    // btn array, split by break line str
+	ID       int64   `gorm:"column:id;type:bigint;primaryKey;autoIncrement:true;comment:auto increment id" json:"id,string"`                                                      // auto increment id
+	Name     *string `gorm:"column:name;type:character varying(50);comment:name" json:"name"`                                                                                     // name
+	Code     string  `gorm:"column:code;type:character(8);not null;uniqueIndex:idx_action_code,priority:1;comment:code" json:"code"`                                              // code
+	Word     *string `gorm:"column:word;type:character varying(50);uniqueIndex:idx_action_word,priority:1;comment:keyword, must be unique, used as frontend display" json:"word"` // keyword, must be unique, used as frontend display
+	Resource *string `gorm:"column:resource;type:text;comment:resource rules, split by newline; examples: GET|/user, PUT|/role/*" json:"resource"`                                // resource rules, split by newline; examples: GET|/user, PUT|/role/*
+	Menu     *string `gorm:"column:menu;type:text;comment:menu list, split by newline" json:"menu"`                                                                               // menu list, split by newline
+	Btn      *string `gorm:"column:btn;type:text;comment:button list, split by newline" json:"btn"`                                                                               // button list, split by newline
 }
 
 // TableName Action's table name

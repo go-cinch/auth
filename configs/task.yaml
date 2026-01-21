@@ -1,0 +1,38 @@
+# Task/Cron scheduler configuration
+# Requires: enable_redis=true, enable_task=true
+# Uses Redis for distributed task coordination
+task:
+  # Cron task list - scheduled tasks that run on a cron schedule
+  # Cron expression format: 7 fields
+  # second minute hour day month weekday year
+  #
+  # Format:
+  #   task_id:
+  #     name: 'task_name'          # Unique task identifier
+  #     expr: 'cron_expression'    # 7-field cron expression
+  #     timeout: timeout_seconds   # Optional, default 60
+  #     retry: max_retry_count     # Optional, default 3
+  #
+  # Cron examples:
+  #   '0 0/5 * * * * *'     - Every 5 minutes
+  #   '0 0 2 * * * *'       - Daily at 2:00 AM
+  #   '0 0 9-17 * * 1-5 *'  - Every hour from 9AM-5PM on weekdays
+  #   '0/10 * * * * * *'    - Every 10 seconds
+  cron:
+    refresh.hotspot:
+      name: 'refresh.hotspot'
+      expr: '0 0/5 * * * * *'
+
+  # Task group mappings - maps group names to task names
+  # Used to reference tasks in code (both cron and one-time tasks)
+  # Format: groupName: 'task_name'
+  group:
+    # Login failed will delay to update wrong count (once)
+    loginFailed: 'login.failed'
+    # Login success will delay to update last login time (once)
+    loginLast: 'login.last'
+    # Refresh hotspot (cron)
+    refreshHotspot: 'refresh.hotspot'
+    # Refresh hotspot manual (once)
+    refreshHotspotManual: 'refresh.hotspot.manual'
+
