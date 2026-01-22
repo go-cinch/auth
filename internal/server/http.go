@@ -29,8 +29,6 @@ func NewHTTPServer(
 	c *conf.Bootstrap,
 	svc *service.AuthService,
 	rds redis.UniversalClient,
-	permission *biz.PermissionUseCase,
-	user *biz.UserUseCase,
 	whitelist *biz.WhitelistUseCase,
 ) *http.Server {
 	middlewares := []middleware.Middleware{
@@ -49,7 +47,7 @@ func NewHTTPServer(
 	}
 	// Add Permission middleware for JWT parsing when enabled
 	if c.Server.Jwt.Enable {
-		middlewares = append(middlewares, localMiddleware.Permission(c, rds, permission, user, whitelist))
+		middlewares = append(middlewares, localMiddleware.Permission(c, rds, whitelist))
 	}
 	middlewares = append(middlewares, localMiddleware.Idempotent(rds))
 

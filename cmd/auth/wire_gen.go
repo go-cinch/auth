@@ -55,7 +55,7 @@ func wireApp(bootstrap *conf.Bootstrap) (*kratos.App, func(), error) {
 	healthRepo := data.NewHealthRepo(dataData, universalClient)
 	authService := service.NewAuthService(bootstrap, authUseCase, userUseCase, roleUseCase, permissionUseCase, actionUseCase, userGroupUseCase, whitelistUseCase, hotspotRepo, healthRepo)
 	grpcServer := server.NewGRPCServer(bootstrap, authService, universalClient)
-	httpServer := server.NewHTTPServer(bootstrap, authService, universalClient, permissionUseCase, userUseCase, whitelistUseCase)
+	httpServer := server.NewHTTPServer(bootstrap, authService, universalClient, whitelistUseCase)
 	app := newApp(grpcServer, httpServer)
 	return app, func() {
 		cleanup()
