@@ -9,14 +9,13 @@ import (
 
 	"go.opentelemetry.io/otel"
 
+	auth "auth/api/auth"
+	"auth/internal/biz"
+	"auth/internal/conf"
 	"github.com/go-cinch/common/copierx"
 	"github.com/go-cinch/common/jwt"
 	"github.com/go-cinch/common/log"
 	"github.com/go-cinch/common/utils"
-
-	auth "auth/api/auth"
-	"auth/internal/biz"
-	"auth/internal/conf"
 	"github.com/go-kratos/kratos/v2/middleware"
 	"github.com/go-kratos/kratos/v2/transport"
 	jwtV4 "github.com/golang-jwt/jwt/v4"
@@ -86,7 +85,7 @@ func handlePermissionEndpoint(
 		return &emptypb.Empty{}, nil
 	}
 
-	// JWT whitelist: no need JWT verification (check the requested resource, not /permission itself)
+	// JWT whitelist: no need JWT verification (check the requested resource)
 	if jwtWhitelist(ctx, whitelist, checkReq.Resource) {
 		return &emptypb.Empty{}, nil
 	}
