@@ -4,9 +4,9 @@
 
 package model
 
-const TableNameAction = "action"
+const TableNameAction = "t_action"
 
-// Action mapped from table <action>
+// Action mapped from table <t_action>
 type Action struct {
 	ID       int64   `gorm:"column:id;type:bigint;primaryKey;autoIncrement:true;comment:auto increment id" json:"id,string"`                                                      // auto increment id
 	Name     *string `gorm:"column:name;type:character varying(50);comment:name" json:"name"`                                                                                     // name

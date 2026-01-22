@@ -1,6 +1,6 @@
 -- +migrate Up
 -- SQL in section 'Up' is executed when this migration is applied
-INSERT INTO "action" (id, name, code, word, resource, menu, btn) VALUES
+INSERT INTO "t_action" (id, name, code, word, resource, menu, btn) VALUES
 (2972307337314305,'All Permissions','SN2837AY','*','*','*','*'),
 (2972307337379841,'Default Permissions','KHXK5JVL','default','POST|/auth/logout|/auth.v1.Auth/Logout
 GET|/auth/info|/auth.v1.Auth/Info
@@ -31,37 +31,37 @@ GET|/auth/action/list|/auth.v1.Auth/FindAction','/system/group','system.user.gro
 (2972307338690561,'Whitelist Update','28FN73B3','whitelist.update','PUT,PATCH|/auth/whitelist/update|/auth.v1.Auth/UpdateWhitelist','/system/whitelist','system.whitelist.update'),
 (2972307338756097,'Whitelist Delete','E8SN4T9K','whitelist.delete','DELETE|/auth/whitelist/delete|/auth.v1.Auth/DeleteWhitelist','/system/whitelist','system.whitelist.delete');
 
-INSERT INTO "role" (id, name, word, action) VALUES
+INSERT INTO "t_role" (id, name, word, action) VALUES
 (2972307338821633,'Admin','admin','SN2837AY'),
 (2972307338887169,'Guest','guest','2QKHTYEE');
 
-INSERT INTO "user_group" (id, name, word, action) VALUES
+INSERT INTO "t_user_group" (id, name, word, action) VALUES
 (2972307338952705,'Read Only','readonly','GRNA3NPV,V2HRXGW9,AS2V9HND,42TMWNP3'),
 (2972307339018241,'Read Write','write','GRNA3NPV,2LV9MDWB,NME3CT5H,EQH37R9C,V2HRXGW9,GGKPXAL6,JM3TT968,JE45TMPQ,AS2V9HND,88BA22VF,GE5YBVDN,AY6QE7QG,42TMWNP3,SXPYFM3K,8VCXMSCW,86QSDSRL'),
 (2972307339083777,'No Delete','nodelete','GRNA3NPV,2LV9MDWB,NME3CT5H,V2HRXGW9,GGKPXAL6,JM3TT968,AS2V9HND,88BA22VF,GE5YBVDN,42TMWNP3,SXPYFM3K,8VCXMSCW');
 
-INSERT INTO "user" (id, created_at, updated_at, role_id, username, code, password, platform) VALUES
+INSERT INTO "t_user" (id, created_at, updated_at, role_id, username, code, password, platform) VALUES
 (2972307339149313,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,2972307338821633,'super','89HEK28Y','$2a$10$TRT9yIpxi3LLgBnVrvktDOpxYUeSpq4cKDhuSDU8n16iXRPWkvmxG','pc'),
 (2972307339214849,CURRENT_TIMESTAMP + INTERVAL '1 second',CURRENT_TIMESTAMP + INTERVAL '1 second',2972307338887169,'guest','4VPNKE6M','$2a$10$er8ILElzUu9m7n6DLWZaPeG8h6R2hyySGawvx4y7E/CXKYfvxKifW','pc'),
 (2972307339280385,CURRENT_TIMESTAMP + INTERVAL '2 seconds',CURRENT_TIMESTAMP + INTERVAL '2 seconds',0,'readonly','EXP78RGH','$2a$10$a5pNKJGB3X1BScsEUkA6Yub184Q99SiNbxbftJsOG88liuIKlnxcW','pc'),
 (2972307339345921,CURRENT_TIMESTAMP + INTERVAL '3 seconds',CURRENT_TIMESTAMP + INTERVAL '3 seconds',0,'write','6SHWH93V','$2a$10$C.9Zfx/D0n9tep8zXP4jUekz58ClC6Zrx.vMjwxHCNPB6Rblib//S','pc'),
 (2972307339411457,CURRENT_TIMESTAMP + INTERVAL '4 seconds',CURRENT_TIMESTAMP + INTERVAL '4 seconds',0,'nodelete','JJHWJ9YJ','$2a$10$8SPpr/z.ukV4IvSVUIHVQOhKzY3Xfp9QJla5poW4/HgBeMxSviQ22','pc');
 
-INSERT INTO "user_user_group_relation" (user_id, user_group_id) VALUES
+INSERT INTO "t_user_user_group_relation" (user_id, user_group_id) VALUES
 (2972307339280385,2972307338952705),
 (2972307339345921,2972307339018241),
 (2972307339411457,2972307339083777);
 
-INSERT INTO "whitelist" (id, category, resource) VALUES
+INSERT INTO "t_whitelist" (id, category, resource) VALUES
 (2972307339476993, 0, '/grpc.health.v1.Health/Check
 /grpc.health.v1.Health/Watch'),
 (2972307339542529, 1, '/grpc.health.v1.Health/Check
 /grpc.health.v1.Health/Watch');
 
 -- +migrate Down
-TRUNCATE TABLE "action" CASCADE;
-TRUNCATE TABLE "role" CASCADE;
-TRUNCATE TABLE "user_group" CASCADE;
-TRUNCATE TABLE "user" CASCADE;
-TRUNCATE TABLE "user_user_group_relation" CASCADE;
-TRUNCATE TABLE "whitelist" CASCADE;
+TRUNCATE TABLE "t_action" CASCADE;
+TRUNCATE TABLE "t_role" CASCADE;
+TRUNCATE TABLE "t_user_group" CASCADE;
+TRUNCATE TABLE "t_user" CASCADE;
+TRUNCATE TABLE "t_user_user_group_relation" CASCADE;
+TRUNCATE TABLE "t_whitelist" CASCADE;

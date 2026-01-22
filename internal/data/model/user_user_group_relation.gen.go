@@ -4,9 +4,9 @@
 
 package model
 
-const TableNameUserUserGroupRelation = "user_user_group_relation"
+const TableNameUserUserGroupRelation = "t_user_user_group_relation"
 
-// UserUserGroupRelation mapped from table <user_user_group_relation>
+// UserUserGroupRelation mapped from table <t_user_user_group_relation>
 type UserUserGroupRelation struct {
 	UserID      int64 `gorm:"column:user_id;type:bigint;primaryKey;comment:user id" json:"user_id"`                                                                               // user id
 	UserGroupID int64 `gorm:"column:user_group_id;type:bigint;primaryKey;index:idx_user_user_group_relation_user_group_id,priority:1;comment:user group id" json:"user_group_id"` // user group id

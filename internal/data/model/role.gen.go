@@ -4,9 +4,9 @@
 
 package model
 
-const TableNameRole = "role"
+const TableNameRole = "t_role"
 
-// Role mapped from table <role>
+// Role mapped from table <t_role>
 type Role struct {
 	ID     int64   `gorm:"column:id;type:bigint;primaryKey;autoIncrement:true;comment:auto increment id" json:"id,string"`                                                    // auto increment id
 	Name   *string `gorm:"column:name;type:character varying(50);comment:name" json:"name"`                                                                                   // name

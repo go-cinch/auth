@@ -4,9 +4,9 @@
 
 package model
 
-const TableNameWhitelist = "whitelist"
+const TableNameWhitelist = "t_whitelist"
 
-// Whitelist mapped from table <whitelist>
+// Whitelist mapped from table <t_whitelist>
 type Whitelist struct {
 	ID       int64  `gorm:"column:id;type:bigint;primaryKey;autoIncrement:true;comment:auto increment id" json:"id,string"`                                       // auto increment id
 	Category int16  `gorm:"column:category;type:smallint;not null;index:idx_whitelist_category,priority:1;comment:category(0:permission, 1:jwt)" json:"category"` // category(0:permission, 1:jwt)

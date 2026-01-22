@@ -597,3 +597,29 @@ func TestDeleteGame(t *testing.T) {
 - Always use `mock.NewContextWithUserId()` to create context with tenant ID
 - Use `github.com/stretchr/testify/assert` for assertions
 - Test files are in `internal/tests/service/`, not alongside service files
+
+## 13. Database Naming Convention
+
+Table names **must** use `t_` prefix with singular form. Index names **do not** use `t_` prefix. Column names **must not** use database reserved keywords.
+
+```sql
+-- Table naming
+CREATE TABLE t_order (...)    -- Good
+CREATE TABLE t_user (...)     -- Good
+CREATE TABLE order (...)      -- Bad: reserved keyword
+CREATE TABLE orders (...)     -- Bad: plural form
+
+-- Index naming (no t_ prefix)
+CREATE INDEX idx_user_name ON t_user(name);           -- Good
+CREATE UNIQUE INDEX idx_user_word ON t_user(word);    -- Good
+CREATE INDEX idx_t_user_name ON t_user(name);         -- Bad: unnecessary t_ prefix
+
+-- Column naming
+order_type VARCHAR(50)        -- Good
+user_group VARCHAR(100)       -- Good
+type VARCHAR(50)              -- Bad: reserved keyword
+group VARCHAR(100)            -- Bad: reserved keyword
+```
+
+**Common reserved keywords to avoid in columns:**
+- `order`, `group`, `select`, `table`, `index`, `key`, `type`, `status`, `value`

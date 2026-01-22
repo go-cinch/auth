@@ -306,6 +306,34 @@ gen-model:
 			echo "  - Added $$FIELD_NAME to $$MODEL_TABLE"; \
 		done; \
 	fi
+	@echo "Handling t_ prefix tables..."; \
+	for file in internal/data/model/t_*.gen.go; do \
+		if [ -f "$$file" ]; then \
+			TABLE_NAME=$$(basename "$$file" .gen.go); \
+			NEW_NAME=$${TABLE_NAME#t_}; \
+			NEW_FILE="internal/data/model/$${NEW_NAME}.gen.go"; \
+			OLD_STRUCT=$$(echo "$$TABLE_NAME" | awk -F'_' '{for(i=1;i<=NF;i++){$$i=toupper(substr($$i,1,1)) substr($$i,2)}}1' OFS=''); \
+			NEW_STRUCT=$$(echo "$$NEW_NAME" | awk -F'_' '{for(i=1;i<=NF;i++){$$i=toupper(substr($$i,1,1)) substr($$i,2)}}1' OFS=''); \
+			sed -i.bak "s/const TableName$$OLD_STRUCT = \"$$TABLE_NAME\"/const TableName$$NEW_STRUCT = \"$$TABLE_NAME\"/g" "$$file"; \
+			sed -i.bak "s/return TableName$$OLD_STRUCT/return TableName$$NEW_STRUCT/g" "$$file"; \
+			sed -i.bak "s/type $$OLD_STRUCT struct/type $$NEW_STRUCT struct/g" "$$file"; \
+			sed -i.bak "s/(\*$$OLD_STRUCT)/(\*$$NEW_STRUCT)/g" "$$file"; \
+			sed -i.bak "s/($$OLD_STRUCT)/($$NEW_STRUCT)/g" "$$file"; \
+			sed -i.bak "s/\/\/ $$OLD_STRUCT mapped from/\/\/ $$NEW_STRUCT mapped from/g" "$$file"; \
+			sed -i.bak "s/\/\/ TableName $$OLD_STRUCT's/\/\/ TableName $$NEW_STRUCT's/g" "$$file"; \
+			sed -i.bak "s/mapped from table <$$TABLE_NAME>/mapped from table <$$TABLE_NAME>/g" "$$file"; \
+			mv "$$file" "$$NEW_FILE"; \
+			rm -f "$$file.bak"; \
+			for other_file in internal/data/model/*.gen.go; do \
+				if [ -f "$$other_file" ]; then \
+					sed -i.bak "s/\*$$OLD_STRUCT/\*$$NEW_STRUCT/g" "$$other_file"; \
+					sed -i.bak "s/\[\]$$OLD_STRUCT/\[\]$$NEW_STRUCT/g" "$$other_file"; \
+					rm -f "$$other_file.bak"; \
+				fi; \
+			done; \
+			echo "  - Renamed $$TABLE_NAME -> $$NEW_NAME (struct: $$OLD_STRUCT -> $$NEW_STRUCT)"; \
+		fi; \
+	done
 	@echo "✓ Models generated in internal/data/model/"
 
 .PHONY: lint

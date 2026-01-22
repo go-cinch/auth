@@ -8,9 +8,9 @@ import (
 	"github.com/golang-module/carbon/v2"
 )
 
-const TableNameUser = "user"
+const TableNameUser = "t_user"
 
-// User mapped from table <user>
+// User mapped from table <t_user>
 type User struct {
 	ID         int64            `gorm:"column:id;type:bigint;primaryKey;autoIncrement:true;comment:auto increment id" json:"id,string"`                               // auto increment id
 	CreatedAt  *carbon.DateTime `gorm:"column:created_at;type:timestamp(3) without time zone;comment:create time" json:"created_at"`                                  // create time

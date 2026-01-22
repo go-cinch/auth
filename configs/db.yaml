@@ -37,9 +37,9 @@ db:
       #   - order.order_id       # Only order table's order_id field
       jsonStringFields:
         - id
-        - user.role_id
-        - user.lock_expire
-        - user.wrong
+        - t_user.role_id
+        - t_user.lock_expire
+        - t_user.wrong
 
       # Remove pointer (*) from nullable fields
       # Warning: NULL values will be zero values (0, "", false, etc.)
@@ -59,6 +59,6 @@ db:
     #   - 'post|post|Quote|has_one|foreignKey:QuoteID'  # self-reference
     #   - 'post_comment|post_comment|[]Children|has_many|foreignKey:ParentID'  # array with slice prefix
     association:
-      - 'user_group|user|[]Users|many_to_many|many2many:user_user_group_relation'
-      - 'user|role|Role|has_one|foreignKey:RoleID'
+      - 't_user_group|t_user|[]User|many_to_many|many2many:t_user_user_group_relation'
+      - 't_user|t_role|Role|has_one|foreignKey:RoleID'
 

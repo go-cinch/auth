@@ -4,15 +4,15 @@
 
 package model
 
-const TableNameUserGroup = "user_group"
+const TableNameUserGroup = "t_user_group"
 
-// UserGroup mapped from table <user_group>
+// UserGroup mapped from table <t_user_group>
 type UserGroup struct {
 	ID     int64   `gorm:"column:id;type:bigint;primaryKey;autoIncrement:true;comment:auto increment id" json:"id,string"`                                                          // auto increment id
 	Name   *string `gorm:"column:name;type:character varying(50);comment:name" json:"name"`                                                                                         // name
 	Word   *string `gorm:"column:word;type:character varying(50);uniqueIndex:idx_user_group_word,priority:1;comment:keyword, must be unique, used as frontend display" json:"word"` // keyword, must be unique, used as frontend display
 	Action *string `gorm:"column:action;type:text;comment:user group permission/action code array" json:"action"`                                                                   // user group permission/action code array
-	Users  []User  `gorm:"many2many:user_user_group_relation" json:"users"`
+	User   []User  `gorm:"many2many:t_user_user_group_relation" json:"user"`
 }
 
 // TableName UserGroup's table name
